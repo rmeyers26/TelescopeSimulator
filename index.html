@@ -513,15 +513,16 @@ M('rearcell',gRear,cylZ(.153,.153,.05,64,true),'blackg',{p:[0,0,.24],sub:'cone',
 M('rearcell',gRear,cylZ(.153,.153,.024,64,true),'blackg',{p:[0,0,.265],sub:'cone',clip:true});
 M('rearcell',gRear,cylZ(.07,.07,.025,48),'black',{p:[0,0,.3025],sub:'flange',clip:true});
 M('rearcell',gRear,cylZ(.0275,.0275,.012,40),'silver',{p:[0,0,.321],sub:'thread'});
-// rear-face details from the photo: slotted vent, two cone-shaped locking knobs, curved ridges, rim screws
+// rear-cell details from the photos: vents on the band, two cone-shaped locking knobs, curved ridges, rim screws
 (function(){
   const zs=r=>.277+(.15-Math.min(.15,Math.max(.075,r)))/.075*.012;                       // z of the shallow rear face at radius r
-  const vg=new THREE.CircleGeometry(.043,40);vg.scale(1,.34,1);
-  M('rearcell',gRear,vg,'blackg',{p:[.012,.122,zs(.122)+.004],sub:'vent',noShadow:true});                    // vent plate
-  const bz=new THREE.TorusGeometry(.043,.0025,8,40);bz.scale(1,.34,1);
-  M('rearcell',gRear,bz,'blackg',{p:[.012,.122,zs(.122)+.0045],sub:'vent'});                                  // raised bezel
-  for(let i=0;i<9;i++){const x=-.034+i*.0085,h=.0145*Math.sqrt(Math.max(.05,1-Math.pow(x/.041,2)));
-    M('rearcell',gRear,new THREE.BoxGeometry(.0028,h*2.2,.0018),'silver',{p:[.012+x,.122,zs(.122)+.0052],r:[0,0,-.6],sub:'vent',noShadow:true});}   // diagonal slats
+  // louvred vents on the top and bottom of the rear-cell band (CPC Deluxe HD / EdgeHD), long axis running around the tube
+  [1,-1].forEach(sg=>{const yv=sg*.1545,zv=.252,fy=g=>{g.rotateX(-sg*Math.PI/2);return g;};
+    const vg=new THREE.CircleGeometry(.042,40);vg.scale(1,.36,1);M('rearcell',gRear,fy(vg),'rubber',{p:[0,yv,zv],sub:'vent',noShadow:true});
+    const bz=new THREE.TorusGeometry(.042,.003,8,40);bz.scale(1,.36,1);M('rearcell',gRear,fy(bz),'gloss',{p:[0,yv+sg*.0006,zv],sub:'vent'});
+    for(let i=0;i<9;i++){const x=-.034+i*.0085,h=.0145*Math.sqrt(Math.max(.05,1-Math.pow(x/.04,2)));
+      const sl=M('rearcell',gRear,new THREE.BoxGeometry(.003,.002,h*2.1),'blackg',{p:[x,yv+sg*.0012,zv],sub:'vent',noShadow:true});sl.rotation.y=.55;}});
+  M('rearcell',gRear,new THREE.TorusGeometry(.148,.006,10,64),'blackg',{p:[0,0,.275],sub:'cone',clip:true});   // rounded rear edge of the band
   [[-.085,.055],[-.06,-.085]].forEach(([x,y])=>{const z=zs(Math.hypot(x,y));
     const pk=new THREE.TorusGeometry(.021,.003,8,32);M('rearcell',gRear,pk,'blackg',{p:[x,y,z+.003],sub:'lockknob'});                    // recessed pocket rim
     M('rearcell',gRear,cylZ(.019,.019,.008,32),'blackg',{p:[x,y,z+.004],sub:'lockknob'});
@@ -922,7 +923,7 @@ rearcell:{n:'Rear cell',
  p:'Provides the mounting thread for visual back, diagonal, cameras and reducers, and houses the focus shaft.',
  h:'The 2-inch Schmidt-Cassegrain (SCT) thread is a standard 2"-24 thread that most accessories use. Different parts screw directly here.',
  i:'The focus knob turns a shaft in the rear cell, the primary baffle tube passes through it, and the visual back threads onto it.',
- subs:[['cone','Rear face','Shallow face that carries the accessory port.'],['vent','Vent','Slotted vent that lets air and heat move in and out so the mirror can reach outdoor temperature.'],['lockknob','Locking knobs','Two cone-shaped knobs that clamp parts of the rear mechanism (see your manual for the exact function).'],['ridge','Ridges','Raised arcs that stiffen the rear face.'],['screws','Rim screws','Hold the rear cover on.'],['flange','Flange','Machined plate that carries the accessory thread.'],['thread','SCT thread','2"-24 threaded port.']],
+ subs:[['cone','Rear face','Shallow face that carries the accessory port.'],['vent','Vents','Louvred vents on the top and bottom of the rear cell that let air and heat move in and out so the mirror can reach outdoor temperature.'],['lockknob','Locking knobs','Two cone-shaped knobs that clamp parts of the rear mechanism (see your manual for the exact function).'],['ridge','Ridges','Raised arcs that stiffen the rear face.'],['screws','Rim screws','Hold the rear cover on.'],['flange','Flange','Machined plate that carries the accessory thread.'],['thread','SCT thread','2"-24 threaded port.']],
  spec:[['Thread','2"-24 SCT'],['Back focus','≈ 4–5 in behind the flange (varies with focus)']],
  m:['Keep the port capped when no accessory is fitted.','Do not overtighten accessories; hand tight is enough.'],
  t:[['Camera or diagonal will not reach focus','Check spacing; each accessory adds to the optical path.']]},
