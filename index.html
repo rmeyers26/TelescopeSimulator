@@ -602,21 +602,40 @@ const gStar=G('starsense',altG,V3(0,0.4,-0.25));   // optional plate-solving cam
   sm(new THREE.ExtrudeGeometry(sh,{depth:.012,bevelEnabled:true,bevelSize:.002,bevelThickness:.002,bevelSegments:2,curveSegments:32}),'blackg',[0,.2275,-.092],'housing');   // oval housing behind the lens
   sm(cylZ(.004,.004,.003,10),'black',[.017,.2,-.0795],'housing');
 })();
-const gTel=G('telrad',altG,V3(0,0.32,0));      // Telrad-style reflex finder on the dovetail: long body, ribbed top, tilted window with side shades
+const gTel=G('telrad',altG,V3(0,0.32,0));      // Telrad reflex sight: long battery body, tall rear tower with a pitched roof and tilted glass, knobs on the back
 (function(){
   const tm=(geo,mat,p,sub,r)=>M('telrad',gTel,geo,mat,{p,sub,r});
-  tm(new THREE.BoxGeometry(.07,.006,.14),'black',[0,.1685,.02],'base');
-  tm(new THREE.BoxGeometry(.056,.036,.15),'blackg',[0,.189,.02],'body');
-  for(let i=0;i<6;i++)tm(new THREE.BoxGeometry(.05,.003,.006),'black',[0,.2085,-.04+i*.02],'body');                 // ribs
-  tm(new THREE.CylinderGeometry(.006,.006,.004,16),'orange',[0,.2095,-.045],'body');                                   // red LED lens
-  const fr=new THREE.Shape();fr.moveTo(-.031,-.034);fr.lineTo(.031,-.034);fr.lineTo(.031,.034);fr.lineTo(-.031,.034);fr.closePath();
-  const hole=new THREE.Path();hole.moveTo(-.026,-.028);hole.lineTo(.026,-.028);hole.lineTo(.026,.028);hole.lineTo(-.026,.028);hole.closePath();fr.holes.push(hole);
-  tm(new THREE.ExtrudeGeometry(fr,{depth:.006,bevelEnabled:false}),'blackg',[0,.226,.1],'window',[-.5,0,0]);           // window frame, tilted up and back
-  tm(new THREE.PlaneGeometry(.052,.056),'glass',[0,.226,.1],'window',[-.5,0,0]);
-  const tri=new THREE.Shape();tri.moveTo(.085,.207);tri.lineTo(.125,.207);tri.lineTo(.125,.247);tri.closePath();       // side shades (shape x -> z, y -> y)
-  [-1,1].forEach(sd=>{const g=new THREE.ExtrudeGeometry(tri,{depth:.003,bevelEnabled:false});g.rotateY(-Math.PI/2);
-    tm(g,'blackg',[sd*.031,0,0],'hood');
-    tm(new THREE.CylinderGeometry(.004,.004,.012,10),'silver',[sd*.0365,.19,.07],'body',[0,0,Math.PI/2]);});            // alignment screws
+  const y0=.1685,yb=y0+.004,W=.056;                                                 // base-plate top, body bottom, body width
+  const side=(pts,w)=>{const sh=new THREE.Shape();pts.forEach((q,i)=>i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]));sh.closePath();   // (z,y) outline extruded across x, centred
+    const g=new THREE.ExtrudeGeometry(sh,{depth:w,bevelEnabled:true,bevelSize:.0012,bevelThickness:.0012,bevelSegments:1});g.rotateY(-Math.PI/2);g.translate(w/2,0,0);return g;};
+  // base plate with its spring clip, screwed to the tube
+  tm(new THREE.BoxGeometry(.05,.004,.2),'black',[0,y0,-.01],'base');
+  tm(new THREE.BoxGeometry(.03,.008,.012),'steel',[0,y0+.002,-.11],'base');
+  // long body (battery compartment and reticle optics) with a groove and a raised name panel on each side
+  tm(new THREE.BoxGeometry(W,.044,.2),'grip',[0,yb+.022,-.02],'body');
+  [-1,1].forEach(sd=>{tm(new THREE.BoxGeometry(.002,.003,.2),'black',[sd*W/2,yb+.006,-.02],'body');
+    tm(new THREE.BoxGeometry(.002,.026,.075),'grip',[sd*(W/2+.0008),yb+.023,-.055],'body');
+    tm(new THREE.BoxGeometry(.0025,.021,.069),'black',[sd*(W/2+.0012),yb+.023,-.055],'body');});
+  for(let i=0;i<4;i++)tm(new THREE.BoxGeometry(.03,.0015,.008),'black',[0,yb+.0445,-.06+i*.014],'body');   // embossed lettering on top
+  // rear tower: vertical back, steep rear slope carrying the glass, long front slope down to the body
+  const yT=yb+.044,P=[[.04,yT-.01],[.04,yb],[.1,yb],[.1,yT+.042],[.078,yT+.075],[.072,yT+.075],[.04,yT+.012]];
+  tm(side(P,W),'grip',[0,0,0],'hood');
+  // tilted glass on the rear slope, in a thin frame, propped slightly open as on the real unit
+  const ang=Math.atan2(.033,.022),cz=.089,cy=yT+.0585;
+  tm(new THREE.BoxGeometry(W-.004,.04,.003),'grip',[0,cy+.002,cz+.005],'window',[-(Math.PI/2-ang)+.12,0,0]);
+  tm(new THREE.PlaneGeometry(W-.012,.034),'glass',[0,cy+.003,cz+.0072],'window',[-(Math.PI/2-ang)+.12,0,0]);
+  [-1,1].forEach(sd=>tm(side([[.076,yT+.074],[.1,yT+.04],[.104,yT+.05],[.082,yT+.08]],.003),'grip',[sd*(W/2-.0015),0,0],'window'));   // raised side cheeks of the window
+  // back face: three knurled adjustment knobs and four silver screws
+  [[-.014,yb+.05],[.014,yb+.05],[-.016,yb+.016]].forEach(([x,y])=>{
+    tm(new THREE.CylinderGeometry(.0075,.0075,.004,16),'rubber',[x,y,.1025],'body',[Math.PI/2,0,0]);
+    tm(ribbed(.0065,.012,10,.12),'black',[x,y,.11],'body',[Math.PI/2,0,0]);
+    tm(new THREE.CylinderGeometry(.0018,.0018,.002,10),'silver',[x,y,.1165],'body',[Math.PI/2,0,0]);});
+  [[-.022,yb+.008],[.022,yb+.008],[-.022,yb+.072],[.022,yb+.072]].forEach(([x,y])=>tm(new THREE.CylinderGeometry(.003,.003,.002,12),'silver',[x,y,.1012],'body',[Math.PI/2,0,0]));
+  // on/off / brightness knob with its lever on the right of the tower
+  tm(new THREE.CylinderGeometry(.008,.008,.012,20),'black',[W/2+.006,yb+.05,.06],'body',[0,0,Math.PI/2]);
+  tm(new THREE.CylinderGeometry(.006,.006,.004,16),'silver',[W/2+.001,yb+.05,.06],'body',[0,0,Math.PI/2]);
+  tm(new THREE.BoxGeometry(.006,.006,.022),'black',[W/2+.004,yb+.044,.05],'body',[.5,0,0]);
+  tm(new THREE.CylinderGeometry(.0028,.0028,.003,10),'orange',[0,yT+.003,.03],'body');               // red reticle lens window under the glass
 })();
 const gDove=G('dovetail',altG,V3(0,0.22,0));
 M('dovetail',gDove,new THREE.BoxGeometry(.055,.015,.36),'silver',{p:[0,.158,-.03],sub:'bar'});
@@ -973,12 +992,12 @@ starsense:{n:'StarSense-style AutoAlign camera (optional)',
  spec:[['Needs','Clear sky, level mount, approximate time and location'],['Result here','Alignment good to a few arc-minutes (simulated)']],
  m:['Keep the lens clean and dry; use a lens cap when stored.','Set date, time and location correctly before aligning.'],
  t:[['Alignment fails','Clouds, dew on the lens or a badly levelled mount can stop the solve.'],['Pointing is off after aligning','Check the time, date and location entered in the hand controller.']]},
-telrad:{n:'Telrad-style reflex finder',
+telrad:{n:'Telrad reflex sight',
  d:'A zero-magnification finder: you look through a clear window and see a red bullseye projected on the sky.',
  p:'Gets the scope onto a target quickly, by eye, before you use the 9x50 finder or an eyepiece.',
  h:'An LED shines through a lens and reflects off the angled window glass, so the circles appear to hang in the sky at infinity. Both eyes stay open and there is no magnification, so the view matches the real sky.',
- i:'The base plate sits on the dovetail rail. Two screws set the alignment; a knob or switch sets brightness (real units use a small coin battery).',
- subs:[['base','Base plate','Mounts to the dovetail.'],['body','Body','Holds the LED, lens and battery.'],['window','Window','Angled clear glass that reflects the bullseye.'],['hood','Side shades','Block stray light so the window stays easy to read.']],
+ i:'A separate base plate is fixed to the tube and the sight slides onto it, so it can be removed without losing alignment. Three knurled knobs on the back aim the bullseye; the rotary knob on the side is the on/off and brightness control (it runs on two AA cells in the long body).',
+ subs:[['base','Base plate','Mounts to the dovetail.'],['body','Body','Holds the LED, lens and battery.'],['window','Window','Angled clear glass that reflects the bullseye.'],['hood','Rear tower','Tall housing with a pitched roof; the glass sits on its rear slope.']],
  spec:[['Magnification','1×'],['Typical circles','0.5°, 2° and 4° (real unit)']],
  m:['Turn the LED off after use.','Wipe the window with a soft cloth only.'],
  t:[['Circles look dim','Raise the brightness or replace the battery.'],['Bullseye is off target','Re-align on a distant object using the two alignment screws.']]},
