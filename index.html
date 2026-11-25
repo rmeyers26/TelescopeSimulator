@@ -56,6 +56,18 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
 .lab{position:fixed;pointer-events:none;font:11px system-ui;color:#fff;background:rgba(20,24,34,.85);border:1px solid #ff8a3d;border-radius:10px;padding:1px 7px 1px 2px;white-space:nowrap;transform:translate(10px,-50%);z-index:6;display:none}.lab b{display:inline-block;background:#ff8a3d;color:#111;border-radius:50%;min-width:15px;text-align:center;margin-right:4px}.lab:before{content:'';position:absolute;left:-10px;top:50%;width:10px;height:1px;background:#ff8a3d}
 .su h2{margin:4px 0}.su .st{border:1px solid #333b52;border-radius:10px;padding:8px 10px;margin:8px 0;background:#161b27}.su .wn{color:#ffb347;font-size:12px;margin-top:6px}.su ol{padding-left:18px;margin:6px 0}.su li{cursor:pointer;margin:2px 0}.su li.on{color:#ff8a3d;font-weight:600}.su li.dn{opacity:.55}.su .kk{font-size:11px;columns:2;color:#9aa4bf}
 .lcd{position:relative}
+/* night (red light) mode: a red multiply layer turns everything red-only, and a dark layer dims it */
+#redov,#dimov{position:fixed;inset:0;pointer-events:none;display:none;z-index:60}#redov{background:#ff1a00;mix-blend-mode:multiply}#dimov{background:#000;opacity:.3}
+body.red #redov,body.red #dimov{display:block}
+/* toolbar: advanced tools are tucked under More in Education mode */
+body.edu:not(.showadv) #top .adv{display:none}body:not(.edu) #bMore{display:none}#top .adv{display:contents}
+/* welcome screen */
+#welcome{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,4,10,.72);z-index:32;padding:12px}
+#welcome>div{background:#121a2c;border:1px solid #3a4a72;border-radius:20px;padding:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto;animation:pop .35s}
+#welcome h1{margin:0 0 4px;font-size:22px}.wtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.wtiles button{background:#1b2540;border:1px solid #3a4a72;border-radius:14px;color:#e8ecf7;padding:14px 10px;text-align:left;cursor:pointer;font-size:14px;line-height:1.35}
+.wtiles button b{display:block;font-size:16px;margin:4px 0}.wtiles button .e{font-size:30px}.wtiles button:hover{background:#26335a}
+.wopts{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:14px;color:#c6cde0}
 /* simple controller (Education mode) */
 #kidpad{display:none}body.edu #kidpad{display:block}body.edu:not(.fullhc) #p-ctrl .hc,body.edu:not(.fullhc) #p-ctrl>p.mu{display:none}
 .kstat{background:#2a0a06;color:#ff7a5c;border-radius:10px;padding:10px 12px;font:600 16px/1.4 system-ui;text-align:center;margin-bottom:10px;border:2px solid #000}
@@ -89,15 +101,16 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
 <canvas id="gl"></canvas><div id="vig"></div><canvas id="grain" width="256" height="256"></canvas><div class="lb" id="lbT"></div><div class="lb" id="lbB"></div>
 
 <div id="top">
-  <button class="b on" id="bOrbit">Orbit</button><button class="b" id="bWalk">Walk</button><span class="sep"></span>
-  <button class="b" data-v="front">Front</button><button class="b" data-v="rear">Rear</button><button class="b" data-v="left">Left</button><button class="b" data-v="right">Right</button><button class="b" data-v="top">Top</button><span class="sep"></span>
-  <button class="b on" id="bA2">2 arms</button><button class="b" id="bA1">1 arm</button><span class="sep"></span>
-  <button class="b" id="bStar">StarSense</button><button class="b on" id="bDew">Dew shield</button><button class="b" id="bCut">Cutaway</button><button class="b" id="bOpt">Optics</button><button class="b" id="bCine">Cinematic</button><button class="b on" id="bFol">Follow</button><button class="b" id="bLab">Labels</button><button class="b on" id="bDip">Dipper guide</button><button class="b" id="bEdu">🎓 Education mode</button><span class="sep"></span>
-  <label>Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label>
-  <button class="b" id="bReset">Reset view</button>
+  <button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓ Help</button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴 Night mode</button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓 Education mode</button><span class="sep"></span>
+  <button class="b on" id="bOrbit" title="Drag to spin around the telescope">Orbit</button><button class="b" id="bWalk" title="Walk around with WASD / the on-screen stick">Walk</button><span class="sep"></span>
+  <button class="b" data-v="front" title="View from the front">Front</button><button class="b" data-v="rear" title="View from behind the eyepiece">Rear</button><button class="b" data-v="left" title="Left side">Left</button><button class="b" data-v="right" title="Right side">Right</button><button class="b" data-v="top" title="Look down from above">Top</button><span class="sep"></span>
+  <button class="b" id="bLab" title="Show numbered part labels">Labels</button><button class="b on" id="bDip" title="Big Dipper → North Star guide lines in the sky">Dipper guide</button><button class="b" id="bReset" title="Go back to the starting view">Reset view</button><button class="b" id="bMore" title="Show more tools">More ▾</button>
+  <span class="adv"><span class="sep"></span><button class="b on" id="bA2" title="Two-arm fork (CPC)">2 arms</button><button class="b" id="bA1" title="One-arm fork for comparison">1 arm</button><span class="sep"></span>
+  <button class="b" id="bStar" title="Fit the optional StarSense camera">StarSense</button><button class="b on" id="bDew" title="Slide the dew shield on or off">Dew shield</button><button class="b" id="bCut" title="Cut the tube open to see inside">Cutaway</button><button class="b" id="bOpt" title="Show light rays">Optics</button><button class="b" id="bCine" title="Slow cinematic camera">Cinematic</button><button class="b on" id="bFol" title="Camera follows the telescope as it turns">Follow</button><span class="sep"></span>
+  <label title="Pull the telescope apart">Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label></span>
 </div>
 <div id="hud"></div>
-<div id="reward"></div><div id="safety"></div><div id="toast"></div>
+<div id="redov"></div><div id="dimov"></div><div id="welcome"></div><div id="reward"></div><div id="safety"></div><div id="toast"></div>
 <div id="joy"><i></i></div>
 <div id="lcard"></div>
 
@@ -1401,6 +1414,33 @@ function missionsTick(dt){
 }
 renderMissions();
 
+
+/* ---- user-friendliness: night mode, More tools, welcome screen ---- */
+function setRed(v){document.body.classList.toggle('red',v);$('#bRed').classList.toggle('on',v);try{localStorage.setItem('c11red',v?'1':'0');}catch(_){}const w=$('#wRed');if(w)w.checked=v;}
+$('#bRed').onclick=()=>setRed(!document.body.classList.contains('red'));
+$('#bMore').onclick=()=>{const on=document.body.classList.toggle('showadv');$('#bMore').textContent=on?'Less ▴':'More ▾';};
+function lessonIdx(start){return LESSONS.findIndex(l=>l.t.includes(start));}
+function startLesson(i){if(i<0)return;L.lesson=i;L.step=0;renderLearn();doStep(LESSONS[i].s[0]);}
+function showWelcome(){const el=$('#welcome');let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}
+  el.innerHTML=`<div><h1>🔭 Welcome to the telescope simulator!</h1><p class="mu">This is a Celestron C11 telescope on its computer-controlled mount. What would you like to do first?</p>
+  <div class="wtiles">
+   <button data-w="light"><span class="e">🔦</span><b>How does it work?</b>Follow a beam of light through the telescope.</button>
+   <button data-w="north"><span class="e">⭐</span><b>Find the North Star</b>Use the Big Dipper trick, like sailors did.</button>
+   <button data-w="drive"><span class="e">🎮</span><b>Drive the telescope</b>Big arrows and one-tap trips to Saturn, the Moon and more.</button>
+   <button data-w="miss"><span class="e">🏅</span><b>Missions</b>Find 5 targets in the sky and earn badges.</button>
+   <button data-w="parts"><span class="e">🔧</span><b>Explore the parts</b>Tap any part to learn what it does.</button>
+   <button data-w="setup"><span class="e">🧰</span><b>Set it up</b>Step-by-step setup from the manual.</button></div>
+  <div class="wopts"><label><input type="checkbox" id="wRed" ${red?'checked':''}> 🔴 Night mode (red light, for outdoors)</label><label><input type="checkbox" id="wShow" ${show?'checked':''}> Show this at start</label></div>
+  <p class="mu sm" style="margin-top:10px">Tips: drag to spin the view · pinch or scroll to zoom · tap a part to learn about it · ❓ Help brings this back.</p>
+  <div class="row" style="justify-content:flex-end"><button class="b on" data-w="close">Just explore</button></div></div>`;
+  el.style.display='flex';}
+$('#welcome').addEventListener('change',e=>{if(e.target.id==='wRed')setRed(e.target.checked);if(e.target.id==='wShow'){try{localStorage.setItem('c11welcome',e.target.checked?'1':'0');}catch(_){}}});
+$('#welcome').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b&&e.target.id!=='welcome')return;$('#welcome').style.display='none';const k=b?b.dataset.w:'close';
+  if(k==='light')startLesson(lessonIdx('Follow the light'));else if(k==='north')startLesson(lessonIdx('Find the North Star'));
+  else if(k==='drive')tab('ctrl');else if(k==='miss')tab('miss');else if(k==='setup')tab('setup');else if(k==='parts'){tab('parts');if(!labState.on)$('#bLab').click();}});
+$('#bHelp').onclick=showWelcome;
+{let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}setRed(red);if(show)setTimeout(showWelcome,400);}
+
 /* ---- toolbar ---- */
 $('#bOrbit').onclick=()=>setMode('orbit');$('#bWalk').onclick=()=>setMode('walk');
 $$('#top [data-v]').forEach(b=>b.onclick=()=>viewFrom(b.dataset.v));
@@ -2079,7 +2119,7 @@ function loop(now){
 function uiTick(){
   const st=driver.state();
   $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br>Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br>${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
-  if(curTab==='ctrl'){hcDraw();drawEyepiece($('#epMini'));if(edu.on){$('#kstat').textContent=kidStatus();if(frame%30===0)renderKidTiles();}}
+  if(curTab==='ctrl'){hcDraw();drawEyepiece($('#epMini'));if(edu.on){$('#kstat').textContent=kidStatus();const nw=performance.now();if(!(uiTick.kt>nw-2000)){uiTick.kt=nw;renderKidTiles();}}}
   else if(curTab==='sky'){updSelPos();drawSkyChart($('#skyc'));drawEyepiece($('#epBig'));
     const T=st.truth;$('#truth').innerHTML=`<b>Truth</b> (where the tube points): Az ${T.az.toFixed(2)}° Alt ${T.alt.toFixed(2)}°<br><b>Mount reports</b>: Az ${st.az.toFixed(2)}° Alt ${st.alt.toFixed(2)}°<br><b>Error</b>: ${Math.hypot(wrap180(T.az-st.az)*Math.cos(T.alt*D2R),T.alt-st.alt).toFixed(2)}° ${st.aligned?'(after alignment)':'(not aligned yet)'}`;
     const d=new Date(simMs);$('#timeTxt').textContent=`Sim UTC ${d.toISOString().slice(0,19).replace('T',' ')} · LST ${fmtRA(lstDeg(jdNow()))}`;}
