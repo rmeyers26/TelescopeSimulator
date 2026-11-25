@@ -25,6 +25,7 @@ const SU={on:false,i:0,mine:new Set()};
 const MOUNT_STEP=()=>SETUP.findIndex(x=>x.t.startsWith('Mount the telescope'));
 // levelling game: leg lengths tilt the tripod head; the bubble moves toward the high side
 function levelUpdate(){const L=LEVEL.legs,dx=(L[1]-L[2])*.87,dz=L[0]-(L[1]+L[2])/2;LEVEL.dx=clamp(dx,-1,1);LEVEL.dz=clamp(-dz,-1,1);LEVEL.ok=Math.hypot(dx,dz)<.18;
+  driver.s.tilt={a:LEVEL.dz*.9,b:LEVEL.dx*.9};          // the bubble's offset becomes a real pointing error
   for(const m of ALLM)if(m.userData.bubble){m.position.x=LEVEL.dx*.009;m.position.z=-.06+LEVEL.dz*.009;}
   const c=document.getElementById('lvlC');if(!c)return;const x=c.getContext('2d'),W=c.width,H=c.height,R=W/2-6;x.clearRect(0,0,W,H);
   x.fillStyle='#1d2a12';x.beginPath();x.arc(W/2,H/2,R,0,7);x.fill();x.strokeStyle='#6b7d3a';x.lineWidth=2;x.beginPath();x.arc(W/2,H/2,R*.28,0,7);x.stroke();

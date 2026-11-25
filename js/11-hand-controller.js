@@ -90,8 +90,10 @@ function doGoto(o,after,ok){
   if(o.type==='sun'){hcMsg('WARNING','Solar filter required!',3.5);toast('Never view the Sun without a certified solar filter.',4000);}else hcMsg('Slewing to',o.name,1.8);
   return true;
 }
-function startAlign(){
-  HC.al={n:0,first:null,cur:null};if(driver.state().tracking==='off')driver.setTracking('sidereal');unwind();pickAlignStar(1);
+function startAlign(need,planet){
+  need=need||2;HC.al={n:0,first:null,cur:null,need,planet:!!planet,used:[]};driver.clearAlign();if(driver.state().tracking==='off')driver.setTracking('sidereal');unwind();
+  if(planet){const items=solarList().filter(o=>o.type!=='sun'&&o.type!=='pluto'&&o.alt>10).map(o=>({label:o.name,sub:visTxt(o),o,act:()=>alignSlew(o,1)}));if(!items.length){hcMsg('No planet up','try Star Align');return;}openPick('Solar System Align',items);}
+  else pickAlignStar(1);
 }
 function starSenseAlign(){                    // simulated: slew to 3 sky fields, image each, plate-solve, then set the alignment
   if(hidden.has('starsense')){hcMsg('StarSense','Not fitted');return;}
@@ -103,12 +105,12 @@ function starSenseAlign(){                    // simulated: slew to 3 sky fields
   next();
 }
 function pickAlignStar(n){
-  const items=OBJ.filter(o=>o.type==='star'&&o.mag<2.3&&o.alt>20).sort((a,b)=>a.mag-b.mag).map(o=>({label:o.name,sub:`alt ${o.alt.toFixed(0)}° az ${o.az.toFixed(0)}°`,o,act:()=>alignSlew(o,n)}));
+  const items=OBJ.filter(o=>o.type==='star'&&o.mag<2.3&&o.alt>20&&!(HC.al.used||[]).includes(o)).sort((a,b)=>a.mag-b.mag).map(o=>({label:o.name,sub:`alt ${o.alt.toFixed(0)}° az ${o.az.toFixed(0)}°`,o,act:()=>alignSlew(o,n)}));
   if(!items.length){hcMsg('No bright stars','above 20° now');unwind();return;}
   unwind();openPick(`Align star ${n}`,items);
 }
 function alignSlew(o,n){
-  if(n===2&&HC.al.first&&angSep({ra:o.cra,dec:o.cdec},{ra:HC.al.first.cra,dec:HC.al.first.cdec})<40){hcMsg('Too close','Pick star >40° away');return;}
+  if(n>1&&(HC.al.used||[]).some(u=>angSep({ra:o.cra,dec:o.cdec},{ra:u.cra,dec:u.cdec})<35)){hcMsg('Too close','Pick star >35° away');return;}
   unwind();HC.al.cur=o;HC.al.n=n;if(doGoto(o)){HC.mode='center';}
 }
 function enter(){
@@ -119,9 +121,9 @@ function enter(){
   else if(HC.mode==='rate'){unwind();}
   else if(HC.mode==='center'){
     if(driver.state().slewing){hcMsg('Wait','Still slewing');return;}
-    const o=HC.al.cur;driver.addAlignPoint(o);
-    if(HC.al.n===1){HC.al.first=o;hcMsg('Star 1 accepted','Now pick star 2',1.6);pickAlignStar(2);}
-    else{unwind();driver.setTracking('sidereal');hcMsg('Align success','Two-star alignment');toast('Alignment complete. GoTo should now land objects in the field.');}
+    const o=HC.al.cur;driver.addAlignPoint(o);(HC.al.used=HC.al.used||[]).push(o);const need=HC.al.need||2;
+    if(HC.al.n<need){HC.al.first=o;hcMsg(`Object ${HC.al.n} accepted`,`Now pick star ${HC.al.n+1}`,1.6);pickAlignStar(HC.al.n+1);}
+    else{unwind();driver.setTracking('sidereal');hcMsg('Align success',HC.al.planet?'Solar System Align':need+'-star alignment');toast('Alignment complete – tracking is on. GoTo should now land objects in the field.');}
   }
 }
 function undo(){                                                  // BACK: erase a digit, else go up one level; at the top it stops the motors
@@ -165,7 +167,7 @@ function key(k){
       {label:'Time speed',act:()=>openPick('Time speed',[1,10,60,600,3600].map(v=>({label:v+'×',act:()=>{setSpeed(v);unwind();}})))},
       {label:'Clear alignment',act:()=>{driver.clearAlign();unwind();hcMsg('Alignment','cleared');}},
       {label:'Hardware link',act:()=>{unwind();hcMsg('Simulation only','See Link tab',3);}}]);break;
-    case 'align':unwind();openPick('Alignment',[...(hidden.has('starsense')?[]:[{label:'StarSense AutoAlign',sub:'camera',act:starSenseAlign}]),{label:'Two-Star Align',act:startAlign},{label:'Clear alignment',act:()=>{driver.clearAlign();unwind();hcMsg('Alignment','cleared');}}]);break;
+    case 'align':unwind();openPick('Alignment',[...(hidden.has('starsense')?[]:[{label:'StarSense AutoAlign',sub:'camera',act:starSenseAlign}]),{label:'Solar System Align',sub:'1 planet',act:()=>startAlign(1,true)},{label:'Two-Star Align',act:()=>startAlign(2)},{label:'Three-Star Align',act:()=>startAlign(3)},{label:'Clear alignment',act:()=>{driver.clearAlign();unwind();hcMsg('Alignment','cleared');}}]);break;
     case 'stars':unwind();openPick('Stars',[
       {label:'Bright stars',act:()=>openPick('Bright stars',objItems(['star']).sort((a,b)=>a.o.mag-b.o.mag).slice(0,60))},
       {label:'Double stars',act:()=>openPick('Double stars',objItems(['star'],o=>o.cat==='double').sort((a,b)=>a.o.mag-b.o.mag))},

@@ -168,6 +168,17 @@ const gBaf=G('baffle',altG,V3(0,0.12,0));
 M('baffle',gBaf,cylZ(.032,.032,.28,32,true),'black',{p:[0,0,.16],sub:'tube',clip:true});
 M('baffle',gBaf,cylZ(.04,.032,.015,32,true),'black',{p:[0,0,.02],sub:'flare',clip:true});
 const gRear=G('rearcell',altG,V3(0,0,0.58));
+// ---- inside the tube, normally hidden: shown in colour (like Celestron's cutaway art) when Cutaway is on ----
+BASE.liner=new THREE.MeshStandardMaterial({color:0xd3dcc6,roughness:.85,metalness:0,side:THREE.DoubleSide});   // pale inner wall
+BASE.cast=new THREE.MeshStandardMaterial({color:0x8a3a33,roughness:.55,metalness:.2,side:THREE.DoubleSide});   // maroon rear casting / mirror cell
+M('tube',gTube,cylZ(.1475,.1475,.41,72,true),'liner',{p:[0,0,0.0075],sub:'inside',clip:true,noShadow:true});
+M('rearcell',gRear,cylZ(.146,.146,.045,64,true),'cast',{p:[0,0,.247],sub:'casting',clip:true});            // inner wall of the rear cell
+M('rearcell',gRear,new THREE.RingGeometry(.036,.146,64),'cast',{p:[0,0,.268],sub:'casting',clip:true});    // back plate (inside face)
+M('rearcell',gRear,cylZ(.05,.05,.075,48,true),'cast',{p:[0,0,.235],sub:'casting',clip:true});              // central hub the primary mirror slides on
+M('rearcell',gRear,cylZ(.05,.036,.004,48),'cast',{p:[0,0,.198],sub:'casting',clip:true});
+[0,1,2].forEach(k=>{const a=k*2.094+.3,rib=M('rearcell',gRear,new THREE.BoxGeometry(.006,.09,.03),'cast',{p:[Math.cos(a)*.097,Math.sin(a)*.097,.252],sub:'casting',clip:true});rib.rotation.z=a-Math.PI/2;});   // stiffening ribs
+M('rearcell',gRear,cylZ(.004,.004,.085,12),'silver',{p:[.1,-.025,.235],sub:'casting',clip:true});         // focus screw that pushes the mirror
+M('rearcell',gRear,new THREE.BoxGeometry(.03,.012,.012),'silver',{p:[.088,-.025,.2],sub:'casting',clip:true});   // and its bracket on the mirror carrier
 M('rearcell',gRear,cylZ(.075,.15,.012,64,true),'blackg',{p:[0,0,.283],sub:'cone',clip:true});   // nearly flat rear face
 M('rearcell',gRear,cylZ(.153,.153,.05,64,true),'blackg',{p:[0,0,.24],sub:'cone',clip:true});
 M('rearcell',gRear,cylZ(.153,.153,.024,64,true),'blackg',{p:[0,0,.265],sub:'cone',clip:true});
@@ -287,6 +298,15 @@ const gTel=G('telrad',altG,V3(0,0.32,0));      // Telrad reflex sight: long batt
   const ang=Math.atan2(.033,.022),cz=.089,cy=yT+.0585;
   tm(new THREE.BoxGeometry(W-.004,.04,.003),'grip',[0,cy+.002,cz+.005],'window',[-(Math.PI/2-ang)+.12,0,0]);
   tm(new THREE.PlaneGeometry(W-.012,.034),'glass',[0,cy+.003,cz+.0072],'window',[-(Math.PI/2-ang)+.12,0,0]);
+  // the Telrad's bullseye: three red rings (0.5°, 2° and 4°) with four gaps, projected onto the glass so you see them from behind.
+  // Drawn on a canvas and kept glowing (userData.glow) so the rings stay bright red in the 3D view.
+  const rt=canvasTex(256,256,(x,w,h)=>{x.clearRect(0,0,w,h);x.strokeStyle='#ff0000';x.lineCap='butt';x.shadowColor='#ff0000';x.shadowBlur=6;
+    [[100,9],[52,8],[13,7]].forEach(([r,lw],i)=>{x.lineWidth=lw;const g=i===2?0:.16;for(let q=0;q<4;q++){x.beginPath();x.arc(128,128,r,q*Math.PI/2+g+Math.PI/4,(q+1)*Math.PI/2-g+Math.PI/4);x.stroke();}});},true);
+  const wb=tm(new THREE.PlaneGeometry(W-.014,.032),'white',[0,cy+.0032,cz+.0078],'window',[-(Math.PI/2-ang)+.12,0,0]);   // bright white reflector behind the rings, as on the real glass
+  wb.material=new THREE.MeshStandardMaterial({color:0xeef2f6,roughness:.25,metalness:.15,transparent:true,opacity:.85,side:THREE.DoubleSide});wb.userData.o0={t:true,o:.85,d:true};
+  const rm=tm(new THREE.PlaneGeometry(.034,.034),'glass',[0,cy+.0035,cz+.0085],'window',[-(Math.PI/2-ang)+.12,0,0]);
+  rm.material=new THREE.MeshStandardMaterial({map:rt,emissiveMap:rt,emissive:0xd00000,emissiveIntensity:1,color:0xff2020,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:1,metalness:0});
+  rm.userData.o0={t:true,o:1,d:false};rm.userData.glow=true;rm.renderOrder=3;
   [-1,1].forEach(sd=>tm(side([[.076,yT+.074],[.1,yT+.04],[.104,yT+.05],[.082,yT+.08]],.003),'grip',[sd*(W/2-.0015),0,0],'window'));   // raised side cheeks of the window
   // back face: three knurled adjustment knobs and four silver screws
   [[-.014,yb+.05],[.014,yb+.05],[-.016,yb+.016]].forEach(([x,y])=>{
@@ -379,7 +399,7 @@ M('fork',gBase,lathe([[.12,0],[.16,.004],[.178,.014],[.186,.03],[.187,.05],[.185
 [1.005,1.04].forEach(y=>M('fork',gBase,new THREE.TorusGeometry(y<1.01?.18:.1865,.0018,6,72),'grip',{p:[0,y,0],r:[Math.PI/2,0,0],sub:'base'}));   // moulded grooves round the band   // flared drive base (dia about 345 mm in the drawing)
 for(let k=0;k<3;k++){const a=k*2.094+1.05;M('fork',gBase,new THREE.CylinderGeometry(.009,.009,.007,6),'silver',{p:[Math.sin(a)*.13,.974,Math.cos(a)*.13],sub:'base'});}   // mounting bolts seen under the base
 const gTri=G('tripod',root,V3(0,-0.5,0));
-const LEVEL={legs:[.6,-.4,0],dx:.7,dz:-.4,ok:false};   // tripod levelling state (Setup step 4); the bubble starts off-centre
+const LEVEL={legs:[.6,-.4,0],dx:.7,dz:-.4,ok:false};driver.s.tilt={a:LEVEL.dz*.9,b:LEVEL.dx*.9};   // tripod levelling state (Setup step 4); the bubble starts off-centre
 // rounded triangle outline (Minkowski sum of a triangle and a circle); corners point at the legs. Shape y maps to world -z after rotateX(-90deg)
 const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
   for(let k=0;k<3;k++){const a=k*Math.PI*2/3;for(let i=0;i<=12;i++){const d=a+(-1+i/6)*Math.PI/3;pts.push([Math.sin(a)*Rv+Math.sin(d)*rc,-Math.cos(a)*Rv-Math.cos(d)*rc]);}}
@@ -389,33 +409,60 @@ function buildTripod(H,B){
   [...gTri.children].forEach(c=>{gTri.remove(c);const i=ALLM.indexOf(c);if(i>=0)ALLM.splice(i,1);c.geometry.dispose();c.material.dispose();});
   const yT=H*.43;
   const flat=(shape,depth,bev)=>{const g=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:bev,bevelThickness:bev,bevelSegments:3,curveSegments:10});g.rotateX(-Math.PI/2);return g;};
-  M('tripod',gTri,flat(roundTri(.12,.1),.03,.008),'blackg',{p:[0,H-.04,0],sub:'head'});                  // head plate
+  const up=V3(0,1,0),orient=(m,p,q)=>{const d=q.clone().sub(p);m.position.copy(p.clone().add(q).multiplyScalar(.5));m.quaternion.setFromUnitVectors(up,d.normalize());};
+  const cyl=(r,p,q,mat,sub,seg)=>{const m=M('tripod',gTri,new THREE.CylinderGeometry(r,r,p.distanceTo(q),seg||20),mat,{sub});orient(m,p,q);return m;};
+  // ---- head: a rounded-triangle plate (corners toward the legs) on a deeper, slightly smaller skirt ----
+  M('tripod',gTri,flat(roundTri(.13,.1),.016,.006),'blackg',{p:[0,H-.022,0],sub:'head'});                 // top plate the mount sits on
+  M('tripod',gTri,flat(roundTri(.11,.095),.03,.01),'blackg',{p:[0,H-.06,0],sub:'head'});                  // rounded skirt under the plate
   M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.004,24),'blackg',{p:[0,H-.001,-.06],sub:'head'});   // bubble level well
   M('tripod',gTri,new THREE.CylinderGeometry(.0075,.0075,.006,20),'bubble',{p:[LEVEL.dx*.009,H+.0005,-.06+LEVEL.dz*.009],sub:'head'}).userData.bubble=true;   // the bubble itself (moves while levelling)
   M('tripod',gTri,new THREE.TorusGeometry(.0185,.0025,8,24),'silver',{p:[0,H+.0005,-.06],r:[Math.PI/2,0,0],sub:'head'});
   M('tripod',gTri,new THREE.CylinderGeometry(.006,.006,.022,12),'silver',{p:[0,H+.005,0],sub:'head'});        // locating pin
-  for(let k=0;k<3;k++){const a=k*Math.PI*2/3;M('tripod',gTri,new THREE.CylinderGeometry(.011,.011,.008,6),'silver',{p:[Math.sin(a)*.15,H+.0005,Math.cos(a)*.15],sub:'head'});}   // mounting bolts
-  const up=V3(0,1,0),orient=(m,p,q)=>{const d=q.clone().sub(p);m.position.copy(p.clone().add(q).multiplyScalar(.5));m.quaternion.setFromUnitVectors(up,d.normalize());};
-  const cyl=(r,p,q,mat,sub)=>{const m=M('tripod',gTri,new THREE.CylinderGeometry(r,r,p.distanceTo(q),20),mat,{sub});orient(m,p,q);return m;};
+  for(let k=0;k<3;k++){const a=k*Math.PI*2/3,s=Math.sin(a),c=Math.cos(a);
+    M('tripod',gTri,new THREE.CylinderGeometry(.011,.011,.008,6),'silver',{p:[s*.16,H+.0005,c*.16],sub:'head'});          // mounting bolt near each corner
+    M('tripod',gTri,new THREE.CylinderGeometry(.005,.005,.002,10),'rubber',{p:[s*.12+c*.03,H+.0003,c*.12-s*.03],sub:'head'});   // small screw holes beside it
+    const a2=a+Math.PI/3;M('tripod',gTri,new THREE.CylinderGeometry(.005,.005,.002,10),'rubber',{p:[Math.sin(a2)*.1,H+.0003,Math.cos(a2)*.1],sub:'head'});}
   for(let k=0;k<3;k++){
-    const a=k*Math.PI*2/3,u=V3(Math.sin(a),0,Math.cos(a)),tg=V3(Math.cos(a),0,-Math.sin(a)),top=V3(u.x*.11,H-.035,u.z*.11),bot=V3(u.x*B,0,u.z*B),d=bot.clone().sub(top).normalize();
-    const hEnd=top.clone().addScaledVector(d,.2),mid=top.clone().lerp(bot,.62);
-    cyl(.055,top,hEnd,'blackg','legs');                                             // black casting at the top of each leg
-    M('tripod',gTri,new THREE.SphereGeometry(.055,20,14),'blackg',{p:[hEnd.x,hEnd.y,hEnd.z],sub:'legs'});
-    [-1,1].forEach(sd=>{const m=M('tripod',gTri,new THREE.CylinderGeometry(.012,.012,.03,6),'silver',{sub:'legs'});m.position.copy(top.clone().addScaledVector(d,.06).addScaledVector(tg,sd*.056));m.rotation.z=Math.PI/2;m.rotation.y=-a;});   // pivot bolts
-    cyl(.031,hEnd,mid,'silver','legs');cyl(.025,mid,bot,'silver','legs');          // chrome upper leg and extension
+    const a=k*Math.PI*2/3,u=V3(Math.sin(a),0,Math.cos(a)),tg=V3(Math.cos(a),0,-Math.sin(a));
+    const top=V3(u.x*.2,H-.05,u.z*.2),bot=V3(u.x*B,0,u.z*B),d=bot.clone().sub(top).normalize();
+    // ---- leg casting: a tall rounded block hanging under each corner of the head, gripping the chrome leg ----
+    const cs=new THREE.Shape(),w=.05,hh=.11,r=.035;
+    cs.moveTo(-w+r,-hh);cs.lineTo(w-r,-hh);cs.quadraticCurveTo(w,-hh,w,-hh+r);cs.lineTo(w,hh-r);cs.quadraticCurveTo(w,hh,w-r,hh);cs.lineTo(-w+r,hh);cs.quadraticCurveTo(-w,hh,-w,hh-r);cs.lineTo(-w,-hh+r);cs.quadraticCurveTo(-w,-hh,-w+r,-hh);
+    const cg=new THREE.ExtrudeGeometry(cs,{depth:.075,bevelEnabled:true,bevelSize:.014,bevelThickness:.014,bevelSegments:4,curveSegments:8});cg.translate(0,0,-.0375);
+    const cast=M('tripod',gTri,cg,'blackg',{sub:'legs'});const cc=top.clone().addScaledVector(d,.08);cast.position.copy(cc);
+    cast.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(tg,d.clone().negate(),tg.clone().cross(d.clone().negate())));
+    // arm from the head skirt out to the casting
+    cyl(.026,V3(u.x*.09,H-.05,u.z*.09),top.clone().addScaledVector(d,.02),'blackg','head',16);
+    // big hex pivot bolt through the casting, with a washer, on both sides
+    [-1,1].forEach(sd=>{const p=cc.clone().addScaledVector(d,-.04).addScaledVector(tg,sd*.068);
+      const bolt=M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.012,6),'silver',{sub:'legs'});bolt.position.copy(p);bolt.quaternion.setFromUnitVectors(up,tg);
+      const wa=M('tripod',gTri,new THREE.CylinderGeometry(.021,.021,.003,20),'silver',{sub:'legs'});wa.position.copy(p.clone().addScaledVector(tg,-sd*.007));wa.quaternion.setFromUnitVectors(up,tg);});
+    const hEnd=top.clone().addScaledVector(d,.17),mid=top.clone().lerp(bot,.62);
+    cyl(.031,hEnd,mid,'silver','legs',24);cyl(.025,mid,bot,'silver','legs',24);         // chrome upper leg and extension
     cyl(.04,mid.clone().addScaledVector(d,-.025),mid.clone().addScaledVector(d,.025),'rubber','locks');   // extension lock collar
     cyl(.032,bot.clone().addScaledVector(d,-.06),bot,'blackg','feet');
     M('tripod',gTri,new THREE.SphereGeometry(.034,14,10),'rubber',{p:[bot.x,.03,bot.z],sub:'feet'});
-    cyl(.011,V3(0,yT-.02,0),top.clone().lerp(bot,.78),'blackg','tray');                // spreader brace to the leg
+    // curved support arm under the head, from the centre column out to the casting
+    const crv=new THREE.QuadraticBezierCurve3(V3(0,H-.2,0),V3(u.x*.06,H-.08,u.z*.06),top.clone().addScaledVector(d,.12).addScaledVector(u,-.04));
+    M('tripod',gTri,new THREE.TubeGeometry(crv,16,.012,8,false),'blackg',{sub:'head'});
+    // flat spreader bar from the central hub to the leg
+    const p0=V3(u.x*.05,yT-.045,u.z*.05),p1=top.clone().lerp(bot,.8),bar=M('tripod',gTri,new THREE.BoxGeometry(.03,p0.distanceTo(p1),.008),'blackg',{sub:'tray'});
+    orient(bar,p0,p1);bar.rotateY(Math.PI/2);
   }
-  const ts=roundTri(.3,.16);for(let k=0;k<3;k++){const a=k*2*Math.PI/3+Math.PI/3,h=new THREE.Path();h.absarc(Math.sin(a)*.22,-Math.cos(a)*.22,.052,0,Math.PI*2,true);ts.holes.push(h);}
-  M('tripod',gTri,flat(ts,.018,.006),'blackg',{p:[0,yT,0],sub:'tray'});            // accessory tray with three holes
-  M('tripod',gTri,new THREE.CylinderGeometry(.06,.066,.02,40),'blackg',{p:[0,yT+.03,0],sub:'tray'});
-  M('tripod',gTri,new THREE.CylinderGeometry(.045,.045,.004,40),'silver',{p:[0,yT+.042,0],sub:'tray'});   // medallion
-  // central column from the head down through the leg-support bracket, with the tension knob underneath
+  // ---- accessory tray: deep rounded triangle with a raised rim and two eyepiece holes on each side ----
+  const outer=roundTri(.27,.13),inner=roundTri(.25,.115);
+  const holes=[];for(let k=0;k<3;k++){const a=k*2*Math.PI/3+Math.PI/3,cx=Math.sin(a)*.21,cz=-Math.cos(a)*.21,tx=Math.cos(a),tz=Math.sin(a);
+    [-1,1].forEach(sd=>{const h=new THREE.Path();h.absarc(cx+tx*sd*.085,cz+tz*sd*.085,.03,0,Math.PI*2,true);holes.push(h);});}
+  const floor=roundTri(.27,.13);floor.holes.push(...holes);
+  M('tripod',gTri,flat(floor,.012,.004),'blackg',{p:[0,yT,0],sub:'tray'});                                   // tray floor with six holes
+  const rim=roundTri(.27,.13);const ip=new THREE.Path(inner.getPoints(8).reverse());rim.holes.push(ip);
+  M('tripod',gTri,flat(rim,.045,.006),'blackg',{p:[0,yT,0],sub:'tray'});                                     // raised rim around it
+  // central spreader hub with the brushed CELESTRON medallion
+  M('tripod',gTri,flat(roundTri(.03,.035),.03,.006),'blackg',{p:[0,yT-.06,0],sub:'tray'});
+  M('tripod',gTri,new THREE.CylinderGeometry(.045,.045,.004,40),'silver',{p:[0,yT+.018,0],sub:'tray'});
+  // central column from the head down through the tray, with the tension knob underneath
   M('tripod',gTri,new THREE.CylinderGeometry(.012,.012,H-yT+.05,14),'silver',{p:[0,(H+yT-.05)/2-.02,0],sub:'tray'});
-  M('tripod',gTri,new THREE.CylinderGeometry(.03,.03,.03,16),'blackg',{p:[0,yT-.06,0],sub:'tray'});
+  M('tripod',gTri,new THREE.CylinderGeometry(.03,.03,.03,16),'rubber',{p:[0,yT-.08,0],sub:'tray'});
 }
 const TRI={t:.55,H:0,B:0};
 // CPC Deluxe 1100 HD drawing (OTA level): altitude axis is 530 mm above the tripod head, top of tube 689 mm above it.
