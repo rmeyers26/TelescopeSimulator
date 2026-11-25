@@ -1855,7 +1855,12 @@ function uiTick(){
   else hcDraw();
   if(st.tracking!==uiTick.trk){uiTick.trk=st.tracking;updTrkRow();}   // rebuild only on change so clicks are not lost
 }
-computeSky();if(toDark())setTimeout(()=>toast('Sim clock moved to the next dark sky. Use “Real time” in the Sky tab to return.',4500),600);
+// Start pointing at Polaris with Saturn selected: move the sim clock to the next dark sky with Saturn at least 25 deg up, aim the tube at Polaris, track, and use the 13 mm eyepiece.
+(function(){const SAT=OBJ.find(o=>o.id==='saturn');let n=0;computeSky();
+  while((SUN.alt>-12||SAT.alt<25)&&n<600){simMs+=10*60000;computeSky();n++;}
+  selObj=SAT;HC.last=SAT;const POL=OBJ.find(o=>o.id==='Polaris'),s=driver.s;s.enc.az=norm360(POL.az-s.err.az);s.enc.alt=POL.alt-s.err.alt;s.goto=null;driver.autoAlign();   // tube points at Polaris, mount starts aligned so a GoTo to Saturn lands in the eyepiece (Menu > Clear alignment to practise aligning)
+  driver.setTracking('sidereal');driver._relock();setEp(3);
+  if(n)setTimeout(()=>toast('Scope is on Polaris; Saturn is selected – press GoTo to slew to it. The sim clock was moved to a dark sky with Saturn well placed (“Real time” in the Sky tab returns).',6000),600);})();
 window.__c11={driver,OBJ,key,doGoto,setSpeed,cam,setArms,ALLM};   // small debug hook
 fillSelBox();hcDraw();
 // CPC 11 drawing: the altitude axis is 366 mm behind the front of the OTA and 285 mm in front of the rear end, so slide the whole OTA forward on its pivot.
