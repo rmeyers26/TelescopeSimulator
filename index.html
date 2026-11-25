@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070a12"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <title>Celestron C11 – Interactive 3D Simulator</title>
 <style>
 :root{--bg:#070a12;--pn:#0d1220;--ln:#1e2740;--tx:#e4e9f5;--mu:#8f9bb8;--ac:#4da3ff;--or:#ff8a3d;--dockw:400px}
@@ -56,6 +57,24 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
 .lab{position:fixed;pointer-events:none;font:11px system-ui;color:#fff;background:rgba(20,24,34,.85);border:1px solid #ff8a3d;border-radius:10px;padding:1px 7px 1px 2px;white-space:nowrap;transform:translate(10px,-50%);z-index:6;display:none}.lab b{display:inline-block;background:#ff8a3d;color:#111;border-radius:50%;min-width:15px;text-align:center;margin-right:4px}.lab:before{content:'';position:absolute;left:-10px;top:50%;width:10px;height:1px;background:#ff8a3d}
 .su h2{margin:4px 0}.su .st{border:1px solid #333b52;border-radius:10px;padding:8px 10px;margin:8px 0;background:#161b27}.su .wn{color:#ffb347;font-size:12px;margin-top:6px}.su ol{padding-left:18px;margin:6px 0}.su li{cursor:pointer;margin:2px 0}.su li.on{color:#ff8a3d;font-weight:600}.su li.dn{opacity:.55}.su .kk{font-size:11px;columns:2;color:#9aa4bf}
 .lcd{position:relative}
+/* ---- phones and small screens ---- */
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}button,input,select{-webkit-tap-highlight-color:transparent}
+#bMenu{display:none}
+@media (max-width:780px),(max-height:520px){
+  #top{gap:5px;padding:calc(6px + env(safe-area-inset-top)) 6px 6px calc(6px + env(safe-area-inset-left))}
+  #top .sep{display:none}#top .tl{display:none}#bMenu{display:inline-block}
+  body:not(.topopen) #top>:not(#bMenu):not(#bHome):not(#bHelp):not(#bRed):not(#bEdu){display:none}
+  body.topopen #top{flex-wrap:wrap;background:rgba(8,12,22,.97);border-bottom:1px solid var(--ln);max-height:70vh;overflow:auto;z-index:8}
+  body.topopen #top .tl{display:inline}body.topopen #top .adv{display:contents}
+  #top .b{padding:7px 10px;font-size:14px}
+  #hud{top:calc(48px + env(safe-area-inset-top));font-size:10.5px;padding:4px 7px}#hud .hx{display:none}
+  #tabs button{padding:8px 9px;font-size:13px}
+  #lcard .row:first-child{flex-wrap:nowrap}#lcard .row:first-child b{flex:1;min-width:0;font-size:13px}
+  #welcome>div,#reward>div,#safety>div{max-height:calc(100dvh - 24px);overflow:auto}
+}
+@media (max-width:780px){#dock{height:50vh;height:50dvh;padding-bottom:env(safe-area-inset-bottom)}#joy{bottom:calc(50dvh + 18px)}#lcard{bottom:calc(50dvh + 8px)}}
+@media (max-height:520px) and (min-width:781px){:root{--dockw:min(46vw,400px)}#lcard{max-height:60vh;overflow:auto}}
+.wclose{float:right;position:sticky;top:0}
 /* night (red light) mode: a red multiply layer turns everything red-only, and a dark layer dims it */
 #redov,#dimov{position:fixed;inset:0;pointer-events:none;display:none;z-index:60}#redov{background:#ff1a00;mix-blend-mode:multiply}#dimov{background:#000;opacity:.3}
 body.red #redov,body.red #dimov{display:block}
@@ -114,7 +133,7 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
 <canvas id="gl"></canvas><div id="vig"></div><canvas id="grain" width="256" height="256"></canvas><div class="lb" id="lbT"></div><div class="lb" id="lbB"></div>
 
 <div id="top">
-  <button class="b" id="bHome" title="Back to the home screen to pick a telescope">🏠 Home</button><button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓ Help</button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴 Night mode</button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓 Education mode</button><span class="sep"></span>
+  <button class="b" id="bMenu" title="Show all tools">☰<span class="tl"> Menu</span></button><button class="b" id="bHome" title="Back to the home screen to pick a telescope">🏠<span class="tl"> Home</span></button><button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓<span class="tl"> Help</span></button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴<span class="tl"> Night mode</span></button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓<span class="tl"> Education mode</span></button><span class="sep"></span>
   <button class="b on" id="bOrbit" title="Drag to spin around the telescope">Orbit</button><button class="b" id="bWalk" title="Walk around with WASD / the on-screen stick">Walk</button><span class="sep"></span>
   <button class="b" data-v="front" title="View from the front">Front</button><button class="b" data-v="rear" title="View from behind the eyepiece">Rear</button><button class="b" data-v="left" title="Left side">Left</button><button class="b" data-v="right" title="Right side">Right</button><button class="b" data-v="top" title="Look down from above">Top</button><span class="sep"></span>
   <button class="b" id="bLab" title="Show numbered part labels">Labels</button><button class="b on" id="bDip" title="Big Dipper → North Star guide lines in the sky">Dipper guide</button><button class="b" id="bReset" title="Go back to the starting view">Reset view</button><button class="b" id="bMore" title="Show more tools">More ▾</button>
@@ -1435,7 +1454,7 @@ $('#bMore').onclick=()=>{const on=document.body.classList.toggle('showadv');$('#
 function lessonIdx(start){return LESSONS.findIndex(l=>l.t.includes(start));}
 function startLesson(i){if(i<0)return;L.lesson=i;L.step=0;renderLearn();doStep(LESSONS[i].s[0]);}
 function showWelcome(){const el=$('#welcome');let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}
-  el.innerHTML=`<div><h1>🔭 Welcome to the telescope simulator!</h1><p class="mu">This is a Celestron C11 telescope on its computer-controlled mount. What would you like to do first?</p>
+  el.innerHTML=`<div><button class="b wclose" data-w="close" title="Close">✕</button><h1>🔭 Welcome to the telescope simulator!</h1><p class="mu">This is a Celestron C11 telescope on its computer-controlled mount. What would you like to do first?</p>
   <div class="wtiles">
    <button data-w="light"><span class="e">🔦</span><b>How does it work?</b>Follow a beam of light through the telescope.</button>
    <button data-w="north"><span class="e">⭐</span><b>Find the North Star</b>Use the Big Dipper trick, like sailors did.</button>
@@ -1452,6 +1471,10 @@ $('#welcome').addEventListener('click',e=>{const b=e.target.closest('[data-w]');
   if(k==='light')startLesson(lessonIdx('Follow the light'));else if(k==='north')startLesson(lessonIdx('Find the North Star'));
   else if(k==='drive')tab('ctrl');else if(k==='miss')tab('miss');else if(k==='setup')tab('setup');else if(k==='parts'){tab('parts');if(!labState.on)$('#bLab').click();}});
 $('#bHelp').onclick=showWelcome;
+// phone menu: the toolbar collapses to icons; ☰ opens every tool, and choosing one closes it again
+$('#bMenu').onclick=()=>{document.body.classList.toggle('topopen');};
+$('#top').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.id!=='bMenu'&&b.id!=='bMore'&&document.body.classList.contains('topopen'))setTimeout(()=>document.body.classList.remove('topopen'),150);});
+cv.addEventListener('pointerdown',()=>document.body.classList.remove('topopen'));
 /* ---- home screen: choose a telescope. Add future models to SCOPES; each entry's load() builds/activates its scene ---- */
 const SCOPES=[
  {id:'c11cpc',name:'Celestron C11',sub:'CPC Deluxe 1100 HD',kind:'Schmidt-Cassegrain on a computerized GoTo fork mount',
@@ -2159,7 +2182,7 @@ function loop(now){
 }
 function uiTick(){
   const st=driver.state();
-  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br>Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br>${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
+  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br><span class="hx">Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br></span>${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
   if(curTab==='ctrl'){hcDraw();drawEyepiece($('#epMini'));if(edu.on){$('#kstat').textContent=kidStatus();const nw=performance.now();if(!(uiTick.kt>nw-2000)){uiTick.kt=nw;renderKidTiles();}}}
   else if(curTab==='sky'){updSelPos();drawSkyChart($('#skyc'));drawEyepiece($('#epBig'));
     const T=st.truth;$('#truth').innerHTML=`<b>Truth</b> (where the tube points): Az ${T.az.toFixed(2)}° Alt ${T.alt.toFixed(2)}°<br><b>Mount reports</b>: Az ${st.az.toFixed(2)}° Alt ${st.alt.toFixed(2)}°<br><b>Error</b>: ${Math.hypot(wrap180(T.az-st.az)*Math.cos(T.alt*D2R),T.alt-st.alt).toFixed(2)}° ${st.aligned?'(after alignment)':'(not aligned yet)'}`;
