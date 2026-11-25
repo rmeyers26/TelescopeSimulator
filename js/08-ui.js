@@ -1,0 +1,71 @@
+/* Telescope Simulator – 08-ui.js
+   Classic script (not an ES module) so the page also works when opened straight from disk.
+   All files share one global scope and must load in numeric order (see index.html). */
+'use strict';
+/* =====================================================================
+   8. UI: tabs, parts list, info panel
+   ===================================================================== */
+const TABS=[['parts','Parts'],['miss','Missions'],['setup','Setup'],['info','Info'],['ctrl','Control'],['sky','Sky'],['learn','Learn'],['link','Link']];
+let curTab='parts';
+$('#tabs').innerHTML=TABS.map(([k,n])=>`<button data-t="${k}" class="${k==='parts'?'on':''}">${n}</button>`).join('')+'<button class="min" id="bMin">▾</button>';
+function tab(k){if(k==='setup'&&!SU.on)setupGo(0);curTab=k;$$('#tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));$('#dock').classList.remove('min');$('#bMin').textContent='▾';}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='bMin'){const m=$('#dock').classList.toggle('min');b.textContent=m?'▴':'▾';return;}if(b.dataset.t)tab(b.dataset.t);});
+function toast(t,ms){const e=$('#toast');e.textContent=t;e.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.opacity=0,ms||2400);}
+
+function renderParts(){
+  let h='<h3>Optical path (click a part)</h3>'+schem(sel.part,true)+'<p class="sm mu">Click any part in the diagram or 3D view. Eye icons hide parts. Use <b>Cutaway</b> and <b>Optics</b> above to see light travel.</p>';
+  for(const [g,ids] of GROUPS){h+=`<h3>${g}</h3>`;for(const id of ids)h+=`<div class="pl${sel.part===id?' on':''}" data-p="${id}"><span class="eye${hidden.has(id)?' off':''}" data-eye="${id}">👁</span><span style="flex:1">${INFO[id].n}</span><span class="mu">›</span></div>`;}
+  $('#p-parts').innerHTML=h;
+}
+$('#p-parts').addEventListener('click',e=>{const eye=e.target.closest('[data-eye]');if(eye){toggleHide(eye.dataset.eye);renderParts();return;}const p=e.target.closest('[data-p]');if(p)selectPart(p.dataset.p,null,true);});
+
+const KID={
+ tube:'The big white tube holds all the glass and mirrors in exactly the right places. It is sealed so dust and bugs stay out.',
+ corrector:'The thin glass window at the front. Starlight comes in here first. It gently bends the light so the picture comes out sharp.',
+ secondary:'A small mirror stuck to the middle of the front glass. It catches the light from the big mirror and bounces it back down the tube.',
+ primary:'The big curved mirror at the back. It collects lots of light – about 1,600 times more than your eye – and bounces it forward.',
+ baffle:'A black tube in the middle that stops stray light from sneaking into your eyepiece, so the sky looks dark and stars look sharp.',
+ rearcell:'The black back end of the tube. It holds the big mirror, the focus knob and the vents that let warm air out.',
+ focuser:'The focus knob. Turn it slowly until stars become tiny sharp dots – just like focusing binoculars.',
+ dew:'A tube on the front that stops dew (water drops) from forming on the glass on cold nights.',
+ visualback:'The ring on the back that eyepieces and cameras attach to.',
+ diagonal:'A little box with a mirror that turns the light sideways, so you can look down into the eyepiece instead of lying on the ground.',
+ eyepiece:'The part you look into. It works like a magnifying glass. Small numbers (like 6 mm) mean bigger, closer views.',
+ kit:'A case of extra eyepieces and colourful filters. Swap eyepieces to zoom in or out; filters can bring out details on planets.',
+ finder:'A mini telescope on top. It sees a wide part of the sky, so you can aim the big telescope more easily.',
+ starsense:'A small camera that takes pictures of the stars and works out where the telescope is pointing all by itself.',
+ telrad:'A pointer with no zoom. You look through the window and see red circles floating on the sky – put them on your target.',
+ dovetail:'A metal rail on top of the tube where finders and pointers clip on.',
+ fork:'The two black arms and round base. Motors inside turn the telescope left-right and up-down to find and follow stars.',
+ tripod:'The three-legged stand. It holds everything steady. Lower legs = less wobble.',
+ handset:'The hand controller. Press buttons to move the telescope, or pick an object and press ENTER – the telescope goes there by itself!'};
+const edu={on:false};
+function showInfo(){
+  const el=$('#p-info'),id=sel.part;
+  if(edu.on&&id&&KID[id]){const I=INFO[id];el.innerHTML=`<h2>${I.n}</h2>`+schem(id,false)+`<div class="kid">${KID[id]}</div><div class="row"><button class="b sm" data-a="focus">Show me</button><button class="b sm${sel.solo===id?' on':''}" data-a="solo">Pull it out</button><button class="b sm" data-a="clear">Done</button></div><p class="mu sm">Turn off Education mode in the toolbar for the full technical details.</p>`;return;}
+  if(!id){el.innerHTML='<h2>Component info</h2><p class="mu">Click a component in the 3D view, the diagram or the Parts list to drill into its construction, how it works, specifications, maintenance and troubleshooting.</p>';return;}
+  const I=INFO[id];let h=`<h2>${I.n}</h2>`+schem(id,false);
+  h+=`<div class="row"><button class="b sm" data-a="focus">Focus camera</button><button class="b sm${sel.isolate?' on':''}" data-a="iso">Isolate</button><button class="b sm${sel.solo===id?' on':''}" data-a="solo">Pull out of assembly</button><button class="b sm" data-a="clear">Clear</button></div>`;
+  h+=`<h3>What it is</h3><p>${I.d}</p><h3>Purpose</h3><p>${I.p}</p><h3>How it works</h3><p>${I.h}</p><h3>Interacts with</h3><p>${I.i}</p>`;
+  if(I.subs.length){h+='<h3>Subcomponents</h3><div>'+I.subs.map(s=>`<button class="b sm sub${sel.sub===s[0]?' on':''}" data-sub="${s[0]}">${s[1]}</button>`).join('')+'</div>';
+    const cur=I.subs.find(s=>s[0]===sel.sub);if(cur)h+=`<div class="tb"><b>${cur[1]}</b><br>${cur[2]}</div>`;}
+  h+='<h3>Specifications</h3><table>'+I.spec.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')+'</table><p class="sm mu">Values are approximate and model-dependent; check your scope’s manual.</p>';
+  h+='<h3>Maintenance</h3><ul>'+I.m.map(x=>`<li>${x}</li>`).join('')+'</ul><h3>Troubleshooting</h3>'+I.t.map(r=>`<div class="tb"><b>${r[0]}</b><br>${r[1]}</div>`).join('');
+  el.innerHTML=h;
+}
+$('#p-info').addEventListener('click',e=>{
+  const a=e.target.closest('[data-a]'),s=e.target.closest('[data-sub]'),p=e.target.closest('[data-p]');
+  if(p){selectPart(p.dataset.p,null,false);return;}
+  if(s){sel.sub=sel.sub===s.dataset.sub?null:s.dataset.sub;showInfo();return;}
+  if(!a)return;const k=a.dataset.a;
+  if(k==='focus')focusPart(sel.part);else if(k==='iso'){sel.isolate=!sel.isolate;showInfo();}
+  else if(k==='solo'){sel.solo=sel.solo===sel.part?null:sel.part;showInfo();}else if(k==='clear')selectPart(null);
+});
+function focusPart(id){
+  scene.updateMatrixWorld(true);const b=new THREE.Box3();ALLM.filter(m=>m.userData.part===id).forEach(m=>b.expandByObject(m));
+  const c=b.getCenter(V3(0,0,0)),s=b.getSize(V3(0,0,0));setMode('orbit');
+  const d=clamp(s.length()*1.5,.5,6),off=camera.position.clone().sub(V3(cam.tx,cam.ty,cam.tz)).normalize().multiplyScalar(d);tweenTo(toOrbit(c.clone().add(off),c));
+}
+renderParts();showInfo();
+
+
