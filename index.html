@@ -61,6 +61,19 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
 body.red #redov,body.red #dimov{display:block}
 /* toolbar: advanced tools are tucked under More in Education mode */
 body.edu:not(.showadv) #top .adv{display:none}body:not(.edu) #bMore{display:none}#top .adv{display:contents}
+/* home screen: pick a telescope */
+#home{position:fixed;inset:0;z-index:34;display:none;overflow:auto;background:radial-gradient(ellipse at 50% 120%,#1b2a52 0%,#070b17 55%,#03050b 100%);padding:28px 18px}
+#home:before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.7;background-image:radial-gradient(1px 1px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 72% 12%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 30%,#cfe0ff,transparent),radial-gradient(1px 1px at 85% 40%,#fff,transparent),radial-gradient(1px 1px at 22% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 60% 65%,#ffe6c4,transparent),radial-gradient(1px 1px at 90% 80%,#fff,transparent),radial-gradient(1px 1px at 8% 85%,#fff,transparent),radial-gradient(1px 1px at 50% 8%,#fff,transparent)}
+#home .hw{position:relative;max-width:960px;margin:0 auto}#home h1{font-size:30px;margin:6px 0 2px}#home .tag{color:#aab4cf;font-size:15px;margin-bottom:20px}
+.scopes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.scard{background:rgba(20,28,48,.92);border:1px solid #34436b;border-radius:18px;overflow:hidden;cursor:pointer;text-align:left;color:#e8ecf7;padding:0;display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+.scard:hover{transform:translateY(-3px);border-color:#ff8a3d}.scard .im{height:180px;background:#0b1020 center 22%/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:64px}
+.scard .bd{padding:14px 16px 16px}.scard h3{margin:0 0 2px;font-size:19px;color:#fff;text-transform:none;letter-spacing:0}.scard .sub{color:#aab4cf;font-size:13px;margin-bottom:8px}
+.scard ul{margin:6px 0 12px;padding-left:18px;font-size:13px;color:#c9d1e6}.scard .go{display:inline-block;background:#ff8a3d;color:#111;font-weight:700;border-radius:10px;padding:8px 14px}
+.scard.soon .im{height:90px;font-size:44px}
+@media(min-width:700px){.scard.main{grid-column:1/-1;flex-direction:row}.scard.main .im{width:52%;height:auto;min-height:280px;flex:none}.scard.main .bd{padding:22px}}
+.scard.soon{cursor:default;border-style:dashed;opacity:.75}.scard.soon:hover{transform:none;border-color:#34436b}.scard .pill{display:inline-block;font-size:11px;border:1px solid #4b5a85;border-radius:20px;padding:2px 8px;color:#aab4cf;margin-bottom:6px}
+.hopts{display:flex;flex-wrap:wrap;gap:16px;margin-top:22px;color:#c6cde0;font-size:14px}
 /* welcome screen */
 #welcome{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,4,10,.72);z-index:32;padding:12px}
 #welcome>div{background:#121a2c;border:1px solid #3a4a72;border-radius:20px;padding:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto;animation:pop .35s}
@@ -101,7 +114,7 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
 <canvas id="gl"></canvas><div id="vig"></div><canvas id="grain" width="256" height="256"></canvas><div class="lb" id="lbT"></div><div class="lb" id="lbB"></div>
 
 <div id="top">
-  <button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓ Help</button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴 Night mode</button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓 Education mode</button><span class="sep"></span>
+  <button class="b" id="bHome" title="Back to the home screen to pick a telescope">🏠 Home</button><button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓ Help</button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴 Night mode</button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓 Education mode</button><span class="sep"></span>
   <button class="b on" id="bOrbit" title="Drag to spin around the telescope">Orbit</button><button class="b" id="bWalk" title="Walk around with WASD / the on-screen stick">Walk</button><span class="sep"></span>
   <button class="b" data-v="front" title="View from the front">Front</button><button class="b" data-v="rear" title="View from behind the eyepiece">Rear</button><button class="b" data-v="left" title="Left side">Left</button><button class="b" data-v="right" title="Right side">Right</button><button class="b" data-v="top" title="Look down from above">Top</button><span class="sep"></span>
   <button class="b" id="bLab" title="Show numbered part labels">Labels</button><button class="b on" id="bDip" title="Big Dipper → North Star guide lines in the sky">Dipper guide</button><button class="b" id="bReset" title="Go back to the starting view">Reset view</button><button class="b" id="bMore" title="Show more tools">More ▾</button>
@@ -110,7 +123,7 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
   <label title="Pull the telescope apart">Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label></span>
 </div>
 <div id="hud"></div>
-<div id="redov"></div><div id="dimov"></div><div id="welcome"></div><div id="reward"></div><div id="safety"></div><div id="toast"></div>
+<div id="redov"></div><div id="dimov"></div><div id="home"></div><div id="welcome"></div><div id="reward"></div><div id="safety"></div><div id="toast"></div>
 <div id="joy"><i></i></div>
 <div id="lcard"></div>
 
@@ -1439,7 +1452,27 @@ $('#welcome').addEventListener('click',e=>{const b=e.target.closest('[data-w]');
   if(k==='light')startLesson(lessonIdx('Follow the light'));else if(k==='north')startLesson(lessonIdx('Find the North Star'));
   else if(k==='drive')tab('ctrl');else if(k==='miss')tab('miss');else if(k==='setup')tab('setup');else if(k==='parts'){tab('parts');if(!labState.on)$('#bLab').click();}});
 $('#bHelp').onclick=showWelcome;
-{let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}setRed(red);if(show)setTimeout(showWelcome,400);}
+/* ---- home screen: choose a telescope. Add future models to SCOPES; each entry's load() builds/activates its scene ---- */
+const SCOPES=[
+ {id:'c11cpc',name:'Celestron C11',sub:'CPC Deluxe 1100 HD',kind:'Schmidt-Cassegrain on a computerized GoTo fork mount',
+  facts:['280 mm (11-inch) mirror – about 1,600× more light than your eye','2800 mm focal length · f/10','NexStar+ hand controller with 40,000-object database','Optional StarSense camera, Telrad and eyepiece kit'],
+  load:()=>{}}];                                   // the C11 scene is built at start-up, so loading it needs no extra work
+const COMING=[{e:'🤖',t:'Smart telescope',s:'An all-in-one scope that takes pictures for you'},{e:'🔭',t:'Refractor',s:'A lens telescope, like Galileo’s'},{e:'🪣',t:'Dobsonian',s:'A big mirror on a simple push-around base'}];
+const homeState={scope:null,thumb:null};
+function showHome(){const el=$('#home');let red=document.body.classList.contains('red');
+  el.innerHTML=`<div class="hw"><div style="font-size:40px">🔭</div><h1>Telescope Simulator</h1><div class="tag">Learn how a real telescope works – pick one to explore, drive and use under tonight’s sky.</div>
+   <div class="scopes">${SCOPES.map(sc=>`<button class="scard main" data-scope="${sc.id}"><div class="im" style="${homeState.thumb?`background-image:url(${homeState.thumb})`:''}">${homeState.thumb?'':'🔭'}</div>
+     <div class="bd"><span class="pill">${sc.kind}</span><h3>${sc.name}</h3><div class="sub">${sc.sub}</div><ul>${sc.facts.map(f=>`<li>${f}</li>`).join('')}</ul><span class="go">Explore this telescope ▸</span></div></button>`).join('')}
+    </div><h3 style="margin:26px 0 10px;color:#aab4cf">More telescopes on the way</h3><div class="scopes">${COMING.map(c=>`<div class="scard soon"><div class="im">${c.e}</div><div class="bd"><span class="pill">Coming soon</span><h3>${c.t}</h3><div class="sub">${c.s}</div></div></div>`).join('')}</div>
+   <div class="hopts"><label><input type="checkbox" id="hRed" ${red?'checked':''}> 🔴 Night mode</label><label><input type="checkbox" id="hEdu" ${edu.on?'checked':''}> 🎓 Education mode (simpler, kid-friendly)</label></div></div>`;
+  el.style.display='block';}
+function chooseScope(id){const sc=SCOPES.find(x=>x.id===id);if(!sc)return;homeState.scope=sc;sc.load();$('#home').style.display='none';
+  document.title=sc.name+' – Telescope Simulator';let show=true;try{show=localStorage.getItem('c11welcome')!=='0';}catch(_){}if(show)showWelcome();}
+$('#home').addEventListener('click',e=>{const c=e.target.closest('[data-scope]');if(c)chooseScope(c.dataset.scope);});
+$('#home').addEventListener('change',e=>{if(e.target.id==='hRed')setRed(e.target.checked);if(e.target.id==='hEdu')setEdu(e.target.checked);});
+$('#bHome').onclick=showHome;
+
+{let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}setRed(red);showHome();}   // the home screen comes first; the welcome screen follows once a telescope is chosen
 
 /* ---- toolbar ---- */
 $('#bOrbit').onclick=()=>setMode('orbit');$('#bWalk').onclick=()=>setMode('walk');
@@ -1475,7 +1508,7 @@ function updLabels(){
     if(labState.v.z>1){e.style.display='none';return;}
     e.style.display='block';e.style.left=(r.left+(labState.v.x+1)/2*r.width)+'px';e.style.top=(r.top+(1-labState.v.y)/2*r.height)+'px';});
 }
-function setEdu(v){edu.on=v;document.body.classList.toggle('edu',v);$('#bEdu').classList.toggle('on',v);try{localStorage.setItem('c11edu',v?'1':'0');}catch(_){}
+function setEdu(v){edu.on=v;{const h=document.getElementById('hEdu');if(h)h.checked=v;}document.body.classList.toggle('edu',v);$('#bEdu').classList.toggle('on',v);try{localStorage.setItem('c11edu',v?'1':'0');}catch(_){}
   if(v&&curTab==='link')tab('miss');showInfo();renderLearn();renderMissions();}
 $('#bEdu').onclick=()=>setEdu(!edu.on);
 // Education mode is on by default; the choice is remembered on this device
@@ -2113,6 +2146,7 @@ function loop(now){
   stepPhoton(dt);grainShift(t);
   applyCamera();if(labState.on||frame%30===0)updLabels();
   renderer.render(scene,camera);
+  if(frame===12&&!homeState.thumb){try{homeState.thumb=renderer.domElement.toDataURL('image/jpeg',.82);const im=document.querySelector('#home .scard .im');if(im){im.style.backgroundImage=`url(${homeState.thumb})`;im.textContent='';}}catch(_){}}
   // slow UI updates
   if(now-hudT>100){hudT=now;uiTick();}
 }
