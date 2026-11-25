@@ -7,6 +7,7 @@
    It uses the same simulated mount as everything else: before alignment GoTo misses by a few degrees,
    the user centres each object with big arrows, and the mount learns the error.
    ===================================================================== */
+let ALIGN_DONE_AT=0;                                          // time of the last finished alignment (wizard or hand control) – used by the First Night story
 const WZ={on:false,mode:null,phase:null,list:[],i:0,cur:null,view:0,demo:null};
 const WZ_VIEWS=[EPS[0],EPS[1],EPS[3]];                     // finder, 40 mm, 13 mm
 function wzSep(o){const T=driver.state().truth,eq=horToEq(T.alt,T.az,jdNow());return angSep({ra:o.cra,dec:o.cdec},eq);}
@@ -30,7 +31,7 @@ function wzAlignHere(){
   const o=WZ.cur;if(wzSep(o)>.5){toast(o.name+' is not in the middle yet – keep using the arrows (it should say Centred!).');haptic('warn');return;}
   driver.addAlignPoint(o);haptic('success');WZ.i++;
   if(WZ.mode==='stars'&&WZ.i<3){WZ.phase='star';wzRender();return;}
-  driver.setTracking('sidereal');WZ.phase='done';wzRender();}
+  driver.setTracking('sidereal');WZ.phase='done';ALIGN_DONE_AT=performance.now();wzRender();}
 function wzDemo(kind){                                      // watch the sky for an "hour" at 600x with tracking on or off
   wzDemoStop();WZ.demo={kind,t0:performance.now(),spd:speed,trk:driver.s.tracking};
   driver.setTracking(kind==='off'?'off':'sidereal');setSpeed(600);WZ.demo.timer=setTimeout(wzDemoStop,6000);wzRender();}

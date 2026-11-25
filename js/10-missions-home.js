@@ -55,6 +55,8 @@ function startLesson(i){if(i<0)return;L.lesson=i;L.step=0;renderLearn();doStep(L
 function showWelcome(){const el=$('#welcome');let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}
   el.innerHTML=`<div><button class="b wclose" data-w="close" title="Close">✕</button><h1>🔭 Welcome to the telescope simulator!</h1><p class="mu">This is a Celestron C11 telescope on its computer-controlled mount. What would you like to do first?</p>
   <div class="wtiles">
+   <button data-w="night" class="wbig"><span class="e">🌙</span><b>My First Night</b>${(()=>{try{const s=+localStorage.getItem('c11fnStep');return s>0&&localStorage.getItem('c11fn')!=='done'?'Pick up where you left off (step '+(s+1)+').':'Start here! Set up, align and find a planet, step by step.';}catch(_){return 'Start here!';}})()}</button>
+   <button data-w="tour"><span class="e">🧭</span><b>Quick tour</b>Where everything is, in 1 minute.</button>
    <button data-w="light"><span class="e">🔦</span><b>How does it work?</b>Follow a beam of light through the telescope.</button>
    <button data-w="north"><span class="e">⭐</span><b>Find the North Star</b>Use the Big Dipper trick, like sailors did.</button>
    <button data-w="drive"><span class="e">🎮</span><b>Drive the telescope</b>Big arrows and one-tap trips to Saturn, the Moon and more.</button>
@@ -67,7 +69,8 @@ function showWelcome(){const el=$('#welcome');let red=false,show=true;try{red=lo
   el.style.display='flex';}
 $('#welcome').addEventListener('change',e=>{if(e.target.id==='wRed')setRed(e.target.checked);if(e.target.id==='wShow'){try{localStorage.setItem('c11welcome',e.target.checked?'1':'0');}catch(_){}}});
 $('#welcome').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b&&e.target.id!=='welcome')return;$('#welcome').style.display='none';const k=b?b.dataset.w:'close';
-  if(k==='light')startLesson(lessonIdx('Follow the light'));else if(k==='north')startLesson(lessonIdx('Find the North Star'));
+  if(k==='night'){let s=0;try{s=+localStorage.getItem('c11fnStep')||0;}catch(_){}fnStart(s>0);}else if(k==='tour')startTour();
+  else if(k==='light')startLesson(lessonIdx('Follow the light'));else if(k==='north')startLesson(lessonIdx('Find the North Star'));
   else if(k==='drive')tab('ctrl');else if(k==='miss')tab('miss');else if(k==='setup')tab('setup');else if(k==='parts'){tab('parts');if(!labState.on)$('#bLab').click();}});
 $('#bHelp').onclick=showWelcome;
 // phone menu: the toolbar collapses to icons; ☰ opens every tool, and choosing one closes it again
@@ -89,7 +92,8 @@ function showHome(){const el=$('#home');let red=document.body.classList.contains
    <div class="hopts"><label><input type="checkbox" id="hRed" ${red?'checked':''}> 🔴 Night mode</label><label><input type="checkbox" id="hEdu" ${edu.on?'checked':''}> 🎓 Education mode (simpler, kid-friendly)</label></div></div>`;
   el.style.display='block';}
 function chooseScope(id){const sc=SCOPES.find(x=>x.id===id);if(!sc)return;homeState.scope=sc;sc.load();$('#home').style.display='none';
-  document.title=sc.name+' – Telescope Simulator';let show=true;try{show=localStorage.getItem('c11welcome')!=='0';}catch(_){}if(show)showWelcome();}
+  document.title=sc.name+' – Telescope Simulator';if(typeof tourFirstRun==='function'&&tourFirstRun())return;   // first visit: quick tour instead of the welcome screen
+  let show=true;try{show=localStorage.getItem('c11welcome')!=='0';}catch(_){}if(show)showWelcome();}
 $('#home').addEventListener('click',e=>{const c=e.target.closest('[data-scope]');if(c)chooseScope(c.dataset.scope);});
 $('#home').addEventListener('change',e=>{if(e.target.id==='hRed')setRed(e.target.checked);if(e.target.id==='hEdu')setEdu(e.target.checked);});
 $('#bHome').onclick=showHome;
