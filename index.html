@@ -465,7 +465,8 @@ const ribbed=(r,len,n,d)=>{const g=new THREE.CylinderGeometry(r,r,len,n*4,1);con
 // --- scene graph: root -> (tripod, base) ; azG (rotates about vertical) -> fork ; altG (pitches) -> OTA parts
 const root=new THREE.Group();scene.add(root);
 const PIV_Y=1.56;
-const azG=new THREE.Group();azG.position.y=1.06;root.add(azG);
+const mountG=new THREE.Group();root.add(mountG);      // everything above the tripod head; lifted when the tripod legs are extended
+const azG=new THREE.Group();azG.position.y=1.06;mountG.add(azG);
 const altG=new THREE.Group();altG.position.y=0.5;azG.add(altG);   // tube pivot is 0.5 m above the fork base
 const OPT={fp:0.559,zs:-0.235,zp:0.19,zd:0.395,Mg:5};              // optics layout (metres, tube axis = z, front = -z)
 
@@ -635,7 +636,7 @@ M('fork',gDrv,rotZ(new THREE.CylinderGeometry(.034,.034,.004,24)),'orange',{p:[-
 let armCount=2;
 function setArms(n){armCount=n;gArmL.visible=n===2;gDrv.visible=n===1;gHCL.visible=n===2;gHCR.visible=n===1;$('#bA1').classList.toggle('on',n===1);$('#bA2').classList.toggle('on',n===2);if(sel.part==='fork')showInfo();}
 // base + tripod (static)
-const gBase=G('base',root,V3(0,-0.22,0));
+const gBase=G('base',mountG,V3(0,-0.22,0));
 M('base',gBase,lathe([[.17,0],[.215,.01],[.232,.03],[.232,.06],[.222,.078],[.212,.08],[.17,.08]],72),'blackg',{p:[0,.98,0],sub:'drive'});   // flared drive base
 M('base',gBase,new THREE.TorusGeometry(.2125,.003,8,72),'grip',{p:[0,1.0615,0],r:[Math.PI/2,0,0],sub:'ring'});     // seam under the rotating drum
 for(let k=0;k<3;k++){const a=k*2.094+1.05;M('base',gBase,cylZ(.006,.006,.004,10).rotateX(Math.PI/2),'silver',{p:[Math.sin(a)*.222,1.0,Math.cos(a)*.222],sub:'drive'});}
@@ -644,17 +645,20 @@ const gTri=G('tripod',root,V3(0,-0.5,0));
 const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
   for(let k=0;k<3;k++){const a=k*Math.PI*2/3;for(let i=0;i<=12;i++){const d=a+(-1+i/6)*Math.PI/3;pts.push([Math.sin(a)*Rv+Math.sin(d)*rc,-Math.cos(a)*Rv-Math.cos(d)*rc]);}}
   pts.forEach((p,i)=>i?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1]));sh.closePath();return sh;};
-(function(){
+// Tripod dimensions from Celestron's CPC Tripod drawing: head height 784 mm (legs retracted) to 1180 mm (extended), footprint dia 958 to 1310 mm.
+function buildTripod(H,B){
+  [...gTri.children].forEach(c=>{gTri.remove(c);const i=ALLM.indexOf(c);if(i>=0)ALLM.splice(i,1);c.geometry.dispose();c.material.dispose();});
+  const yT=H*.43;
   const flat=(shape,depth,bev)=>{const g=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:bev,bevelThickness:bev,bevelSegments:3,curveSegments:10});g.rotateX(-Math.PI/2);return g;};
-  M('tripod',gTri,flat(roundTri(.12,.1),.03,.008),'blackg',{p:[0,.945,0],sub:'head'});                  // head plate
-  M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.006,24),'bubble',{p:[0,.9855,-.06],sub:'head'});   // bubble level
-  M('tripod',gTri,new THREE.TorusGeometry(.0185,.0025,8,24),'silver',{p:[0,.9855,-.06],r:[Math.PI/2,0,0],sub:'head'});
-  M('tripod',gTri,new THREE.CylinderGeometry(.006,.006,.022,12),'silver',{p:[0,.99,.0],sub:'head'});        // locating pin
-  for(let k=0;k<3;k++){const a=k*Math.PI*2/3;M('tripod',gTri,new THREE.CylinderGeometry(.011,.011,.008,6),'silver',{p:[Math.sin(a)*.15,.9855,Math.cos(a)*.15],sub:'head'});}   // mounting bolts
+  M('tripod',gTri,flat(roundTri(.12,.1),.03,.008),'blackg',{p:[0,H-.04,0],sub:'head'});                  // head plate
+  M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.006,24),'bubble',{p:[0,H+.0005,-.06],sub:'head'});   // bubble level
+  M('tripod',gTri,new THREE.TorusGeometry(.0185,.0025,8,24),'silver',{p:[0,H+.0005,-.06],r:[Math.PI/2,0,0],sub:'head'});
+  M('tripod',gTri,new THREE.CylinderGeometry(.006,.006,.022,12),'silver',{p:[0,H+.005,0],sub:'head'});        // locating pin
+  for(let k=0;k<3;k++){const a=k*Math.PI*2/3;M('tripod',gTri,new THREE.CylinderGeometry(.011,.011,.008,6),'silver',{p:[Math.sin(a)*.15,H+.0005,Math.cos(a)*.15],sub:'head'});}   // mounting bolts
   const up=V3(0,1,0),orient=(m,p,q)=>{const d=q.clone().sub(p);m.position.copy(p.clone().add(q).multiplyScalar(.5));m.quaternion.setFromUnitVectors(up,d.normalize());};
   const cyl=(r,p,q,mat,sub)=>{const m=M('tripod',gTri,new THREE.CylinderGeometry(r,r,p.distanceTo(q),20),mat,{sub});orient(m,p,q);return m;};
   for(let k=0;k<3;k++){
-    const a=k*Math.PI*2/3,u=V3(Math.sin(a),0,Math.cos(a)),tg=V3(Math.cos(a),0,-Math.sin(a)),top=V3(u.x*.11,.95,u.z*.11),bot=V3(u.x*.85,0,u.z*.85),d=bot.clone().sub(top).normalize();
+    const a=k*Math.PI*2/3,u=V3(Math.sin(a),0,Math.cos(a)),tg=V3(Math.cos(a),0,-Math.sin(a)),top=V3(u.x*.11,H-.035,u.z*.11),bot=V3(u.x*B,0,u.z*B),d=bot.clone().sub(top).normalize();
     const hEnd=top.clone().addScaledVector(d,.2),mid=top.clone().lerp(bot,.62);
     cyl(.055,top,hEnd,'blackg','legs');                                             // black casting at the top of each leg
     M('tripod',gTri,new THREE.SphereGeometry(.055,20,14),'blackg',{p:[hEnd.x,hEnd.y,hEnd.z],sub:'legs'});
@@ -663,13 +667,21 @@ const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
     cyl(.04,mid.clone().addScaledVector(d,-.025),mid.clone().addScaledVector(d,.025),'rubber','locks');   // extension lock collar
     cyl(.032,bot.clone().addScaledVector(d,-.06),bot,'blackg','feet');
     M('tripod',gTri,new THREE.SphereGeometry(.034,14,10),'rubber',{p:[bot.x,.03,bot.z],sub:'feet'});
-    cyl(.011,V3(0,.39,0),top.clone().lerp(bot,.78),'blackg','tray');                // spreader brace to the leg
+    cyl(.011,V3(0,yT-.02,0),top.clone().lerp(bot,.78),'blackg','tray');                // spreader brace to the leg
   }
   const ts=roundTri(.3,.16);for(let k=0;k<3;k++){const a=k*2*Math.PI/3+Math.PI/3,h=new THREE.Path();h.absarc(Math.sin(a)*.22,-Math.cos(a)*.22,.052,0,Math.PI*2,true);ts.holes.push(h);}
-  M('tripod',gTri,flat(ts,.018,.006),'blackg',{p:[0,.41,0],sub:'tray'});            // accessory tray with three holes
-  M('tripod',gTri,new THREE.CylinderGeometry(.06,.066,.02,40),'blackg',{p:[0,.44,0],sub:'tray'});
-  M('tripod',gTri,new THREE.CylinderGeometry(.045,.045,.004,40),'silver',{p:[0,.452,0],sub:'tray'});   // medallion
-})();
+  M('tripod',gTri,flat(ts,.018,.006),'blackg',{p:[0,yT,0],sub:'tray'});            // accessory tray with three holes
+  M('tripod',gTri,new THREE.CylinderGeometry(.06,.066,.02,40),'blackg',{p:[0,yT+.03,0],sub:'tray'});
+  M('tripod',gTri,new THREE.CylinderGeometry(.045,.045,.004,40),'silver',{p:[0,yT+.042,0],sub:'tray'});   // medallion
+  // central column from the head down through the leg-support bracket, with the tension knob underneath
+  M('tripod',gTri,new THREE.CylinderGeometry(.012,.012,H-yT+.05,14),'silver',{p:[0,(H+yT-.05)/2-.02,0],sub:'tray'});
+  M('tripod',gTri,new THREE.CylinderGeometry(.03,.03,.03,16),'blackg',{p:[0,yT-.06,0],sub:'tray'});
+}
+const TRI={t:.55,H:0,B:0};
+function setTripod(t){TRI.t=t;TRI.H=.784+(1.18-.784)*t;TRI.B=.45+(.64-.45)*t;buildTripod(TRI.H,TRI.B);mountG.position.y=TRI.H-.985;}
+const triTxt=()=>`Head height ${Math.round(TRI.H*1000)} mm (${(TRI.H/.0254).toFixed(1)} in) · footprint Ø${Math.round(958+352*TRI.t)} mm`;
+setTripod(.55);
+
 // port panel on the front of the fork base, where the handset cord plugs in (like the real CPC base)
 const gPort=G('base',azG,V3(0,0,.3));
 (function(){const sh=new THREE.Shape();sh.moveTo(.08,.058);sh.lineTo(.21,.058);sh.lineTo(.21,.072);sh.lineTo(.11,.11);sh.lineTo(.08,.11);sh.closePath();   // (z,y) profile of the raised port housing
@@ -906,7 +918,7 @@ tripod:{n:'Tripod',
  h:'The tray braces the legs. A level tripod makes alignment and tracking easier.',
  i:'The base bolts to the head; vibration depends on leg extension and the surface underneath.',
  subs:[['head','Head plate','Tripod head.'],['legs','Legs','Extend to adjust height.'],['locks','Leg locks','Clamp the leg extension.'],['tray','Accessory tray','Black tray with holes for eyepieces; it also braces the legs.'],['feet','Feet','Rubber feet.']],
- spec:[['Height (head)','≈ 1 m in this model']],
+ spec:[['Head height','784 mm legs retracted · 1180 mm extended (CPC Tripod drawing)'],['Footprint','Ø958 mm retracted · Ø1310 mm extended'],['Legs','2-inch stainless steel'],['Support','Leg-support bracket / accessory tray on a central rod with a tension knob']],
  m:['Check leg locks.','Place on firm ground.'],t:[['Shaky image','Shorten legs, check locks, add vibration pads.']]},
 handset:{n:'NexStar-style hand controller',
  d:'A hand-held keypad with a text display, connected by a cable. Click it to open the virtual version.',
@@ -966,12 +978,12 @@ function toOrbit(posV,tgt){const d=posV.clone().sub(tgt),dist=d.length();return 
 function setMode(m){
   if(m===cam.mode)return;
   if(m==='walk'){const p=camera.position,d=V3(cam.tx-p.x,0,cam.tz-p.z);cam.px=p.x;cam.pz=p.z;if(Math.hypot(cam.px,cam.pz)<1)cam.pz=3;cam.py=1.7;cam.wyaw=Math.atan2(-d.x,-d.z);cam.wpitch=-.05;}
-  else{const t=V3(0,PIV_Y,0);Object.assign(cam,toOrbit(camera.position,t));}
+  else{const t=V3(0,PIV_Y+mountG.position.y,0);Object.assign(cam,toOrbit(camera.position,t));}
   cam.mode=m;document.body.classList.toggle('walk',m==='walk');$('#bOrbit').classList.toggle('on',m==='orbit');$('#bWalk').classList.toggle('on',m==='walk');cam.tw=null;
 }
 function viewFrom(kind){
   setMode('orbit');scene.updateMatrixWorld(true);
-  const piv=V3(0,PIV_Y+exp.cur*.55,0),dir=V3(0,0,-1).transformDirection(altG.matrixWorld),ax=V3(1,0,0).transformDirection(altG.matrixWorld),up=V3(0,1,0).transformDirection(altG.matrixWorld);
+  const piv=V3(0,PIV_Y+mountG.position.y+exp.cur*.55,0),dir=V3(0,0,-1).transformDirection(altG.matrixWorld),ax=V3(1,0,0).transformDirection(altG.matrixWorld),up=V3(0,1,0).transformDirection(altG.matrixWorld);
   let off;
   if(kind==='front')off=dir.clone().multiplyScalar(2.6).add(V3(0,.3,0));
   else if(kind==='rear')off=dir.clone().multiplyScalar(-2.6).add(V3(0,.3,0));
@@ -1110,12 +1122,14 @@ function renderSetup(){
   const st=SETUP[SU.i];
   $('#p-setup').innerHTML=`<h2>Setup guide</h2><p class="mu sm">Follows the Celestron CPC Deluxe HD and EdgeHD manuals. Parts appear as you reach the step that installs them.</p>
   <div class="st"><div class="mu sm">Step ${SU.i+1} of ${SETUP.length}</div><h3 style="margin:4px 0">${st.t}</h3><div>${st.b}</div>${st.w?`<div class="wn">⚠ ${st.w}</div>`:''}
+  ${SU.i===2?`<div style="margin-top:8px"><input type="range" id="triS" min="0" max="100" value="${Math.round(TRI.t*100)}" style="width:100%"><div class="mu sm" id="triT">${triTxt()}</div></div>`:''}
   <div class="row" style="margin-top:8px"><button class="b" data-su="prev">◀ Back</button><button class="b on" data-su="show">Show me</button><button class="b" data-su="next">Next ▶</button></div></div>
   <ol>${SETUP.map((x,i)=>`<li data-su="go${i}" class="${i===SU.i?'on':i<SU.i?'dn':''}">${x.t}</li>`).join('')}</ol>
   <div class="row"><button class="b" data-su="all">Finish – show all parts</button><button class="b" data-su="lab">Toggle labels</button></div>
   <h3>Labels key (manual Figure 3)</h3><div class="kk">1 Control panel · 2 Mirror lock knobs · 3 Star diagonal · 4 Hand control · 5 Eyepiece · 6 Finderscope · 7 Finder quick-release bracket · 8 Optical tube · 9 Schmidt corrector lens · 10 Altitude locking knob · 11 Carrying handle · 12 Azimuth locking knob · 13 Tripod · 14 Accessory tray / centre support bracket · 15 Focus knob</div>
   <div class="kk" style="columns:1;margin-top:6px">Panel ports: A hand control · B auxiliary (×2) · C PC interface · D auto-guider · E on/off switch · F 12 V input jack</div>`;
 }
+$('#p-setup').addEventListener('input',e=>{if(e.target.id==='triS'){setTripod(e.target.value/100);$('#triT').textContent=triTxt();}});
 $('#p-setup').addEventListener('click',e=>{const b=e.target.closest('[data-su]');if(!b)return;const k=b.dataset.su;
   if(k==='prev')setupGo(SU.i-1);else if(k==='next'){setupGo(SU.i+1);setupShow();}else if(k==='show')setupShow();
   else if(k==='all'){SU_PARTS.forEach(id=>hidden.delete(id));renderParts();viewFrom('iso');}
