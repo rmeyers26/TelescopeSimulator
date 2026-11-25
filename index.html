@@ -473,7 +473,22 @@ const OPT={fp:0.559,zs:-0.235,zp:0.19,zd:0.395,Mg:5};              // optics lay
 // OTA parts (all children of altG; exploded along the tube axis)
 const gTube=G('tube',altG,V3(0,0,0));
 M('tube',gTube,cylZ(.15,.15,.415,72,true),'white',{p:[0,0,0.0075],sub:'shell',clip:true});
-(function(){const g=new THREE.CylinderGeometry(.1506,.1506,.16,24,1,true,Math.PI/2-.9,1.8);g.rotateX(Math.PI/2);M('tube',gTube,g,'label',{p:[0,0,-.06],sub:'decal',noShadow:true,clip:true});})();
+(function(){
+  // Celestron badge as on the EdgeHD tube: black pill, orange swirl, CELESTRON, then an "EDGE HD OPTICS" end panel.
+  // Canvas is 256 (around the tube) x 1024 (along the tube); drawn rotated so text runs front-to-rear.
+  const c=document.createElement('canvas');c.width=256;c.height=1024;const x=c.getContext('2d');
+  x.translate(128,512);x.rotate(Math.PI/2);
+  const pill=(w,h,r)=>{x.beginPath();x.moveTo(-w/2+r,-h/2);x.lineTo(w/2-r,-h/2);x.arc(w/2-r,0,r,-Math.PI/2,Math.PI/2);x.lineTo(-w/2+r,h/2);x.arc(-w/2+r,0,r,Math.PI/2,Math.PI*1.5);x.closePath();};
+  pill(1010,236,118);x.fillStyle='#8d9096';x.fill();pill(990,216,108);x.fillStyle='#111216';x.fill();
+  const sw=x.createRadialGradient(-410,-10,4,-410,0,80);sw.addColorStop(0,'#ffb27a');sw.addColorStop(1,'#d2441a');x.fillStyle=sw;x.beginPath();x.arc(-410,0,74,0,7);x.fill();
+  x.fillStyle='#111216';x.beginPath();x.arc(-388,-6,50,0,7);x.fill();
+  x.fillStyle='#e9eaee';x.font='italic 900 112px system-ui';x.textAlign='left';x.textBaseline='middle';x.fillText('CELESTRON',-318,4,500);
+  x.fillStyle='#2a2c31';x.beginPath();x.moveTo(250,-108);x.lineTo(500,-108);x.arc(395,0,108,-Math.PI/2,Math.PI/2);x.lineTo(210,108);x.closePath();x.fill();
+  x.font='bold 58px system-ui';x.fillStyle='#9a9ca2';x.fillText('EDGE',262,-38);x.fillStyle='#e0322a';x.fillText('HD',412,-38);x.fillStyle='#d8d9dd';x.font='bold 56px system-ui';x.fillText('OPTICS',258,40);
+  [0,Math.PI].forEach(rot=>{const t=new THREE.CanvasTexture(c);t.flipY=true;t.encoding=THREE.sRGBEncoding;t.anisotropy=8;t.center.set(.5,.5);t.rotation=rot;
+    const g=new THREE.CylinderGeometry(.1508,.1508,.15,32,1,true,(rot?-Math.PI/2:Math.PI/2)-.125,.25);g.rotateX(Math.PI/2);
+    const m=M('tube',gTube,g,'label',{p:[0,0,-.125],sub:'decal',noShadow:true,clip:true});m.material.map=t;m.material.needsUpdate=true;});
+})();
 const gCor=G('corrector',altG,V3(0,0,-0.32));
 M('corrector',gCor,cylZ(.1397,.1397,.004,64),'glass',{p:[0,0,-.28],sub:'plate',clip:true,noShadow:true});
 M('corrector',gCor,cylZ(.158,.158,.1,72,true),'blackg',{p:[0,0,-.25],sub:'cell',clip:true});
@@ -626,14 +641,35 @@ const ARM_GEO=(function(){const sh=new THREE.Shape();                          /
 const FOOT_GEO=(function(){const sh=new THREE.Shape();             // fillet in (x,y) where an arm grows out of the drum; extruded along z
   sh.moveTo(.15,.066);sh.quadraticCurveTo(.2,.075,.205,.2);sh.lineTo(.215,.2);sh.lineTo(.215,.03);sh.quadraticCurveTo(.2,.004,.17,.004);sh.lineTo(.15,.004);sh.closePath();
   const g=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:true,bevelSize:.022,bevelThickness:.03,bevelSegments:6,curveSegments:20});g.translate(0,0,-.1);return g;})();
+BASE.armgrey=new THREE.MeshStandardMaterial({color:0x3b3d42,metalness:.25,roughness:.62,roughnessMap:brushTex,side:THREE.DoubleSide});   // lighter textured upper panel
 function buildArm(sx){
-  const g=G('fork',azG,FORK_EXP),sub=sx>0?'arm':'arm2';
+  const g=G('fork',azG,FORK_EXP),sub=sx>0?'arm':'arm2',xo=sx*.2745;                // xo = outer face of the arm
+  const face=(m,dx)=>{m.rotation.y=sx*Math.PI/2;m.position.x=xo+sx*(dx||0);return m;};  // turn a shape drawn in (z,y) to lie on the outer face
   M('fork',g,ARM_GEO,'blackg',{p:[sx*.2325,0,0],sub});                          // curved arm with rounded edges
   {const f=M('fork',g,FOOT_GEO,'blackg',{p:[0,0,0],sub});if(sx<0)f.scale.x=-1;}     // flared foot blending the arm into the drum
-  M('fork',g,rotZ(new THREE.CylinderGeometry(.078,.078,.012,40)),'rubber',{p:[sx*.2765,.5,0],sub});     // clutch wheel with three spokes
-  [0,1,2].forEach(k=>M('fork',g,new THREE.BoxGeometry(.016,.15,.02),'blackg',{p:[sx*.2845,.5,0],r:[k*Math.PI/3,0,0],sub}));
+  // lighter textured panel over the upper arm; its lower edge runs diagonally like the real moulding
+  {const sh=new THREE.Shape(),k=-sx;sh.moveTo(k*-.098,.24);sh.lineTo(k*.098,.33);sh.lineTo(k*.098,.5);sh.absarc(0,.5,.098,0,Math.PI,false);sh.lineTo(k*-.098,.24);
+    const m=M('fork',g,new THREE.ShapeGeometry(sh,32),'armgrey',{sub,noShadow:true});face(m,.0012);m.material.side=THREE.DoubleSide;}
+  // raised bead round the top of the arm
+  {const t=new THREE.TorusGeometry(.108,.007,10,48,Math.PI);t.rotateY(Math.PI/2);M('fork',g,t,'gloss',{p:[xo,.5,0],sub});}
+  // clutch knob: dished recess with a glossy rim and a two-lobed grip
+  M('fork',g,rotZ(new THREE.CylinderGeometry(.068,.068,.004,48)),'rubber',{p:[xo+sx*.0015,.5,0],sub:'clutch'});
+  {const t=new THREE.TorusGeometry(.068,.005,10,48);t.rotateY(Math.PI/2);M('fork',g,t,'gloss',{p:[xo+sx*.002,.5,0],sub:'clutch'});}
+  M('fork',g,rotZ(new THREE.CylinderGeometry(.056,.06,.008,48)),'blackg',{p:[xo+sx*.004,.5,0],sub:'clutch'});
+  {const sh=new THREE.Shape();sh.absarc(-.032,0,.02,Math.PI/2,Math.PI*1.5,false);sh.quadraticCurveTo(0,-.006,.032,-.02);sh.absarc(.032,0,.02,-Math.PI/2,Math.PI/2,false);sh.quadraticCurveTo(0,.006,-.032,.02);
+    const gg=new THREE.ExtrudeGeometry(sh,{depth:.014,bevelEnabled:true,bevelSize:.004,bevelThickness:.004,bevelSegments:3,curveSegments:16});
+    const m=M('fork',g,gg,'gloss',{sub:'clutch'});m.rotation.set(0,sx*Math.PI/2,0);m.rotateZ(.7);m.position.set(xo+sx*.006,.5,0);}
   M('fork',g,rotZ(new THREE.CylinderGeometry(.075,.075,.045,36)),'steel',{p:[sx*.1725,.5,0],sub:'pivot'});
-  if(sx>0)M('fork',g,new THREE.BoxGeometry(.016,.2,.035),'silver',{p:[.28,.33,-.07],sub:'handle'});
+  // recessed carry handle low on the outer face of the right arm (the left arm carries the hand-control cradle)
+  if(sx>0){                                                                       // light-grey D handle with the Celestron name, standing off the outer face
+    const zc=.03,y0=.15,y1=.31,off=.03;
+    M('fork',g,new THREE.BoxGeometry(.016,y1-y0,.022),'white',{p:[xo+sx*off,(y0+y1)/2,zc],sub:'handle'});
+    [y0,y1].forEach(y=>{M('fork',g,new THREE.BoxGeometry(off+.006,.022,.024),'white',{p:[xo+sx*off/2,y,zc],sub:'handle'});
+      const t=new THREE.TorusGeometry(.011,.011,8,12,Math.PI/2);});
+    const c=document.createElement('canvas');c.width=64;c.height=512;const x=c.getContext('2d');x.fillStyle='#d9dad6';x.fillRect(0,0,64,512);
+    x.translate(32,256);x.rotate(Math.PI/2);x.fillStyle='#8f9196';x.font='bold 40px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('CELESTRON',0,0);
+    const tx=new THREE.CanvasTexture(c);tx.encoding=THREE.sRGBEncoding;
+    const m=M('fork',g,new THREE.PlaneGeometry(.018,.13),'white',{p:[xo+sx*(off+.0085),(y0+y1)/2,zc],r:[0,sx*Math.PI/2,0],sub:'handle',noShadow:true});m.material.map=tx;m.material.needsUpdate=true;}
   return g;
 }
 const gArmR=buildArm(1),gArmL=buildArm(-1);
