@@ -92,6 +92,14 @@ diagonal:{n:'Star diagonal',
  subs:[['housing','Housing','Black body.'],['mirror','Mirror','Dielectric-coated flat.'],['barrel','Barrel','Eyepiece socket.'],['thumbscrew','Thumbscrew','Locks the eyepiece.']],
  spec:[['Turn','90°'],['Barrel','2 in (1.25 in via adapter)'],['Image','Upright, mirror-reversed']],
  m:['Keep mirror covered.','Hand-tighten the thumbscrew.'],t:[['Cannot reach focus for a camera','Remove diagonal and use a direct camera adapter.']]},
+power:{n:'Portable power station (12 V)',
+ d:'A rechargeable lithium battery box, like a Jackery Explorer 300 (293 Wh). It sits on the ground and a 12 V cable runs from its car-style DC socket to the 12 V input jack on the telescope’s drive base.',
+ p:'Runs the mount motors and hand controller in the field, away from mains power and safer than a car battery.',
+ h:'The CPC needs 12 V DC. A 300 Wh station gives roughly 10–20 hours of observing: about 7 W idle, 14 W while tracking and 25–30 W while slewing (this sim uses those rough figures and drains the battery with the simulated clock). Using the 12 V DC socket avoids the losses of running a mains adapter from the AC outlets.',
+ i:'Plugs into the 12 V input jack (F) next to the power switch. Recharge it from the wall, a car or a solar panel between nights.',
+ subs:[['body','Body','Battery pack with vents on the orange end panels.'],['panel','Front panel','Screen (input/output watts and charge %), USB, AC and the 12 V DC socket.'],['plug','12 V plug','Car-socket plug for the telescope cable.'],['cable','Power cable','12 V cable from the station to the drive base.'],['handle','Handle','Carry handle.']],
+ spec:[['Capacity','293 Wh (Explorer 300 class)'],['12 V DC output','12 V, 10 A car socket'],['Typical C11 runtime','≈ 10–20 h, depends on slewing and accessories (dew heaters use a lot more)'],['Size','≈ 23 × 14 × 17 cm, 3.2 kg']],
+ m:['Keep it charged between sessions; lithium packs like 30–80% for storage.','Keep the cable off the walking path so nobody trips.'],t:[['Scope resets or GoTo is erratic','Low voltage: recharge, or use a shorter / thicker cable.'],['Station turns its DC output off','Press the DC button; some units switch off with no load.']]},
 kit:{n:'Eyepiece and filter kit (1.25")',
  d:'Celestron’s 1.25-inch kit in a foam-lined metal case: five Plössl eyepieces (32, 17, 13, 8 and 6 mm), a 2× Barlow lens and seven colour/Moon filters. It sits open on the table beside the scope.',
  p:'Gives a range of magnifications and lets you try colour filters for planets and a neutral filter for the Moon.',
@@ -175,5 +183,5 @@ handset:{n:'NexStar-style hand controller',
  spec:[['Display','Two lines of 16 characters, red backlight; long text scrolls'],['Keys','ALIGN, ENTER, BACK, arrows, SOLAR SYSTEM, STARS, DEEP SKY, IDENTIFY, SKY TOUR, SCROLL ▲▼, MENU, HELP, OPTION (logo), OBJECT INFO, MOTOR SPEED'],['Rates','1 = ½× sidereal … 9 ≈ 3.5°/s; UP/DOWN reverse at rates 1–6'],['Port','RS-232 jack (not simulated)']],
  m:['Keep the cable strain-relieved.'],t:[['No response','Check cable and power.']]}
 };
-const GROUPS=[['Optical tube',['tube','corrector','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','kit','finder','telrad','starsense','dovetail']],['Mount',['fork','tripod','handset']]];
+const GROUPS=[['Optical tube',['tube','corrector','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','kit','finder','telrad','starsense','dovetail']],['Mount',['fork','power','tripod','handset']]];
 

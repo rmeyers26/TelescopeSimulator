@@ -38,6 +38,7 @@ const KID={
  dovetail:'A metal rail on top of the tube where finders and pointers clip on.',
  fork:'The two black arms and round base. Motors inside turn the telescope left-right and up-down to find and follow stars.',
  tripod:'The three-legged stand. It holds everything steady. Lower legs = less wobble.',
+ power:'A big rechargeable battery. A cable carries 12 volts from it to the telescope so the motors and hand controller work far from a wall plug. Watch the % on its screen go down as you use the telescope!',
  handset:'The hand controller. Press buttons to move the telescope, or pick an object and press ENTER – the telescope goes there by itself!'};
 const edu={on:false};
 function showInfo(){

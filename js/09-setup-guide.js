@@ -17,7 +17,7 @@ const SETUP=[
  {t:'Mount the finderscope',b:'First slide the quick-release mounting bracket off the finder bracket. Fit it over the two holes at the top left of the rear cell (looking from behind the tube) and fasten the two screws. Put the O-ring on the finder, push the eyepiece end through the front ring (no adjustment screws) and then the rear ring, pressing the spring-loaded pivot screw down if needed. Seat the O-ring in the front ring and hand-tighten the two adjustment screws.',w:'If you remove the bracket, never thread the screws all the way back into the rear cell: they can reach and damage the primary mirror.',part:'finder',reveal:['finder'],view:'rear'},
  {t:'Align the finderscope (daytime)',b:'Pick a distant object more than a mile away so there is no parallax. Centre it in the main telescope, lock both clutches, then turn the top and right adjustment screws until the finder cross-hairs sit on the object. The finder image is upside-down and reversed, so each screw can move the view in an unexpected direction at first.',part:'finder',sub:'bracket'},
  {t:'Attach the hand control',b:'The hand control ships in a separate box. Plug its coiled cable (phone-style connector) into the hand control port (A) on the drive base until it clicks. Slide the hand control holder into its slot on the fork arm so the controller can rest there.',part:'handset',reveal:['handset'],view:'left'},
- {t:'Power the telescope',b:'Plug the 12 V car-battery adapter (or optional power supply) into the 12 V input jack (F) on the drive base, then switch the On/Off switch (E) on. The panel on the front of the base carries A hand control, B auxiliary (×2), C PC and D auto-guider ports; the round switch and the jack are on the right shoulder.',part:'fork',view:'left'},
+ {t:'Power the telescope',reveal:['power'],b:'Set the portable power station on the ground beside the tripod, out of the walking path. Plug the 12 V car-socket cable into its DC socket and press its DC button, then plug the other end into the 12 V input jack (F) on the drive base and switch the telescope’s On/Off switch (E) on. (A car-battery adapter or mains supply works too.) The panel on the front of the base carries A hand control, B auxiliary (×2), C PC and D auto-guider ports; the round switch and the jack are on the right shoulder.',part:'fork',view:'left'},
  {t:'Align from the hand control',b:'With the scope powered and level, use ALIGN on the controller (or StarSense AutoAlign if fitted) and follow the prompts. Tracking starts after alignment. Never slew while someone is looking through the eyepiece.',part:'handset',tab:'ctrl'}
 ];
 const SU={on:false,i:0,mine:new Set()};
@@ -32,7 +32,7 @@ function levelUpdate(){const L=LEVEL.legs,dx=(L[1]-L[2])*.87,dz=L[0]-(L[1]+L[2])
 function setupMountVisible(show){                                   // tripod steps show only the tripod, so it is easy to see
   if(!show){for(const id of Object.keys(INFO))if(id!=='tripod'&&id!=='kit'&&!hidden.has(id)){hidden.add(id);SU.mine.add(id);}}
   else{SU.mine.forEach(id=>hidden.delete(id));SU.mine.clear();}}
-const SU_PARTS=['diagonal','eyepiece','finder','handset'];
+const SU_PARTS=['diagonal','eyepiece','finder','handset','power'];
 function setupGo(i){
   SU.on=true;SU.i=Math.max(0,Math.min(SETUP.length-1,i));const st=SETUP[SU.i];
   setupMountVisible(SU.i===0||SU.i>=MOUNT_STEP());

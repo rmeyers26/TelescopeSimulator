@@ -424,6 +424,61 @@ const gPort=G('fork',azG,FORK_EXP);
   M('fork',gPort,new THREE.CylinderGeometry(.008,.008,.004,6),'silver',{p:[-.14,.06,.11],r:[-.45,0,.4],sub:'base'});
   M('fork',gPort,new THREE.CylinderGeometry(.004,.004,.008,12),'silver',{p:[-.14,.064,.112],r:[-.45,0,.4],sub:'base'});
 })();
+
+// 12 V input jack (F) beside the power switch – the power cable plugs in here
+M('fork',gPort,new THREE.CylinderGeometry(.0085,.0085,.006,20),'black',{p:[.158,.05,.082],r:[-.35,0,-.62],sub:'base'});
+M('fork',gPort,new THREE.TorusGeometry(.0072,.0013,8,20),'silver',{p:[.1605,.0515,.0835],r:[-.35+Math.PI/2,0,-.62],sub:'base'}).userData.jack=true;
+
+/* ---- portable power station on the ground (modelled on a ~300 Wh unit such as the Jackery Explorer 300: 23 x 14 x 17 cm) ---- */
+BASE.psBody=new THREE.MeshStandardMaterial({color:0x18191c,roughness:.6,metalness:.1});
+BASE.psOrange=new THREE.MeshStandardMaterial({color:0xd8500f,roughness:.65,metalness:0});
+const psTex=canvasTex(512,300,()=>{},true);
+const PS={wh:293,used:0,lastMs:null,out:0,pct:100};
+function drawPsPanel(){const c=psTex.image,x=c.getContext('2d'),W=c.width,H=c.height;
+  x.fillStyle='#16171a';x.fillRect(0,0,W,H);x.strokeStyle='#2b2d33';x.lineWidth=6;x.strokeRect(3,3,W-6,H-6);
+  const box=(a,b,w,h,t)=>{x.strokeStyle='#e8601c';x.lineWidth=2.5;x.beginPath();x.roundRect?x.roundRect(a,b,w,h,10):x.rect(a,b,w,h);x.stroke();if(t){x.fillStyle='#bfc3cb';x.font='bold 13px system-ui';x.textAlign='center';x.fillText(t,a+w/2,b+h+16);}};
+  x.fillStyle='#e8601c';x.font='bold 24px system-ui';x.textAlign='left';x.fillText('POWER',26,52);x.fillStyle='#bfc3cb';x.font='bold 15px system-ui';x.fillText('STATION 300',28,74);
+  x.fillStyle='#000';x.fillRect(170,22,170,70);x.fillStyle='#e9eef7';x.font='bold 13px system-ui';x.textAlign='center';x.fillText('INPUT',205,44);x.fillText('OUTPUT',305,44);
+  x.font='bold 20px monospace';x.fillText('0W',205,74);x.fillText(Math.round(PS.out)+'W',305,74);
+  x.strokeStyle='#e8601c';x.lineWidth=4;x.beginPath();x.arc(255,57,25,-Math.PI/2,-Math.PI/2+Math.PI*2*PS.pct/100);x.stroke();x.fillStyle='#fff';x.font='bold 15px system-ui';x.fillText(Math.round(PS.pct)+'%',255,62);
+  x.fillStyle='#0b0b0d';x.beginPath();x.arc(440,62,38,0,7);x.fill();x.fillStyle='#8a8d95';x.font='11px system-ui';x.fillText('12V,10A',440,58);x.fillText('DC',440,74);
+  box(22,128,92,120,'INPUT');x.fillStyle='#0b0b0d';x.beginPath();x.arc(68,190,15,0,7);x.fill();x.strokeStyle='#bbb';x.lineWidth=3;x.beginPath();x.arc(68,190,10,0,7);x.stroke();
+  box(134,118,92,130,'USB');x.fillStyle='#0b0b0d';[[180,145,28,10],[180,180,30,16],[180,215,30,16]].forEach(([a,b,w,h])=>x.fillRect(a-w/2,b-h/2,w,h));
+  box(246,118,244,130,'AC 300W');[[310,170],[425,170]].forEach(([a,b])=>{x.fillStyle='#0b0b0d';x.fillRect(a-36,b-34,72,68);x.fillStyle='#2b2d33';x.fillRect(a-16,b-18,6,22);x.fillRect(a+10,b-18,6,22);x.beginPath();x.arc(a,b+16,7,0,7);x.fill();});
+  psTex.needsUpdate=true;}
+const gPS=G('power',root,V3(.25,.15,.25));EXPL[EXPL.length-1].base.set(.9,0,-.3);   // on the ground, outside the tripod legs, on the side you see first
+(function(){
+  const sh=new THREE.Shape(),w=.23,h=.15,r=.025;sh.moveTo(-w/2+r,0);sh.lineTo(w/2-r,0);sh.quadraticCurveTo(w/2,0,w/2,r);sh.lineTo(w/2,h-r);sh.quadraticCurveTo(w/2,h,w/2-r,h);sh.lineTo(-w/2+r,h);sh.quadraticCurveTo(-w/2,h,-w/2,h-r);sh.lineTo(-w/2,r);sh.quadraticCurveTo(-w/2,0,-w/2+r,0);
+  const body=new THREE.ExtrudeGeometry(sh,{depth:.12,bevelEnabled:true,bevelSize:.008,bevelThickness:.008,bevelSegments:3,curveSegments:8});body.translate(0,0,-.06);
+  M('power',gPS,body,'psBody',{p:[0,.038,0],sub:'body'});
+  [-1,1].forEach(sd=>{M('power',gPS,new THREE.BoxGeometry(.012,.12,.124),'psOrange',{p:[sd*.117,.11,0],sub:'body'});            // orange vented end panels
+    for(let i=0;i<9;i++)M('power',gPS,new THREE.BoxGeometry(.004,.006,.1),'black',{p:[sd*.1235,.064+i*.011,0],sub:'body'});});
+  const hs=new THREE.Shape();hs.moveTo(-.09,0);hs.lineTo(-.09,.035);hs.quadraticCurveTo(-.09,.07,-.05,.07);hs.lineTo(.05,.07);hs.quadraticCurveTo(.09,.07,.09,.035);hs.lineTo(.09,0);hs.lineTo(.07,0);hs.lineTo(.07,.03);hs.quadraticCurveTo(.07,.05,.05,.05);hs.lineTo(-.05,.05);hs.quadraticCurveTo(-.07,.05,-.07,.03);hs.lineTo(-.07,0);hs.closePath();
+  const hg=new THREE.ExtrudeGeometry(hs,{depth:.05,bevelEnabled:true,bevelSize:.006,bevelThickness:.006,bevelSegments:3,curveSegments:10});hg.translate(0,0,-.025);
+  M('power',gPS,hg,'psBody',{p:[0,.196,0],sub:'handle'});                                                                          // carry handle
+  {const pm=M('power',gPS,new THREE.PlaneGeometry(.2,.117),'black',{p:[0,.11,.0695],sub:'panel',noShadow:true});pm.material.map=psTex;pm.material.color.set(0xffffff);pm.material.metalness=0;pm.material.roughness=.5;pm.material.emissiveMap=psTex;}   // front panel (lit screen)          // front panel
+  M('power',gPS,cylZ(.012,.012,.03,20),'black',{p:[.072,.142,.075],sub:'plug'}).userData.plug=true;                                // 12 V car plug in the DC socket
+  M('power',gPS,cylZ(.0085,.0085,.022,16),'psOrange',{p:[.072,.142,.093],sub:'plug'});
+  drawPsPanel();
+})();
+gPS.rotation.y=Math.atan2(.9,-.3)+.35;   // front panel faces outward, toward the observer
+const psCable=M('power',gPS.parent,new THREE.BufferGeometry(),'rubber',{sub:'cable',noShadow:true});psCable.userData.part='power';
+const psTmp={a:new THREE.Vector3(),b:new THREE.Vector3(),key:''};
+function updPowerCable(){                                        // cable from the power station's 12 V socket to the jack on the drive base (rebuilt only when something moved)
+  const plug=ALLM.find(m=>m.userData.plug),jack=ALLM.find(m=>m.userData.jack);if(!plug||!jack)return;
+  plug.updateWorldMatrix(true,false);jack.updateWorldMatrix(true,false);
+  const a=psTmp.a.set(0,0,.03).applyMatrix4(plug.matrixWorld),b=jack.getWorldPosition(psTmp.b);
+  const key=[a.x,a.z,b.x,b.y,b.z].map(v=>v.toFixed(3)).join();if(key===psTmp.key)return;psTmp.key=key;
+  const fw=V3(Math.sin(gPS.rotation.y),0,Math.cos(gPS.rotation.y));                // out of the front panel, then down to the ground
+  const out=a.clone().addScaledVector(fw,.07).setY(.05),gnd=a.clone().addScaledVector(fw,.12).lerp(V3(b.x,0,b.z),.35).setY(.033);
+  const dir=V3(b.x,0,b.z).normalize(),mid=V3(b.x,0,b.z).addScaledVector(dir,.28).setY(.25),hang=V3(b.x,0,b.z).addScaledVector(dir,.12).setY(b.y-.25);   // sags outside the tripod legs, then rises to the jack
+  const near=b.clone().addScaledVector(dir,.035).add(V3(0,-.02,0));
+  psCable.geometry.dispose();psCable.geometry=new THREE.TubeGeometry(new THREE.CatmullRomCurve3([a,out,gnd,mid,hang,near,b]),120,.005,8);}
+function updPowerStation(dt,slewing,tracking){              // battery drains with the simulated clock; output shows a rough load
+  PS.out=(slewing?28:tracking?14:7)+(edu&&false?0:0);
+  if(PS.lastMs!==null){const h=(simMs-PS.lastMs)/3.6e6;if(h>0&&h<12)PS.used+=PS.out*1.15*h;}PS.lastMs=simMs;   // 15% conversion loss
+  PS.pct=clamp(100-PS.used/PS.wh*100,0,100);if(!updPowerStation.t||performance.now()-updPowerStation.t>1000){updPowerStation.t=performance.now();drawPsPanel();}}
+
 // hand controller: sits in a cradle bolted to the outer face of an arm, with a coiled cord down to the port panel.
 // buildHC(sx) makes the left-arm version (sx=-1, two-arm mode) or the right-arm version (sx=+1, one-arm mode)
 function buildHC(sx,zc){
