@@ -55,7 +55,16 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
 .hc button:active,.hc button.act{background:#4a5780}.hc button.fl{outline:2px solid var(--or);animation:fl 1s infinite}@keyframes fl{50%{outline-color:transparent}}
 .lab{position:fixed;pointer-events:none;font:11px system-ui;color:#fff;background:rgba(20,24,34,.85);border:1px solid #ff8a3d;border-radius:10px;padding:1px 7px 1px 2px;white-space:nowrap;transform:translate(10px,-50%);z-index:6;display:none}.lab b{display:inline-block;background:#ff8a3d;color:#111;border-radius:50%;min-width:15px;text-align:center;margin-right:4px}.lab:before{content:'';position:absolute;left:-10px;top:50%;width:10px;height:1px;background:#ff8a3d}
 .su h2{margin:4px 0}.su .st{border:1px solid #333b52;border-radius:10px;padding:8px 10px;margin:8px 0;background:#161b27}.su .wn{color:#ffb347;font-size:12px;margin-top:6px}.su ol{padding-left:18px;margin:6px 0}.su li{cursor:pointer;margin:2px 0}.su li.on{color:#ff8a3d;font-weight:600}.su li.dn{opacity:.55}.su .kk{font-size:11px;columns:2;color:#9aa4bf}
-.lcd{position:relative}#scr{position:absolute;right:8px;top:6px;font-size:18px;opacity:0;transition:opacity .15s}.k2{grid-template-columns:1fr 1.4fr!important;align-items:center}.rs{font-size:10px;color:#6c7590;text-align:center}.cau{font-size:11px;color:#ffb347;background:#2a1a08;border:1px solid #5a3a10;border-radius:8px;padding:6px 8px;margin:8px 0}
+.lcd{position:relative}
+/* Education mode: bigger touch targets, simpler panels, no hardware tab */
+body.edu .b{font-size:14px;padding:9px 13px}body.edu .hc button{font-size:15px;padding:12px 4px}body.edu #tabs [data-t=link]{display:none}
+body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:15px}body.edu .pl{padding:10px 8px}
+.kid{background:#16213a;border:1px solid #2c4a7a;border-radius:12px;padding:10px 12px;margin:8px 0;font-size:15px;line-height:1.5}
+.ms{border:1px solid #333b52;border-radius:12px;padding:10px;margin:8px 0;background:#161b27;display:flex;gap:10px;align-items:flex-start}.ms.done{border-color:#e9b949;background:#2a2412}
+.ms .bd{font-size:30px;line-height:1;filter:grayscale(1);opacity:.45}.ms.done .bd{filter:none;opacity:1}.ms h4{margin:0 0 4px}.ms .hint{font-size:13px;color:#9aa4bf}
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.cmp canvas{width:100%;border-radius:50%;background:#000}.cmp div{text-align:center;font-size:12px;color:#9aa4bf}
+#reward{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:30}#reward>div{background:#141c30;border:2px solid #e9b949;border-radius:18px;padding:22px 26px;text-align:center;max-width:320px;animation:pop .4s}
+#reward .big{font-size:64px}@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}#scr{position:absolute;right:8px;top:6px;font-size:18px;opacity:0;transition:opacity .15s}.k2{grid-template-columns:1fr 1.4fr!important;align-items:center}.rs{font-size:10px;color:#6c7590;text-align:center}.cau{font-size:11px;color:#ffb347;background:#2a1a08;border:1px solid #5a3a10;border-radius:8px;padding:6px 8px;margin:8px 0}
 .krow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0}
 .mid{display:grid;grid-template-columns:1fr 1.2fr 0.5fr;gap:8px;align-items:center;margin:8px 0}
 .dpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,38px);gap:4px}.dpad button{font-size:15px;padding:0}
@@ -73,12 +82,12 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
   <button class="b on" id="bOrbit">Orbit</button><button class="b" id="bWalk">Walk</button><span class="sep"></span>
   <button class="b" data-v="front">Front</button><button class="b" data-v="rear">Rear</button><button class="b" data-v="left">Left</button><button class="b" data-v="right">Right</button><button class="b" data-v="top">Top</button><span class="sep"></span>
   <button class="b on" id="bA2">2 arms</button><button class="b" id="bA1">1 arm</button><span class="sep"></span>
-  <button class="b" id="bStar">StarSense</button><button class="b on" id="bDew">Dew shield</button><button class="b" id="bCut">Cutaway</button><button class="b" id="bOpt">Optics</button><button class="b" id="bCine">Cinematic</button><button class="b on" id="bFol">Follow</button><button class="b" id="bLab">Labels</button><button class="b on" id="bDip">Dipper guide</button><span class="sep"></span>
+  <button class="b" id="bStar">StarSense</button><button class="b on" id="bDew">Dew shield</button><button class="b" id="bCut">Cutaway</button><button class="b" id="bOpt">Optics</button><button class="b" id="bCine">Cinematic</button><button class="b on" id="bFol">Follow</button><button class="b" id="bLab">Labels</button><button class="b on" id="bDip">Dipper guide</button><button class="b" id="bEdu">🎓 Education mode</button><span class="sep"></span>
   <label>Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label>
   <button class="b" id="bReset">Reset view</button>
 </div>
 <div id="hud"></div>
-<div id="toast"></div>
+<div id="reward"></div><div id="toast"></div>
 <div id="joy"><i></i></div>
 <div id="lcard"></div>
 
@@ -128,6 +137,7 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
     <p class="sm mu">Positions use low-precision formulas (Sun/planets ≈ arcminutes, Moon ≈ 0.1–0.2°). Faint field stars are procedurally generated for realism, not real catalog stars.</p>
   </div>
   <div class="pane su" id="p-setup"></div>
+  <div class="pane" id="p-miss"></div>
   <div class="pane" id="p-learn"></div>
   <div class="pane" id="p-link"></div>
 </div>
@@ -851,6 +861,21 @@ function rayPath(h){                          // polyline [z,y] for a ray enteri
 const RAY_H=[.07,-.07,.11,-.11,.135,-.135],RAY_COL=[0xffd54a,0x6ad0ff,0xff7ab8,0xff7ab8];
 const rayPts=RAY_H.map(h=>rayPath(h).map(p=>V3(0,p[1],p[0])));
 const particles=[];
+// "Follow the light": one big glowing photon that travels the light path a stage at a time
+const photon={on:false,a:0,b:1,t:0,pts:rayPath(.11).map(p=>V3(0,p[1],p[0]))};
+photon.s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffe27a,transparent:true,depthTest:false,depthWrite:false}));photon.s.scale.set(.1,.1,1);photon.s.renderOrder=20;photon.s.visible=false;altG.add(photon.s);
+photon.trail=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial({color:0xffd54a,transparent:true,opacity:.85,depthTest:false}));photon.trail.renderOrder=19;altG.add(photon.trail);photon.trail.visible=false;
+function stepPhoton(dt){
+  photon.s.visible=photon.trail.visible=photon.on;if(!photon.on)return;
+  if(!photon.s.material.map)photon.s.material.map=glowTex;
+  photon.t+=dt*.45;if(photon.t>1.35)photon.t=0;const u=Math.min(1,photon.t);
+  const P=photon.pts,seg=[];for(let i=photon.a;i<photon.b;i++)seg.push([P[i],P[i+1]]);
+  const L=seg.map(q=>q[0].distanceTo(q[1])),tot=L.reduce((a,b)=>a+b,0);let d=u*tot,k=0;while(k<seg.length-1&&d>L[k]){d-=L[k];k++;}
+  const pos=seg[k][0].clone().lerp(seg[k][1],Math.min(1,d/L[k]));photon.s.position.copy(pos);
+  const tr=[P[photon.a]];for(let i=0;i<k;i++)tr.push(seg[i][1]);tr.push(pos);
+  if(tr[0].distanceTo(pos)>.002){photon.trail.geometry.dispose();photon.trail.geometry=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(tr,false,'catmullrom',0),Math.max(8,tr.length*12),.004,6);}   // thick glowing trail
+  const pul=1+.25*Math.sin(performance.now()/120);photon.s.scale.set(.1*pul,.1*pul,1);
+}
 (function(){const up=V3(0,1,0);
   rayPts.forEach((pts,ri)=>{let L=0;const lens=[];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],d=b.clone().sub(a),l=d.length();lens.push(l);L+=l;
     const m=new THREE.Mesh(new THREE.CylinderGeometry(.0013,.0013,l,6),new THREE.MeshBasicMaterial({color:RAY_COL[Math.min(i,3)]}));
@@ -1146,6 +1171,7 @@ function viewFrom(kind){
   else if(kind==='left')off=ax.clone().multiplyScalar(-2.6);
   else if(kind==='top')off=up.clone().multiplyScalar(2.8).add(dir.clone().multiplyScalar(-.05));
   else if(kind==='cut')off=ax.clone().multiplyScalar(1.5).add(V3(0,.15,0));
+  else if(kind==='light')off=ax.clone().multiplyScalar(.75).add(V3(0,.95,0));    // above the near fork arm, looking into the cut-away tube
   else off=V3(2.2,.9,-2.3).multiplyScalar(1.1);
   tweenTo(toOrbit(piv.clone().add(off),piv));
 }
@@ -1205,7 +1231,7 @@ function updateClip(){const n=V3(-1,0,0).transformDirection(altG.matrixWorld),p=
 /* =====================================================================
    8. UI: tabs, parts list, info panel
    ===================================================================== */
-const TABS=[['parts','Parts'],['setup','Setup'],['info','Info'],['ctrl','Control'],['sky','Sky'],['learn','Learn'],['link','Link']];
+const TABS=[['parts','Parts'],['miss','Missions'],['setup','Setup'],['info','Info'],['ctrl','Control'],['sky','Sky'],['learn','Learn'],['link','Link']];
 let curTab='parts';
 $('#tabs').innerHTML=TABS.map(([k,n])=>`<button data-t="${k}" class="${k==='parts'?'on':''}">${n}</button>`).join('')+'<button class="min" id="bMin">▾</button>';
 function tab(k){if(k==='setup'&&!SU.on)setupGo(0);curTab=k;$$('#tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));$('#dock').classList.remove('min');$('#bMin').textContent='▾';}
@@ -1219,8 +1245,30 @@ function renderParts(){
 }
 $('#p-parts').addEventListener('click',e=>{const eye=e.target.closest('[data-eye]');if(eye){toggleHide(eye.dataset.eye);renderParts();return;}const p=e.target.closest('[data-p]');if(p)selectPart(p.dataset.p,null,true);});
 
+const KID={
+ tube:'The big white tube holds all the glass and mirrors in exactly the right places. It is sealed so dust and bugs stay out.',
+ corrector:'The thin glass window at the front. Starlight comes in here first. It gently bends the light so the picture comes out sharp.',
+ secondary:'A small mirror stuck to the middle of the front glass. It catches the light from the big mirror and bounces it back down the tube.',
+ primary:'The big curved mirror at the back. It collects lots of light – about 1,600 times more than your eye – and bounces it forward.',
+ baffle:'A black tube in the middle that stops stray light from sneaking into your eyepiece, so the sky looks dark and stars look sharp.',
+ rearcell:'The black back end of the tube. It holds the big mirror, the focus knob and the vents that let warm air out.',
+ focuser:'The focus knob. Turn it slowly until stars become tiny sharp dots – just like focusing binoculars.',
+ dew:'A tube on the front that stops dew (water drops) from forming on the glass on cold nights.',
+ visualback:'The ring on the back that eyepieces and cameras attach to.',
+ diagonal:'A little box with a mirror that turns the light sideways, so you can look down into the eyepiece instead of lying on the ground.',
+ eyepiece:'The part you look into. It works like a magnifying glass. Small numbers (like 6 mm) mean bigger, closer views.',
+ kit:'A case of extra eyepieces and colourful filters. Swap eyepieces to zoom in or out; filters can bring out details on planets.',
+ finder:'A mini telescope on top. It sees a wide part of the sky, so you can aim the big telescope more easily.',
+ starsense:'A small camera that takes pictures of the stars and works out where the telescope is pointing all by itself.',
+ telrad:'A pointer with no zoom. You look through the window and see red circles floating on the sky – put them on your target.',
+ dovetail:'A metal rail on top of the tube where finders and pointers clip on.',
+ fork:'The two black arms and round base. Motors inside turn the telescope left-right and up-down to find and follow stars.',
+ tripod:'The three-legged stand. It holds everything steady. Lower legs = less wobble.',
+ handset:'The hand controller. Press buttons to move the telescope, or pick an object and press ENTER – the telescope goes there by itself!'};
+const edu={on:false};
 function showInfo(){
   const el=$('#p-info'),id=sel.part;
+  if(edu.on&&id&&KID[id]){const I=INFO[id];el.innerHTML=`<h2>${I.n}</h2>`+schem(id,false)+`<div class="kid">${KID[id]}</div><div class="row"><button class="b sm" data-a="focus">Show me</button><button class="b sm${sel.solo===id?' on':''}" data-a="solo">Pull it out</button><button class="b sm" data-a="clear">Done</button></div><p class="mu sm">Turn off Education mode in the toolbar for the full technical details.</p>`;return;}
   if(!id){el.innerHTML='<h2>Component info</h2><p class="mu">Click a component in the 3D view, the diagram or the Parts list to drill into its construction, how it works, specifications, maintenance and troubleshooting.</p>';return;}
   const I=INFO[id];let h=`<h2>${I.n}</h2>`+schem(id,false);
   h+=`<div class="row"><button class="b sm" data-a="focus">Focus camera</button><button class="b sm${sel.isolate?' on':''}" data-a="iso">Isolate</button><button class="b sm${sel.solo===id?' on':''}" data-a="solo">Pull out of assembly</button><button class="b sm" data-a="clear">Clear</button></div>`;
@@ -1290,6 +1338,49 @@ $('#p-setup').addEventListener('click',e=>{const b=e.target.closest('[data-su]')
   else if(k==='all'){SU_PARTS.forEach(id=>hidden.delete(id));renderParts();viewFrom('iso');}
   else if(k==='lab')$('#bLab').click();else if(k.startsWith('go')){setupGo(+k.slice(2));setupShow();}});
 
+/* =====================================================================
+   MISSIONS (Education mode) – point the real (simulated) telescope at targets to earn badges
+   ===================================================================== */
+const MISSIONS=[
+ {id:'polaris',b:'⭐',t:'Find the North Star',goal:'Point the telescope at Polaris.',obj:'Polaris',tol:.4,
+  hint:'Try Learn → “Find the North Star” first. Then press STARS on the controller, pick Bright stars, scroll to Polaris and press ENTER twice.'},
+ {id:'saturn',b:'🪐',t:'See Saturn’s rings',goal:'Point at Saturn and use the 9 mm or 6 mm eyepiece.',obj:'saturn',tol:.12,minMag:300,
+  hint:'Press SOLAR SYSTEM, scroll to Saturn and press ENTER twice. Then pick 9 mm or 6 mm under the eyepiece view.'},
+ {id:'moon',b:'🌙',t:'Craters on the Moon',goal:'Point the telescope at the Moon.',obj:'moon',tol:.3,
+  hint:'Press SOLAR SYSTEM – the Moon is first. If it is not up, speed up time in the Sky tab until it rises.'},
+ {id:'galaxy',b:'🌌',t:'Find a galaxy',goal:'Point at any galaxy, like the Andromeda Galaxy (M31).',kind:'gal',tol:.35,obj:'M31',
+  hint:'Press DEEP SKY → Messier, type 3 then 1, and press ENTER twice. Andromeda is 2.5 million light-years away!'},
+ {id:'cluster',b:'✨',t:'Visit a star cluster',goal:'Point at a star cluster such as the Pleiades (M45).',kind:'oc gc',tol:.35,obj:'M45',
+  hint:'Press DEEP SKY → Messier, type 4 then 5, press ENTER twice. Try the 40 mm eyepiece so the whole cluster fits.'}];
+const MSN={done:{},hold:{}};try{MSN.done=JSON.parse(localStorage.getItem('c11badges')||'{}');}catch(_){}
+const NAKED={n:'Your eye',fov:60,mag:1,finder:true};
+function msTarget(m){return OBJ.find(o=>o.id===m.obj);}
+function msHit(m){const st=driver.state(),T=st.truth;if(st.slewing)return null;const eq=horToEq(T.alt,T.az,jdNow());
+  const cand=m.kind?OBJ.filter(o=>o.type==='dso'&&m.kind.split(' ').includes(o.kind)):[msTarget(m)];
+  const o=cand.find(o=>o.alt>0&&angSep({ra:o.cra,dec:o.cdec},eq)<m.tol);if(!o)return null;if(m.minMag&&EPS[epI].mag<m.minMag)return null;return o;}
+function renderMissions(){
+  const n=MISSIONS.filter(m=>MSN.done[m.id]).length;
+  $('#p-miss').innerHTML=`<h2>Missions</h2><p class="mu">Use the hand controller (Control tab) to point the telescope at each target. Hold it there for 2 seconds to earn the badge. ${n}/${MISSIONS.length} badges.</p>`+
+   MISSIONS.map(m=>{const o=msTarget(m),up=o&&o.alt>0;return `<div class="ms${MSN.done[m.id]?' done':''}"><div class="bd">${m.b}</div><div style="flex:1"><h4>${m.t}${MSN.done[m.id]?' ✔':''}</h4><div>${m.goal}</div>
+     <div class="hint">${up?'':'⚠ Not above the horizon right now – speed up time in the Sky tab. '}${m.hint}</div><div class="row"><button class="b sm" data-ms="${m.id}">Show me how</button></div></div></div>`;}).join('')+
+   `<h3>Your eye vs. finder vs. telescope</h3><p class="mu sm">The same patch of sky three ways, centred where the telescope points. The telescope sees a tiny piece of sky but makes it big and bright.</p>
+   <div class="cmp"><div><canvas id="cmp0" width="220" height="220"></canvas>Your eye (60° wide)</div><div><canvas id="cmp1" width="220" height="220"></canvas>Finder 9×50 (5°)</div><div><canvas id="cmp2" width="220" height="220"></canvas><span id="cmpT">Telescope</span></div></div>
+   <div class="row"><button class="b sm" data-ms="reset">Reset badges</button></div>`;
+}
+$('#p-miss').addEventListener('click',e=>{const b=e.target.closest('[data-ms]');if(!b)return;const k=b.dataset.ms;
+  if(k==='reset'){MSN.done={};try{localStorage.removeItem('c11badges');}catch(_){}renderMissions();return;}
+  const m=MISSIONS.find(x=>x.id===k),o=msTarget(m);if(!o)return;if(o.alt<=0){toast(o.name+' is below the horizon now. Speed up time in the Sky tab.',3500);return;}
+  if(doGoto(o)){if(m.minMag&&EPS[epI].mag<m.minMag)setEp(4);if(m.id==='cluster')setEp(1);toast('Watch the telescope move! This is what the hand controller does when you press ENTER.',3500);}});
+function missionsTick(dt){
+  {const st=driver.state();if(st.slewing||st.moving)MSN.armed=true;}   // badges only count after the child has moved the telescope (it starts on Polaris)
+  if(MSN.armed)for(const m of MISSIONS){if(MSN.done[m.id])continue;const o=msHit(m);MSN.hold[m.id]=o?(MSN.hold[m.id]||0)+dt:0;
+    if(MSN.hold[m.id]>2){MSN.done[m.id]=Date.now();try{localStorage.setItem('c11badges',JSON.stringify(MSN.done));}catch(_){}
+      const r=$('#reward');r.innerHTML=`<div><div class="big">${m.b}</div><h2>Mission complete!</h2><p>${m.t}</p><p class="mu sm">You found ${o.name}. ${MISSIONS.filter(x=>MSN.done[x.id]).length}/${MISSIONS.length} badges.</p><button class="b on" id="rwOk">Awesome!</button></div>`;
+      r.style.display='flex';$('#rwOk').onclick=()=>{r.style.display='none';};renderMissions();}}
+  if(curTab==='miss'){drawEyepiece($('#cmp0'),NAKED);drawEyepiece($('#cmp1'),EPS[0]);drawEyepiece($('#cmp2'),EPS[epI]);$('#cmpT').textContent=`Telescope ${EPS[epI].n} (${EPS[epI].fov<1?EPS[epI].fov.toFixed(2):EPS[epI].fov.toFixed(1)}°, ${Math.round(EPS[epI].mag)}×)`;}
+}
+renderMissions();
+
 /* ---- toolbar ---- */
 $('#bOrbit').onclick=()=>setMode('orbit');$('#bWalk').onclick=()=>setMode('walk');
 $$('#top [data-v]').forEach(b=>b.onclick=()=>viewFrom(b.dataset.v));
@@ -1324,6 +1415,11 @@ function updLabels(){
     if(labState.v.z>1){e.style.display='none';return;}
     e.style.display='block';e.style.left=(r.left+(labState.v.x+1)/2*r.width)+'px';e.style.top=(r.top+(1-labState.v.y)/2*r.height)+'px';});
 }
+function setEdu(v){edu.on=v;document.body.classList.toggle('edu',v);$('#bEdu').classList.toggle('on',v);try{localStorage.setItem('c11edu',v?'1':'0');}catch(_){}
+  if(v&&curTab==='link')tab('miss');showInfo();renderLearn();renderMissions();}
+$('#bEdu').onclick=()=>setEdu(!edu.on);
+// Education mode is on by default; the choice is remembered on this device
+{let v=null;try{v=localStorage.getItem('c11edu');}catch(_){}queueMicrotask(()=>setEdu(v!=='0'));}
 $('#bDip').onclick=()=>{guide.on=!guide.on;$('#bDip').classList.toggle('on',guide.on);};
 $('#bLab').onclick=()=>{labState.on=!labState.on;$('#bLab').classList.toggle('on',labState.on);};
 $('#bOpt').onclick=()=>{optics.on=!optics.on;$('#bOpt').classList.toggle('on',optics.on);};
@@ -1688,8 +1784,8 @@ function drawSaturn(x,o,px,py,r,proj,jd,ppd){
     const mx=px+ma[0]*ox+q.pole[0]*oy,my=py+ma[1]*ox+q.pole[1]*oy;if(Math.hypot(mx-px,my-py)<r*1.1&&Math.sin(ps)<0)continue;   // hidden behind the globe
     const mr=Math.max(.9,3-.25*m.m);x.save();x.globalCompositeOperation='lighter';const gg=x.createRadialGradient(mx,my,0,mx,my,mr*2.4);gg.addColorStop(0,'rgba(255,245,225,.95)');gg.addColorStop(1,'rgba(255,245,225,0)');x.fillStyle=gg;x.beginPath();x.arc(mx,my,mr*2.4,0,7);x.fill();x.restore();}
 }
-function drawEyepiece(c){
-  const x=c.getContext('2d'),W=c.width,H=c.height,R=Math.min(W,H)/2-4,cx=W/2,cy=H/2,ep=EPS[epI],fov=ep.fov,ppd=R/(fov/2),st=driver.state(),T=st.truth,jd=jdNow();
+function drawEyepiece(c,epo){
+  const x=c.getContext('2d'),W=c.width,H=c.height,R=Math.min(W,H)/2-4,cx=W/2,cy=H/2,ep=epo||EPS[epI],fov=ep.fov,ppd=R/(fov/2),st=driver.state(),T=st.truth,jd=jdNow();
   x.fillStyle='#000';x.fillRect(0,0,W,H);x.save();x.beginPath();x.arc(cx,cy,R,0,7);x.clip();
   const day=clamp((SUN.alt+6)/12,0,1);x.fillStyle=day>0?`rgba(${40+90*day|0},${60+110*day|0},${90+140*day|0},${.25+.7*day})`:'#04060c';x.fillRect(0,0,W,H);
   const proj=(az,alt)=>[cx+wrap180(az-T.az)*Math.cos(T.alt*D2R)*ppd,cy-(alt-T.alt)*ppd];
@@ -1745,6 +1841,12 @@ function drawMoon(x,o,px,py,r){
    11. LEARN MODE
    ===================================================================== */
 const LESSONS=[
+{t:'⭐ Follow the light (how the telescope works)',kid:true,s:[
+ {c:true,v:'light',ph:[0,1],pf:.45,text:'Light from Saturn travels for more than an hour to reach us. Watch the yellow dot: it comes in through the thin glass window at the front of the tube.'},
+ {c:true,v:'light',ph:[0,1],s:'primary',text:'The light travels all the way to the BIG curved mirror at the back. The mirror is like a giant bowl that catches the light and squeezes it together.'},
+ {c:true,v:'light',ph:[1,2],s:'secondary',text:'The big mirror bounces the light forward to a SMALL mirror stuck on the front glass.'},
+ {c:true,v:'light',ph:[2,3],s:'diagonal',text:'The small mirror sends the light back down the tube, through a hole in the middle of the big mirror, into the diagonal. Its mirror turns the light sideways.'},
+ {c:true,v:'light',ph:[3,4],s:'eyepiece',ep:4,tab:'ctrl',text:'Finally the light goes into the eyepiece, which works like a magnifying glass for your eye. Folding the light back and forth lets a long telescope fit in a short tube! Look at the eyepiece view in the Control tab.'}]},
 {t:'How a Schmidt-Cassegrain works',s:[
  {v:'front',s:'corrector',x:0,c:false,text:'Light from a star enters the front of the C11 through the corrector plate. This thin glass plate seals the tube and fixes the spherical error of the main mirror.'},
  {c:true,o:true,s:'primary',text:'Light travels to the back of the tube and reflects from the large concave primary mirror (about f/2, 559 mm focal length). It would focus in front of the primary, but the secondary intercepts it first.'},
@@ -1781,7 +1883,7 @@ const LESSONS=[
  {text:'If the defocused star looks lopsided, adjust a screw about 1/8 turn at a time, re-centre the star, and repeat until the rings are concentric. Always re-check at the end.'},
  {s:'focuser',text:'The focus knob moves the primary mirror. Finish each focus move in the same direction to reduce backlash and image shift.'},
  {s:'dew',text:'Dew is a main nuisance: use a dew shield (use the eye icon in Parts) and a heater strap in humid conditions. Cap the optics when finished.'}]},
-{t:'Find the North Star (Big Dipper trick)',s:[
+{t:'⭐ Find the North Star (Big Dipper trick)',kid:true,s:[
  {look:'north',dip:true,text:'You are now standing behind the telescope, facing north. The blue lines join the stars of the Big Dipper, a group of 7 bright stars shaped like a ladle or saucepan. Drag to look around if you cannot see it.'},
  {look:'north',dip:true,text:'Find the two stars at the end of the Dipper’s bowl, Merak and Dubhe. They are called the pointer stars. The orange dashed line starts at Dubhe.'},
  {look:'north',dip:true,text:'Follow the pointers out of the bowl about 5 times the gap between them. You land on a fairly bright star sitting on its own: Polaris, the North Star. It is the end of the Little Dipper’s handle.'},
@@ -1790,8 +1892,8 @@ const LESSONS=[
 ];
 const L={lesson:null,step:0};
 function renderLearn(){                           // lesson list lives in the Learn tab; the running step floats over the 3D view
-  $('#p-learn').innerHTML='<h2>Guided learning</h2><p class="mu">Short interactive tutorials. Each step moves the camera, selects parts or highlights controls for you, and the step text appears over the 3D view so you can keep other tabs open.</p>'+LESSONS.map((l,i)=>`<div class="pl${L.lesson===i?' on':''}" data-l="${i}"><span style="flex:1"><b>${i+1}. ${l.t}</b><br><span class="sm mu">${l.s.length} steps</span></span><span class="mu">›</span></div>`).join('');
-  const c=$('#lcard');if(L.lesson===null){c.style.display='none';return;}
+  $('#p-learn').innerHTML='<h2>Guided learning</h2>'+(edu.on?'<p class="mu">Education mode shows the beginner lessons. Turn it off to see all lessons.</p>':'')+'<p class="mu">Short interactive tutorials. Each step moves the camera, selects parts or highlights controls for you, and the step text appears over the 3D view so you can keep other tabs open.</p>'+LESSONS.map((l,i)=>[l,i]).filter(([l])=>!edu.on||l.kid).map(([l,i],j)=>`<div class="pl${L.lesson===i?' on':''}" data-l="${i}"><span style="flex:1"><b>${j+1}. ${l.t}</b><br><span class="sm mu">${l.s.length} steps</span></span><span class="mu">›</span></div>`).join('');
+  const c=$('#lcard');if(L.lesson===null){c.style.display='none';photon.on=false;return;}
   const ls=LESSONS[L.lesson],st=ls.s[L.step];
   c.innerHTML=`<div class="row" style="margin-top:0"><b>${ls.t}</b><span class="mu sm" style="flex:1">step ${L.step+1}/${ls.s.length}</span><button class="b sm" data-n="menu">✕</button></div><div>${st.text}</div><div class="row"><button class="b" data-n="prev"${L.step?'':' disabled'}>Back</button><button class="b on" data-n="next">${L.step<ls.s.length-1?'Next':'Finish'}</button></div>`;
   c.style.display='block';
@@ -1804,6 +1906,7 @@ function doStep(st){
   if(st.s){hidden.delete(st.s);selectPart(st.s,null,false);}
   if(st.ep!==undefined)setEp(st.ep);
   if(st.f)flash(st.f);
+  if(st.ph){photon.on=true;photon.a=st.ph[0];photon.b=st.ph[1];photon.t=0;}else photon.on=false;
   if(st.dip){guide.on=true;$('#bDip').classList.add('on');}
   if(st.look==='north'){setMode('walk');const pl=starById('Polaris'),mz=starById('Megrez'),az=wrap180(wrap180(pl.az)+wrap180(wrap180(mz.az)-wrap180(pl.az))/2);   // aim between the Big Dipper and Polaris
     cam.px=0;cam.pz=2.6;cam.py=1.6;cam.wyaw=-az*D2R;cam.wpitch=clamp(((pl.alt+Math.max(mz.alt,2))/2)*D2R,.05,1.2);camera.fov=70;camera.updateProjectionMatrix();}
@@ -1873,7 +1976,7 @@ function loop(now){
   for(const e of EXPL){const k=Math.max(exp.cur,e.part===sel.solo?exp.solo:0);e.g.position.set(e.base.x+e.exp.x*k,e.base.y+e.exp.y*k,e.base.z+e.exp.z*k);}
   altG.position.y=.5+.55*exp.cur;
   scene.updateMatrixWorld(true);updateClip();applyHighlight(t);
-  raysG.visible=(optics.on||cut.on)&&exp.cur<.03;
+  raysG.visible=(optics.on||cut.on)&&exp.cur<.03&&!photon.on;   // the single photon replaces the ray bundle during Follow the light
   if(raysG.visible)for(const p of particles){p.t=(p.t+dt*.16)%1;let d=p.t*p.L,i=0;while(i<p.lens.length-1&&d>p.lens[i]){d-=p.lens[i];i++;}p.s.position.copy(p.pts[i]).lerp(p.pts[i+1],clamp(d/p.lens[i],0,1));}
   updateDome();
   // camera
@@ -1887,7 +1990,7 @@ function loop(now){
   {const az=driver.state().truth.az;if(follow.on&&follow.prev!=null&&cam.mode==='orbit'&&!cam.tw){const d=wrap180(az-follow.prev);if(Math.abs(d)>.02&&Math.abs(d)<30)cam.yaw+=d*D2R;}follow.prev=az;}
   if(frame%12===0){hc3Lcd();$('#bStar').classList.toggle('on',!hidden.has('starsense'));}
   if(!dewS.e)dewS.e=EXPL.find(e=>e.part==='dew');dewS.t+=(dewS.to-dewS.t)*Math.min(1,dt*3.2);if(Math.abs(dewS.to-dewS.t)<.0005)dewS.t=dewS.to;dewS.e.base.z=-.9*dewS.t;
-  grainShift(t);
+  stepPhoton(dt);grainShift(t);
   applyCamera();if(labState.on||frame%30===0)updLabels();
   renderer.render(scene,camera);
   // slow UI updates
@@ -1901,6 +2004,7 @@ function uiTick(){
     const T=st.truth;$('#truth').innerHTML=`<b>Truth</b> (where the tube points): Az ${T.az.toFixed(2)}° Alt ${T.alt.toFixed(2)}°<br><b>Mount reports</b>: Az ${st.az.toFixed(2)}° Alt ${st.alt.toFixed(2)}°<br><b>Error</b>: ${Math.hypot(wrap180(T.az-st.az)*Math.cos(T.alt*D2R),T.alt-st.alt).toFixed(2)}° ${st.aligned?'(after alignment)':'(not aligned yet)'}`;
     const d=new Date(simMs);$('#timeTxt').textContent=`Sim UTC ${d.toISOString().slice(0,19).replace('T',' ')} · LST ${fmtRA(lstDeg(jdNow()))}`;}
   else hcDraw();
+  missionsTick(.1);
   if(st.tracking!==uiTick.trk){uiTick.trk=st.tracking;updTrkRow();}   // rebuild only on change so clicks are not lost
 }
 // Start pointing at Polaris with Saturn selected: move the sim clock to the next dark sky with Saturn at least 25 deg up, aim the tube at Polaris, track, and use the 13 mm eyepiece.
