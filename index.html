@@ -56,6 +56,41 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
 .lab{position:fixed;pointer-events:none;font:11px system-ui;color:#fff;background:rgba(20,24,34,.85);border:1px solid #ff8a3d;border-radius:10px;padding:1px 7px 1px 2px;white-space:nowrap;transform:translate(10px,-50%);z-index:6;display:none}.lab b{display:inline-block;background:#ff8a3d;color:#111;border-radius:50%;min-width:15px;text-align:center;margin-right:4px}.lab:before{content:'';position:absolute;left:-10px;top:50%;width:10px;height:1px;background:#ff8a3d}
 .su h2{margin:4px 0}.su .st{border:1px solid #333b52;border-radius:10px;padding:8px 10px;margin:8px 0;background:#161b27}.su .wn{color:#ffb347;font-size:12px;margin-top:6px}.su ol{padding-left:18px;margin:6px 0}.su li{cursor:pointer;margin:2px 0}.su li.on{color:#ff8a3d;font-weight:600}.su li.dn{opacity:.55}.su .kk{font-size:11px;columns:2;color:#9aa4bf}
 .lcd{position:relative}
+/* night (red light) mode: a red multiply layer turns everything red-only, and a dark layer dims it */
+#redov,#dimov{position:fixed;inset:0;pointer-events:none;display:none;z-index:60}#redov{background:#ff1a00;mix-blend-mode:multiply}#dimov{background:#000;opacity:.3}
+body.red #redov,body.red #dimov{display:block}
+/* toolbar: advanced tools are tucked under More in Education mode */
+body.edu:not(.showadv) #top .adv{display:none}body:not(.edu) #bMore{display:none}#top .adv{display:contents}
+/* home screen: pick a telescope */
+#home{position:fixed;inset:0;z-index:34;display:none;overflow:auto;background:radial-gradient(ellipse at 50% 120%,#1b2a52 0%,#070b17 55%,#03050b 100%);padding:28px 18px}
+#home:before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.7;background-image:radial-gradient(1px 1px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 72% 12%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 30%,#cfe0ff,transparent),radial-gradient(1px 1px at 85% 40%,#fff,transparent),radial-gradient(1px 1px at 22% 55%,#fff,transparent),radial-gradient(1.5px 1.5px at 60% 65%,#ffe6c4,transparent),radial-gradient(1px 1px at 90% 80%,#fff,transparent),radial-gradient(1px 1px at 8% 85%,#fff,transparent),radial-gradient(1px 1px at 50% 8%,#fff,transparent)}
+#home .hw{position:relative;max-width:960px;margin:0 auto}#home h1{font-size:30px;margin:6px 0 2px}#home .tag{color:#aab4cf;font-size:15px;margin-bottom:20px}
+.scopes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.scard{background:rgba(20,28,48,.92);border:1px solid #34436b;border-radius:18px;overflow:hidden;cursor:pointer;text-align:left;color:#e8ecf7;padding:0;display:flex;flex-direction:column;transition:transform .15s,border-color .15s}
+.scard:hover{transform:translateY(-3px);border-color:#ff8a3d}.scard .im{height:180px;background:#0b1020 center 22%/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:64px}
+.scard .bd{padding:14px 16px 16px}.scard h3{margin:0 0 2px;font-size:19px;color:#fff;text-transform:none;letter-spacing:0}.scard .sub{color:#aab4cf;font-size:13px;margin-bottom:8px}
+.scard ul{margin:6px 0 12px;padding-left:18px;font-size:13px;color:#c9d1e6}.scard .go{display:inline-block;background:#ff8a3d;color:#111;font-weight:700;border-radius:10px;padding:8px 14px}
+.scard.soon .im{height:90px;font-size:44px}
+@media(min-width:700px){.scard.main{grid-column:1/-1;flex-direction:row}.scard.main .im{width:52%;height:auto;min-height:280px;flex:none}.scard.main .bd{padding:22px}}
+.scard.soon{cursor:default;border-style:dashed;opacity:.75}.scard.soon:hover{transform:none;border-color:#34436b}.scard .pill{display:inline-block;font-size:11px;border:1px solid #4b5a85;border-radius:20px;padding:2px 8px;color:#aab4cf;margin-bottom:6px}
+.hopts{display:flex;flex-wrap:wrap;gap:16px;margin-top:22px;color:#c6cde0;font-size:14px}
+/* welcome screen */
+#welcome{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,4,10,.72);z-index:32;padding:12px}
+#welcome>div{background:#121a2c;border:1px solid #3a4a72;border-radius:20px;padding:20px;max-width:560px;width:100%;max-height:92vh;overflow:auto;animation:pop .35s}
+#welcome h1{margin:0 0 4px;font-size:22px}.wtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.wtiles button{background:#1b2540;border:1px solid #3a4a72;border-radius:14px;color:#e8ecf7;padding:14px 10px;text-align:left;cursor:pointer;font-size:14px;line-height:1.35}
+.wtiles button b{display:block;font-size:16px;margin:4px 0}.wtiles button .e{font-size:30px}.wtiles button:hover{background:#26335a}
+.wopts{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:14px;color:#c6cde0}
+/* simple controller (Education mode) */
+#kidpad{display:none}body.edu #kidpad{display:block}body.edu:not(.fullhc) #p-ctrl .hc,body.edu:not(.fullhc) #p-ctrl>p.mu{display:none}
+.kstat{background:#2a0a06;color:#ff7a5c;border-radius:10px;padding:10px 12px;font:600 16px/1.4 system-ui;text-align:center;margin-bottom:10px;border:2px solid #000}
+.kgrid{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(3,64px);gap:8px;justify-content:center}
+.kgrid button{font-size:26px;border-radius:16px;background:#2b3142;border:2px solid #4b5571;color:#fff;touch-action:none;user-select:none}.kgrid button.act{background:#4a5780}
+.kgrid .kstop{font-size:14px;font-weight:800;background:#7a1b14;border-color:#c4322a}
+.kspd{justify-content:center}.ktiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ktiles button{background:#1a2133;border:1px solid #39435d;border-radius:12px;color:#e8ecf7;padding:8px 4px;font-size:13px;cursor:pointer}.ktiles button b{display:block;font-size:26px}.ktiles button.down{opacity:.4}
+#safety{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:31}#safety>div{background:#1b1410;border:2px solid #ffb347;border-radius:18px;padding:20px 22px;text-align:center;max-width:340px;animation:pop .35s;font-size:15px}
+#safety .big{font-size:56px}#safety h2{margin:6px 0}
 /* Education mode: bigger touch targets, simpler panels, no hardware tab */
 body.edu .b{font-size:14px;padding:9px 13px}body.edu .hc button{font-size:15px;padding:12px 4px}body.edu #tabs [data-t=link]{display:none}
 body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:15px}body.edu .pl{padding:10px 8px}
@@ -79,15 +114,16 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
 <canvas id="gl"></canvas><div id="vig"></div><canvas id="grain" width="256" height="256"></canvas><div class="lb" id="lbT"></div><div class="lb" id="lbB"></div>
 
 <div id="top">
-  <button class="b on" id="bOrbit">Orbit</button><button class="b" id="bWalk">Walk</button><span class="sep"></span>
-  <button class="b" data-v="front">Front</button><button class="b" data-v="rear">Rear</button><button class="b" data-v="left">Left</button><button class="b" data-v="right">Right</button><button class="b" data-v="top">Top</button><span class="sep"></span>
-  <button class="b on" id="bA2">2 arms</button><button class="b" id="bA1">1 arm</button><span class="sep"></span>
-  <button class="b" id="bStar">StarSense</button><button class="b on" id="bDew">Dew shield</button><button class="b" id="bCut">Cutaway</button><button class="b" id="bOpt">Optics</button><button class="b" id="bCine">Cinematic</button><button class="b on" id="bFol">Follow</button><button class="b" id="bLab">Labels</button><button class="b on" id="bDip">Dipper guide</button><button class="b" id="bEdu">🎓 Education mode</button><span class="sep"></span>
-  <label>Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label>
-  <button class="b" id="bReset">Reset view</button>
+  <button class="b" id="bHome" title="Back to the home screen to pick a telescope">🏠 Home</button><button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓ Help</button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴 Night mode</button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓 Education mode</button><span class="sep"></span>
+  <button class="b on" id="bOrbit" title="Drag to spin around the telescope">Orbit</button><button class="b" id="bWalk" title="Walk around with WASD / the on-screen stick">Walk</button><span class="sep"></span>
+  <button class="b" data-v="front" title="View from the front">Front</button><button class="b" data-v="rear" title="View from behind the eyepiece">Rear</button><button class="b" data-v="left" title="Left side">Left</button><button class="b" data-v="right" title="Right side">Right</button><button class="b" data-v="top" title="Look down from above">Top</button><span class="sep"></span>
+  <button class="b" id="bLab" title="Show numbered part labels">Labels</button><button class="b on" id="bDip" title="Big Dipper → North Star guide lines in the sky">Dipper guide</button><button class="b" id="bReset" title="Go back to the starting view">Reset view</button><button class="b" id="bMore" title="Show more tools">More ▾</button>
+  <span class="adv"><span class="sep"></span><button class="b on" id="bA2" title="Two-arm fork (CPC)">2 arms</button><button class="b" id="bA1" title="One-arm fork for comparison">1 arm</button><span class="sep"></span>
+  <button class="b" id="bStar" title="Fit the optional StarSense camera">StarSense</button><button class="b on" id="bDew" title="Slide the dew shield on or off">Dew shield</button><button class="b" id="bCut" title="Cut the tube open to see inside">Cutaway</button><button class="b" id="bOpt" title="Show light rays">Optics</button><button class="b" id="bCine" title="Slow cinematic camera">Cinematic</button><button class="b on" id="bFol" title="Camera follows the telescope as it turns">Follow</button><span class="sep"></span>
+  <label title="Pull the telescope apart">Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label></span>
 </div>
 <div id="hud"></div>
-<div id="reward"></div><div id="toast"></div>
+<div id="redov"></div><div id="dimov"></div><div id="home"></div><div id="welcome"></div><div id="reward"></div><div id="safety"></div><div id="toast"></div>
 <div id="joy"><i></i></div>
 <div id="lcard"></div>
 
@@ -96,6 +132,13 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
   <div class="pane on" id="p-parts"></div>
   <div class="pane" id="p-info"></div>
   <div class="pane" id="p-ctrl">
+    <div id="kidpad">
+      <div class="kstat" id="kstat"></div>
+      <div class="kgrid"><span></span><button data-kd="alt+">▲</button><span></span><button data-kd="az-">◀</button><button class="kstop" data-kk="stop">STOP</button><button data-kd="az+">▶</button><span></span><button data-kd="alt-">▼</button><span></span></div>
+      <div class="row kspd"><span class="mu">Speed</span><button class="b" data-ks="5">🐢 Slow</button><button class="b on" data-ks="7">🚶 Medium</button><button class="b" data-ks="9">🚀 Fast</button></div>
+      <h3>Go to…</h3><div class="ktiles" id="ktiles"></div>
+      <div class="row"><button class="b sm" id="bFullHC">Show the real hand controller</button></div>
+    </div>
     <div class="hc">
       <div class="lcd"><span id="scr" title="more items – use SCROLL">⇕</span><div id="l1"></div><div id="l2"></div><div id="l3" class="dim"></div></div>
       <div class="krow"><button data-k="align">Align</button><button data-k="menu">Menu</button><button data-k="undo">Back</button><button data-k="enter">Enter</button></div>
@@ -133,7 +176,10 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
     <h3>Sky time</h3>
     <div class="row" id="spdRow"></div>
     <p class="sm mu" id="timeTxt"></p>
-    <div class="row sm">Observer lat <input id="lat" type="number" step="0.1" value="33.5" style="width:72px" class="b"> lon <input id="lon" type="number" step="0.1" value="-111.9" style="width:78px" class="b"></div>
+    <h3>Location</h3>
+    <div class="row"><select id="locSel" class="b" style="max-width:100%"></select></div>
+    <div class="row sm">Local time <input id="locTime" type="time" value="22:00" class="b"> <button class="b sm" id="bTonight">Go to tonight</button><span class="mu" id="locTxt"></span></div>
+    <div class="row sm">Observer lat <input id="lat" type="number" step="0.1" value="33.45" style="width:72px" class="b"> lon <input id="lon" type="number" step="0.1" value="-112.07" style="width:78px" class="b"></div>
     <p class="sm mu">Positions use low-precision formulas (Sun/planets ≈ arcminutes, Moon ≈ 0.1–0.2°). Faint field stars are procedurally generated for realism, not real catalog stars.</p>
   </div>
   <div class="pane su" id="p-setup"></div>
@@ -155,7 +201,7 @@ const norm360=a=>((a%360)+360)%360, wrap180=a=>((a+540)%360)-180, clamp=(v,a,b)=
    1. ASTRONOMY MATH  (no DOM use in this block so it can be unit-tested)
    ===================================================================== */
 //<ASTRO>
-const obs={lat:33.5,lon:-111.9};            // observer (degrees; east longitude positive)
+const obs={lat:33.448,lon:-112.074};            // observer (degrees; east longitude positive)
 let simMs=Date.now();                        // simulated clock (ms since epoch)
 const jdNow=()=>simMs/86400000+2440587.5;
 const lstDeg=jd=>norm360(280.46061837+360.98564736629*(jd-2451545.0)+obs.lon);
@@ -1381,6 +1427,53 @@ function missionsTick(dt){
 }
 renderMissions();
 
+
+/* ---- user-friendliness: night mode, More tools, welcome screen ---- */
+function setRed(v){document.body.classList.toggle('red',v);$('#bRed').classList.toggle('on',v);try{localStorage.setItem('c11red',v?'1':'0');}catch(_){}const w=$('#wRed');if(w)w.checked=v;}
+$('#bRed').onclick=()=>setRed(!document.body.classList.contains('red'));
+$('#bMore').onclick=()=>{const on=document.body.classList.toggle('showadv');$('#bMore').textContent=on?'Less ▴':'More ▾';};
+function lessonIdx(start){return LESSONS.findIndex(l=>l.t.includes(start));}
+function startLesson(i){if(i<0)return;L.lesson=i;L.step=0;renderLearn();doStep(LESSONS[i].s[0]);}
+function showWelcome(){const el=$('#welcome');let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}
+  el.innerHTML=`<div><h1>🔭 Welcome to the telescope simulator!</h1><p class="mu">This is a Celestron C11 telescope on its computer-controlled mount. What would you like to do first?</p>
+  <div class="wtiles">
+   <button data-w="light"><span class="e">🔦</span><b>How does it work?</b>Follow a beam of light through the telescope.</button>
+   <button data-w="north"><span class="e">⭐</span><b>Find the North Star</b>Use the Big Dipper trick, like sailors did.</button>
+   <button data-w="drive"><span class="e">🎮</span><b>Drive the telescope</b>Big arrows and one-tap trips to Saturn, the Moon and more.</button>
+   <button data-w="miss"><span class="e">🏅</span><b>Missions</b>Find 5 targets in the sky and earn badges.</button>
+   <button data-w="parts"><span class="e">🔧</span><b>Explore the parts</b>Tap any part to learn what it does.</button>
+   <button data-w="setup"><span class="e">🧰</span><b>Set it up</b>Step-by-step setup from the manual.</button></div>
+  <div class="wopts"><label><input type="checkbox" id="wRed" ${red?'checked':''}> 🔴 Night mode (red light, for outdoors)</label><label><input type="checkbox" id="wShow" ${show?'checked':''}> Show this at start</label></div>
+  <p class="mu sm" style="margin-top:10px">Tips: drag to spin the view · pinch or scroll to zoom · tap a part to learn about it · ❓ Help brings this back.</p>
+  <div class="row" style="justify-content:flex-end"><button class="b on" data-w="close">Just explore</button></div></div>`;
+  el.style.display='flex';}
+$('#welcome').addEventListener('change',e=>{if(e.target.id==='wRed')setRed(e.target.checked);if(e.target.id==='wShow'){try{localStorage.setItem('c11welcome',e.target.checked?'1':'0');}catch(_){}}});
+$('#welcome').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(!b&&e.target.id!=='welcome')return;$('#welcome').style.display='none';const k=b?b.dataset.w:'close';
+  if(k==='light')startLesson(lessonIdx('Follow the light'));else if(k==='north')startLesson(lessonIdx('Find the North Star'));
+  else if(k==='drive')tab('ctrl');else if(k==='miss')tab('miss');else if(k==='setup')tab('setup');else if(k==='parts'){tab('parts');if(!labState.on)$('#bLab').click();}});
+$('#bHelp').onclick=showWelcome;
+/* ---- home screen: choose a telescope. Add future models to SCOPES; each entry's load() builds/activates its scene ---- */
+const SCOPES=[
+ {id:'c11cpc',name:'Celestron C11',sub:'CPC Deluxe 1100 HD',kind:'Schmidt-Cassegrain on a computerized GoTo fork mount',
+  facts:['280 mm (11-inch) mirror – about 1,600× more light than your eye','2800 mm focal length · f/10','NexStar+ hand controller with 40,000-object database','Optional StarSense camera, Telrad and eyepiece kit'],
+  load:()=>{}}];                                   // the C11 scene is built at start-up, so loading it needs no extra work
+const COMING=[{e:'🤖',t:'Smart telescope',s:'An all-in-one scope that takes pictures for you'},{e:'🔭',t:'Refractor',s:'A lens telescope, like Galileo’s'},{e:'🪣',t:'Dobsonian',s:'A big mirror on a simple push-around base'}];
+const homeState={scope:null,thumb:null};
+function showHome(){const el=$('#home');let red=document.body.classList.contains('red');
+  el.innerHTML=`<div class="hw"><div style="font-size:40px">🔭</div><h1>Telescope Simulator</h1><div class="tag">Learn how a real telescope works – pick one to explore, drive and use under tonight’s sky.</div>
+   <div class="scopes">${SCOPES.map(sc=>`<button class="scard main" data-scope="${sc.id}"><div class="im" style="${homeState.thumb?`background-image:url(${homeState.thumb})`:''}">${homeState.thumb?'':'🔭'}</div>
+     <div class="bd"><span class="pill">${sc.kind}</span><h3>${sc.name}</h3><div class="sub">${sc.sub}</div><ul>${sc.facts.map(f=>`<li>${f}</li>`).join('')}</ul><span class="go">Explore this telescope ▸</span></div></button>`).join('')}
+    </div><h3 style="margin:26px 0 10px;color:#aab4cf">More telescopes on the way</h3><div class="scopes">${COMING.map(c=>`<div class="scard soon"><div class="im">${c.e}</div><div class="bd"><span class="pill">Coming soon</span><h3>${c.t}</h3><div class="sub">${c.s}</div></div></div>`).join('')}</div>
+   <div class="hopts"><label><input type="checkbox" id="hRed" ${red?'checked':''}> 🔴 Night mode</label><label><input type="checkbox" id="hEdu" ${edu.on?'checked':''}> 🎓 Education mode (simpler, kid-friendly)</label></div></div>`;
+  el.style.display='block';}
+function chooseScope(id){const sc=SCOPES.find(x=>x.id===id);if(!sc)return;homeState.scope=sc;sc.load();$('#home').style.display='none';
+  document.title=sc.name+' – Telescope Simulator';let show=true;try{show=localStorage.getItem('c11welcome')!=='0';}catch(_){}if(show)showWelcome();}
+$('#home').addEventListener('click',e=>{const c=e.target.closest('[data-scope]');if(c)chooseScope(c.dataset.scope);});
+$('#home').addEventListener('change',e=>{if(e.target.id==='hRed')setRed(e.target.checked);if(e.target.id==='hEdu')setEdu(e.target.checked);});
+$('#bHome').onclick=showHome;
+
+{let red=false,show=true;try{red=localStorage.getItem('c11red')==='1';show=localStorage.getItem('c11welcome')!=='0';}catch(_){}setRed(red);showHome();}   // the home screen comes first; the welcome screen follows once a telescope is chosen
+
 /* ---- toolbar ---- */
 $('#bOrbit').onclick=()=>setMode('orbit');$('#bWalk').onclick=()=>setMode('walk');
 $$('#top [data-v]').forEach(b=>b.onclick=()=>viewFrom(b.dataset.v));
@@ -1415,7 +1508,7 @@ function updLabels(){
     if(labState.v.z>1){e.style.display='none';return;}
     e.style.display='block';e.style.left=(r.left+(labState.v.x+1)/2*r.width)+'px';e.style.top=(r.top+(1-labState.v.y)/2*r.height)+'px';});
 }
-function setEdu(v){edu.on=v;document.body.classList.toggle('edu',v);$('#bEdu').classList.toggle('on',v);try{localStorage.setItem('c11edu',v?'1':'0');}catch(_){}
+function setEdu(v){edu.on=v;{const h=document.getElementById('hEdu');if(h)h.checked=v;}document.body.classList.toggle('edu',v);$('#bEdu').classList.toggle('on',v);try{localStorage.setItem('c11edu',v?'1':'0');}catch(_){}
   if(v&&curTab==='link')tab('miss');showInfo();renderLearn();renderMissions();}
 $('#bEdu').onclick=()=>setEdu(!edu.on);
 // Education mode is on by default; the choice is remembered on this device
@@ -1487,11 +1580,23 @@ function identify(){                                              // IDENTIFY: n
   unwind();openPick('Identify',L.map(x=>({label:x.o.name,sub:offsetTxt(x.o),o:x.o,act:toConfirm(x.o)})));
 }
 function solarList(){const l=[MOON,...OBJ.filter(o=>o.type==='planet'&&o.alt>0),...CAT.filter(o=>o.cat==='planet'&&o.alt>0),...(HCS.allowSun?[SUN]:[])];return l;}
-function doGoto(o,after){
+
+/* ---- safety moments: friendly pop-ups before the Sun, before the first move, and for the bright Moon ---- */
+const SAFE={moveTip:false,moon:false};
+function safetyAsk(icon,title,body,ok,cancel){return new Promise(res=>{const el=$('#safety');
+  el.innerHTML=`<div><div class="big">${icon}</div><h2>${title}</h2><p>${body}</p><div class="row" style="justify-content:center">${cancel?`<button class="b" id="sfNo">${cancel}</button>`:''}<button class="b on" id="sfOk">${ok}</button></div></div>`;
+  el.style.display='flex';$('#sfOk').onclick=()=>{el.style.display='none';res(true);};if(cancel)$('#sfNo').onclick=()=>{el.style.display='none';res(false);};});}
+function safetyMoveTip(){if(SAFE.moveTip||!edu.on)return;SAFE.moveTip=true;
+  safetyAsk('🙈','Before the telescope moves','Make sure <b>nobody is looking through the eyepiece</b> and keep fingers away from the arms. A moving eyepiece can bump your eye!','Got it!');}
+function doGoto(o,after,ok){
+  if(o.type==='sun'&&!ok){safetyAsk('☀️','STOP – this is the Sun!','Never point a telescope at the Sun unless a <b>special solar filter covers the FRONT</b> of the telescope. Sunlight through a telescope can blind you in a split second. Only a grown-up should fit the filter.',
+    'A grown-up fitted a solar filter','Cancel').then(y=>{if(y)doGoto(o,after,true);});return false;}
+  if(!ok&&edu.on&&!SAFE.moveTip){SAFE.moveTip=true;safetyAsk('🙈','Before the telescope moves','Make sure <b>nobody is looking through the eyepiece</b> and keep fingers away from the arms. The telescope is about to swing around!','OK, all clear!','Wait').then(y=>{if(y)doGoto(o,after,true);});return false;}
+  if(o.type==='moon'&&!SAFE.moon&&edu.on){SAFE.moon=true;setTimeout(()=>toast('🌙 The Moon is safe to look at, but it is VERY bright. The Moon filter from the eyepiece kit makes it comfortable.',5000),1500);}
   const r=driver.gotoRaDec(o.cra,o.cdec);
   if(!r.ok){hcMsg('Cannot GoTo','Below horizon');toast(o.name+' is below the horizon');return false;}
   driver.s.onArrive=after||null;if(OBJ.includes(o)){selObj=o;fillSelBox();}HC.last=o;
-  if(!HC.warned){HC.warned=true;toast('Caution: never slew the scope while anyone is looking into the eyepiece.',4500);}
+  if(!HC.warned&&!edu.on){HC.warned=true;toast('Caution: never slew the scope while anyone is looking into the eyepiece.',4500);}
   if(o.type==='sun'){hcMsg('WARNING','Solar filter required!',3.5);toast('Never view the Sun without a certified solar filter.',4000);}else hcMsg('Slewing to',o.name,1.8);
   return true;
 }
@@ -1606,6 +1711,23 @@ $$('.hc [data-d]').forEach(b=>{const [ax,sg]=[b.dataset.d.slice(0,-1),b.dataset.
   b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);dirDown(ax,sg,'b');b.classList.add('act');cancelHcMsg();});
   const up=()=>{if(!b.classList.contains('act'))return;dirUp(ax,sg,'b');b.classList.remove('act');};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);});
 function cancelHcMsg(){HC.msg=null;}
+/* ---- simple controller for Education mode: big arrows, 3 speeds, picture Go-to tiles ---- */
+const KT=[['🌙','Moon','moon'],['🪐','Saturn','saturn'],['🟠','Jupiter','jupiter'],['🔴','Mars','mars'],['✨','Venus','venus'],['⭐','North Star','Polaris'],
+  ['🌌','Andromeda Galaxy','M31'],['💫','Pleiades','M45'],['☁️','Orion Nebula','M42'],['💍','Ring Nebula','M57'],['🎆','Hercules Cluster','M13'],['🔵','Vega','Vega']];
+const kid={rate:7};
+function renderKidTiles(){$('#ktiles').innerHTML=KT.map(([e,n,id])=>{const o=OBJ.find(x=>x.id===id),up=o&&o.alt>0;return `<button data-kt="${id}" class="${up?'':'down'}"><b>${e}</b>${n}${up?'':'<br><span class="mu sm">not up</span>'}</button>`;}).join('');}
+$('#ktiles').addEventListener('click',e=>{const b=e.target.closest('[data-kt]');if(!b)return;const o=OBJ.find(x=>x.id===b.dataset.kt);if(!o)return;
+  if(o.alt<=0){toast(`${o.name} is below the horizon right now. Try the Sky tab to speed up time.`,3500);return;}doGoto(o);});
+$$('#kidpad [data-kd]').forEach(b=>{const ax=b.dataset.kd.slice(0,-1),sg=b.dataset.kd.slice(-1)==='+'?1:-1;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);rate=kid.rate;dirDown(ax,sg,'kid');b.classList.add('act');cancelHcMsg();safetyMoveTip();});
+  const up=()=>{if(!b.classList.contains('act'))return;dirUp(ax,sg,'kid');b.classList.remove('act');};['pointerup','pointercancel','lostpointercapture'].forEach(v=>b.addEventListener(v,up));});
+$('#kidpad').addEventListener('click',e=>{const s=e.target.closest('[data-ks]');if(s){kid.rate=+s.dataset.ks;rate=kid.rate;$$('#kidpad [data-ks]').forEach(x=>x.classList.toggle('on',x===s));}
+  if(e.target.closest('[data-kk=stop]')){driver.stop();toast('Stopped.');}});
+$('#bFullHC').onclick=()=>{const on=document.body.classList.toggle('fullhc');$('#bFullHC').textContent=on?'Hide the real hand controller':'Show the real hand controller';};
+function kidStatus(){const st=driver.state();if(st.slewing)return '🔭 Moving… please wait';
+  const T=st.truth,eq=horToEq(T.alt,T.az,jdNow());let best=null,bd=.6;for(const o of OBJ){if(o.alt<0)continue;const d=angSep({ra:o.cra,dec:o.cdec},eq);if(d<bd){bd=d;best=o;}}
+  return best?`Pointing at: ${best.name}${bd>.15?' (nearby)':''}`:`Pointing at empty sky · up ${T.alt.toFixed(0)}°`;}
+
 $('#bMin').textContent='▾';
 const typing=e=>/INPUT|SELECT|TEXTAREA/.test((e.target||{}).tagName||'');
 addEventListener('keydown',e=>{
@@ -1664,7 +1786,7 @@ function feedMount(){
     v[ax]=clamp(d+(d?0:inp.pad[ax]),-1,1);}
   if(dbl)r=SLEW_RATES[9];
   // NexStar+: at rates 6 and below the UP/DOWN motor direction is opposite to rates 7-9 (keeps the image moving the right way in the eyepiece)
-  if(HCS.revUD&&rate<=6&&!dbl)v.alt=-v.alt;
+  if(HCS.revUD&&rate<=6&&!dbl&&!HD.alt.some(h=>h.src==='kid'))v.alt=-v.alt;   // the simple pad always moves the tube the way the arrow points
   driver.setManual(v.az,v.alt,r);
 }
 
@@ -1685,8 +1807,39 @@ function setSpeed(v){speed=v;$$('#spdRow button[data-sp]').forEach(b=>b.classLis
 let speed=1;
 $('#spdRow').innerHTML=[1,10,60,600,3600].map(v=>`<button class="b sm${v===1?' on':''}" data-sp="${v}">${v}×</button>`).join('')+'<button class="b sm" id="bNow">Real time</button><button class="b sm" id="bDark">Next dark sky</button>';
 function toDark(){let n=0;computeSky();while(SUN.alt>-14&&n<400){simMs+=10*60000;computeSky();n++;}if(driver.s.tracking!=='off')driver._relock();return n;}
-$('#spdRow').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sp)setSpeed(+b.dataset.sp);else if(b.id==='bNow'){simMs=Date.now();if(driver.s.tracking!=='off')driver._relock();}else if(b.id==='bDark')toDark();});
-$('#lat').onchange=e=>{obs.lat=clamp(+e.target.value||0,-89,89);};$('#lon').onchange=e=>{obs.lon=clamp(+e.target.value||0,-180,180);};
+$('#spdRow').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sp)setSpeed(+b.dataset.sp);else if(b.id==='bNow'){simMs=Date.now();$('#locTxt').textContent=' '+localTimeTxt();if(driver.s.tracking!=='off')driver._relock();}else if(b.id==='bDark')toDark();});
+$('#lat').onchange=e=>{obs.lat=clamp(+e.target.value||0,-89,89);loc.name='Custom location';$('#locSel').value='custom';};$('#lon').onchange=e=>{obs.lon=clamp(+e.target.value||0,-180,180);loc.name='Custom location';$('#locSel').value='custom';};
+
+
+/* =====================================================================
+   LOCATION AND LOCAL TIME – default Phoenix, AZ at 10 pm tonight
+   ===================================================================== */
+const PLACES=[['Phoenix, AZ',33.448,-112.074,'America/Phoenix'],['Tucson, AZ',32.222,-110.975,'America/Phoenix'],['Flagstaff, AZ',35.198,-111.651,'America/Phoenix'],
+ ['Los Angeles, CA',34.052,-118.244,'America/Los_Angeles'],['Denver, CO',39.739,-104.99,'America/Denver'],['Chicago, IL',41.878,-87.63,'America/Chicago'],['New York, NY',40.713,-74.006,'America/New_York'],
+ ['Honolulu, HI',21.307,-157.858,'Pacific/Honolulu'],['London, UK',51.507,-.128,'Europe/London'],['Sydney, Australia',-33.869,151.209,'Australia/Sydney']];
+const loc={name:'Phoenix, AZ',tz:'America/Phoenix'};
+function tzParts(tz,ms){const f=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const o={};f.formatToParts(new Date(ms)).forEach(p=>{if(p.type!=='literal')o[p.type]=+p.value;});return o;}
+function tzOffMin(tz,ms){const p=tzParts(tz,ms);return (Date.UTC(p.year,p.month-1,p.day,p.hour%24,p.minute,p.second)-Math.floor(ms/1000)*1000)/60000;}   // minutes ahead of UTC
+function tonightMs(hhmm){const [h,m]=(hhmm||'22:00').split(':').map(Number);let p=tzParts(loc.tz,Date.now());if(p.hour<6&&h>=12){p=tzParts(loc.tz,Date.now()-864e5);}   // just after midnight: use the evening that just passed
+  let t=Date.UTC(p.year,p.month-1,p.day,h,m);for(let i=0;i<2;i++)t=Date.UTC(p.year,p.month-1,p.day,h,m)-tzOffMin(loc.tz,t)*60000;return t;}
+const localTimeTxt=()=>{try{return new Intl.DateTimeFormat('en-US',{timeZone:loc.tz,weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(simMs));}catch(_){return '';}};
+function pointAtPolaris(){computeSky();const POL=OBJ.find(o=>o.id==='Polaris'),s=driver.s;if(POL.alt<1)return false;s.goto=null;s.enc.az=norm360(POL.az-s.err.az);s.enc.alt=POL.alt-s.err.alt;driver.autoAlign();driver.setTracking('sidereal');driver._relock();return true;}
+function setLocation(i,keepTime){
+  if(i>=0){const P=PLACES[i];loc.name=P[0];loc.tz=P[3];obs.lat=P[1];obs.lon=P[2];}
+  $('#lat').value=obs.lat.toFixed(3);$('#lon').value=obs.lon.toFixed(3);
+  if(!keepTime)simMs=tonightMs($('#locTime').value);
+  if(!pointAtPolaris()){computeSky();if(driver.s.tracking!=='off')driver._relock();toast('Polaris never rises here (southern hemisphere) – the scope stays where it is.',4000);}
+  $('#locTxt').textContent=' '+localTimeTxt();fillSelBox();
+}
+$('#locSel').innerHTML=PLACES.map((P,i)=>`<option value="${i}">${P[0]}</option>`).join('')+'<option value="me">📍 Use my location</option><option value="custom">Custom (type lat/lon below)</option>';
+$('#locSel').onchange=e=>{const v=e.target.value;$('#locSel').blur();
+  if(v==='custom'){loc.name='Custom location';return;}
+  if(v==='me'){if(!navigator.geolocation){toast('This browser cannot share its location.');return;}
+    navigator.geolocation.getCurrentPosition(p=>{loc.name='My location';loc.tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';obs.lat=p.coords.latitude;obs.lon=p.coords.longitude;setLocation(-1);toast('Using your location at '+$('#locTime').value+' tonight.');},
+      ()=>toast('Location permission was not given. Pick a city instead.',3500),{timeout:8000});return;}
+  setLocation(+v);toast(`${loc.name}, tonight at ${$('#locTime').value}. The telescope is pointed at Polaris.`,3500);};
+$('#bTonight').onclick=()=>{simMs=tonightMs($('#locTime').value);computeSky();if(driver.s.tracking!=='off')driver._relock();$('#locTxt').textContent=' '+localTimeTxt();};
 
 const objSel=$('#objsel');
 objSel.innerHTML=OBJ.map((o,i)=>`<option value="${i}">${o.name} (${KIND_NAME[o.kind||o.type]})</option>`).join('');
@@ -1966,7 +2119,7 @@ let last=performance.now(),hudT=0,frame=0;
 function grainShift(t){const g=$('#grain');g.style.transform=`translate(${(Math.sin(t*37)*20)|0}px,${(Math.cos(t*29)*20)|0}px)`;}
 function loop(now){
   requestAnimationFrame(loop);
-  const dt=Math.min(.05,(now-last)/1000);last=now;frame++;const t=now/1000;
+  const dt=clamp((now-last)/1000,0,.05);last=now;frame++;const t=now/1000;   // dt never negative (the first frame's timestamp can precede start-up)
   simMs+=dt*1000*speed;
   pollPad(dt);feedMount();driver.update(dt);computeSky();
   // mount pose
@@ -1993,13 +2146,14 @@ function loop(now){
   stepPhoton(dt);grainShift(t);
   applyCamera();if(labState.on||frame%30===0)updLabels();
   renderer.render(scene,camera);
+  if(frame===12&&!homeState.thumb){try{homeState.thumb=renderer.domElement.toDataURL('image/jpeg',.82);const im=document.querySelector('#home .scard .im');if(im){im.style.backgroundImage=`url(${homeState.thumb})`;im.textContent='';}}catch(_){}}
   // slow UI updates
   if(now-hudT>100){hudT=now;uiTick();}
 }
 function uiTick(){
   const st=driver.state();
-  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br>${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
-  if(curTab==='ctrl'){hcDraw();drawEyepiece($('#epMini'));}
+  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br>Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br>${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
+  if(curTab==='ctrl'){hcDraw();drawEyepiece($('#epMini'));if(edu.on){$('#kstat').textContent=kidStatus();const nw=performance.now();if(!(uiTick.kt>nw-2000)){uiTick.kt=nw;renderKidTiles();}}}
   else if(curTab==='sky'){updSelPos();drawSkyChart($('#skyc'));drawEyepiece($('#epBig'));
     const T=st.truth;$('#truth').innerHTML=`<b>Truth</b> (where the tube points): Az ${T.az.toFixed(2)}° Alt ${T.alt.toFixed(2)}°<br><b>Mount reports</b>: Az ${st.az.toFixed(2)}° Alt ${st.alt.toFixed(2)}°<br><b>Error</b>: ${Math.hypot(wrap180(T.az-st.az)*Math.cos(T.alt*D2R),T.alt-st.alt).toFixed(2)}° ${st.aligned?'(after alignment)':'(not aligned yet)'}`;
     const d=new Date(simMs);$('#timeTxt').textContent=`Sim UTC ${d.toISOString().slice(0,19).replace('T',' ')} · LST ${fmtRA(lstDeg(jdNow()))}`;}
@@ -2008,11 +2162,9 @@ function uiTick(){
   if(st.tracking!==uiTick.trk){uiTick.trk=st.tracking;updTrkRow();}   // rebuild only on change so clicks are not lost
 }
 // Start pointing at Polaris with Saturn selected: move the sim clock to the next dark sky with Saturn at least 25 deg up, aim the tube at Polaris, track, and use the 13 mm eyepiece.
-(function(){const SAT=OBJ.find(o=>o.id==='saturn');let n=0;computeSky();
-  while((SUN.alt>-12||SAT.alt<25)&&n<600){simMs+=10*60000;computeSky();n++;}
-  selObj=SAT;HC.last=SAT;const POL=OBJ.find(o=>o.id==='Polaris'),s=driver.s;s.enc.az=norm360(POL.az-s.err.az);s.enc.alt=POL.alt-s.err.alt;s.goto=null;driver.autoAlign();   // tube points at Polaris, mount starts aligned so a GoTo to Saturn lands in the eyepiece (Menu > Clear alignment to practise aligning)
-  driver.setTracking('sidereal');driver._relock();setEp(3);
-  if(n)setTimeout(()=>toast('Scope is on Polaris; Saturn is selected – press GoTo to slew to it. The sim clock was moved to a dark sky with Saturn well placed (“Real time” in the Sky tab returns).',6000),600);})();
+// Start in Phoenix, AZ at 10 pm tonight (local time), tube on Polaris, Saturn selected, 13 mm eyepiece
+(function(){setLocation(0);const SAT=OBJ.find(o=>o.id==='saturn');selObj=SAT;HC.last=SAT;fillSelBox();setEp(3);
+  setTimeout(()=>toast(`${loc.name} · ${localTimeTxt()}. The scope is on Polaris; Saturn is selected${SAT.alt>0?'':' (below the horizon right now)'}.`,5500),700);})();
 window.__c11={driver,OBJ,key,doGoto,setSpeed,cam,setArms,ALLM};   // small debug hook
 fillSelBox();hcDraw();
 // CPC 11 drawing: the altitude axis is 366 mm behind the front of the OTA and 285 mm in front of the rear end, so slide the whole OTA forward on its pivot.
