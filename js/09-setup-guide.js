@@ -18,6 +18,7 @@ const SETUP=[
  {t:'Align the finderscope (daytime)',b:'Pick a distant object more than a mile away so there is no parallax. Centre it in the main telescope, lock both clutches, then turn the top and right adjustment screws until the finder cross-hairs sit on the object. The finder image is upside-down and reversed, so each screw can move the view in an unexpected direction at first.',part:'finder',sub:'bracket'},
  {t:'Attach the hand control',b:'The hand control ships in a separate box. Plug its coiled cable (phone-style connector) into the hand control port (A) on the drive base until it clicks. Slide the hand control holder into its slot on the fork arm so the controller can rest there.',part:'handset',reveal:['handset'],view:'left'},
  {t:'Power the telescope',reveal:['power'],b:'Set the portable power station on the ground beside the tripod, out of the walking path. Plug the 12 V car-socket cable into its DC socket and press its DC button, then plug the other end into the 12 V input jack (F) on the LEFT side of the drive base. Turn the telescope on with the On/Off switch (E) on the RIGHT side – its red light comes on. (Tap the red switch in the 3D view, or use ⏻ Power in the Control tab.) (A car-battery adapter or mains supply works too.) The panel on the front of the base carries A hand control, B auxiliary (×2), C PC and D auto-guider ports; the round switch and the jack are on the right shoulder.',part:'fork',view:'left'},
+ {t:'Take off the lens cap',b:'Make sure the telescope is NOT pointed anywhere near the Sun, then pull the black lens cap straight off the front of the tube and put it somewhere safe, like the table. With the cap on, the eyepiece shows nothing at all. Put it back on at the end of the night once the glass is dry.',part:'cap',view:'front',uncap:true},
  {t:'Align from the hand control',b:'With the scope powered and level, use ALIGN on the controller (or StarSense AutoAlign if fitted) and follow the prompts. Tracking starts after alignment. Never slew while someone is looking through the eyepiece.',part:'handset',tab:'ctrl'}
 ];
 const SU={on:false,i:0,mine:new Set()};
@@ -36,11 +37,12 @@ const SU_PARTS=['diagonal','eyepiece','finder','handset','power'];
 function setupGo(i){
   SU.on=true;SU.i=Math.max(0,Math.min(SETUP.length-1,i));const st=SETUP[SU.i];
   setupMountVisible(SU.i===0||SU.i>=MOUNT_STEP());
+  {const ui=SETUP.findIndex(x=>x.uncap);setCap(SU.i<=ui);}            // the cap stays on until the 'Take off the lens cap' step
   SU_PARTS.forEach(id=>hidden.add(id));                                // parts for later steps are not fitted yet
   SETUP.slice(0,SU.i+1).forEach(x=>(x.reveal||[]).forEach(id=>hidden.delete(id)));
   renderSetup();renderParts();if(st.level)levelUpdate();
 }
-function setupShow(){const st=SETUP[SU.i];selectPart(st.part,st.sub||null,false);if(st.cam){setMode('orbit');tweenTo(st.cam());}else if(st.view)viewFrom(st.view);else focusPart(st.part);if(st.tab)tab(st.tab);}
+function setupShow(){const st=SETUP[SU.i];if(st.uncap)setCap(false);selectPart(st.part,st.sub||null,false);if(st.cam){setMode('orbit');tweenTo(st.cam());}else if(st.view)viewFrom(st.view);else focusPart(st.part);if(st.tab)tab(st.tab);}
 function renderSetup(){
   const st=SETUP[SU.i];
   $('#p-setup').innerHTML=`<h2>Setup guide</h2><p class="mu sm">Follows the Celestron CPC Deluxe HD and EdgeHD manuals. Parts appear as you reach the step that installs them.</p>

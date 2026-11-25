@@ -137,6 +137,22 @@ const gCor=G('corrector',altG,V3(0,0,-0.32));
 M('corrector',gCor,cylZ(.1397,.1397,.004,64),'glass',{p:[0,0,-.28],sub:'plate',clip:true,noShadow:true});
 M('corrector',gCor,cylZ(.158,.158,.1,72,true),'blackg',{p:[0,0,-.25],sub:'cell',clip:true});
 M('corrector',gCor,new THREE.RingGeometry(.1397,.158,72),'blackg',{p:[0,0,-.3],sub:'cell',clip:true});
+
+/* ---- front lens cap for the corrector: black disc with a raised rim and an embossed swirl logo ---- */
+const CAP={on:false};
+const capTex=canvasTex(256,256,(x,w,h)=>{x.fillStyle='#0e0f12';x.fillRect(0,0,w,h);
+  x.strokeStyle='rgba(255,255,255,.10)';x.lineWidth=3;x.beginPath();x.arc(128,128,52,0,7);x.stroke();               // embossed centre ring
+  x.strokeStyle='rgba(255,255,255,.16)';x.lineWidth=5;x.beginPath();x.arc(120,128,30,-2.3,2.3);x.stroke();            // swirl logo (moulded, black on black)
+  x.strokeStyle='rgba(255,255,255,.12)';x.lineWidth=3;x.beginPath();x.arc(140,128,20,-2.5,2.5);x.stroke();
+  x.strokeStyle='rgba(255,255,255,.07)';x.lineWidth=2;x.beginPath();x.arc(128,128,122,0,7);x.stroke();},true);
+BASE.cap=new THREE.MeshStandardMaterial({map:capTex,color:0xffffff,roughness:.35,metalness:.1});
+function buildCap(g,flat){                       // flat=true: lying face-up on the table
+  const disc=new THREE.CylinderGeometry(.163,.163,.008,72),face=new THREE.CircleGeometry(.158,72),rim=new THREE.CylinderGeometry(.165,.165,.022,72,1,true);
+  if(!flat){disc.rotateX(Math.PI/2);face.rotateY(Math.PI);rim.rotateX(Math.PI/2);}else face.rotateX(-Math.PI/2);
+  M('cap',g,disc,'gloss',{p:flat?[0,.004,0]:[0,0,-.309],sub:'cap'});
+  M('cap',g,face,'cap',{p:flat?[0,.0085,0]:[0,0,-.3135],sub:'cap',noShadow:true});
+  M('cap',g,rim,'gloss',{p:flat?[0,.011,0]:[0,0,-.302],sub:'cap'});}
+const gCap=G('cap',altG,V3(0,0,-0.7));buildCap(gCap,false);
 const gSec=G('secondary',altG,V3(0,0,-0.17));
 M('secondary',gSec,cylZ(.052,.052,.012,48),'rubber',{p:[0,0,-.296],sub:'holder',clip:true});
 M('secondary',gSec,cylZ(.046,.046,.045,48),'black',{p:[0,0,-.2575],sub:'holder',clip:true});
@@ -527,7 +543,10 @@ const pad=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.03,64),new THREE.Me
 BASE.foam=new THREE.MeshStandardMaterial({color:0x121316,roughness:1,metalness:0});
 BASE.case=new THREE.MeshStandardMaterial({color:0xaeb3bb,metalness:.85,roughness:.35});
 [['f80A',0x2f6fe0],['f58',0x2f9a3a],['f56',0x8fd05a],['f25',0xc8281e],['f21',0xe87a1c],['f12',0xe8d41c],['fMoon',0x8d939c]].forEach(([k,c])=>{BASE[k]=new THREE.MeshStandardMaterial({color:c,roughness:.15,metalness:0,transparent:true,opacity:.82});});
-const kitRoot=new THREE.Group();kitRoot.position.set(1.7,.77,.6);kitRoot.rotation.y=2.4;scene.add(kitRoot);
+const kitRoot=new THREE.Group();kitRoot.position.set(1.876,.77,.696);kitRoot.rotation.y=2.4;scene.add(kitRoot);
+const gCapT=new THREE.Group();gCapT.position.set(1.477,.77,.445);scene.add(gCapT);buildCap(gCapT,true);   // where the cap rests on the table when it is off the scope
+function setCap(v){CAP.on=v;gCap.visible=v;gCapT.visible=!v;$$('.capb').forEach(b=>{b.classList.toggle('on',v);b.textContent=v?'Lens cap: ON':'Lens cap: OFF';});}
+setCap(false);
 const gKit=G('kit',kitRoot,V3(0,0,0));
 (function(){
   M('kit',gKit,new THREE.BoxGeometry(.38,.05,.26),'case',{p:[0,.025,0],sub:'case'});
@@ -644,3 +663,5 @@ function updateDome(){
   starMat.uniforms.op.value=Math.min(starMat.uniforms.op.value,1-day);hemi.intensity=.5+.5*day;
 }
 
+
+document.addEventListener('click',e=>{if(e.target.closest('[data-cap]'))setCap(!CAP.on);});

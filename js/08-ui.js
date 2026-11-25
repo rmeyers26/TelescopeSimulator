@@ -27,6 +27,7 @@ const KID={
  baffle:'A black tube in the middle that stops stray light from sneaking into your eyepiece, so the sky looks dark and stars look sharp.',
  rearcell:'The black back end of the tube. It holds the big mirror, the focus knob and the vents that let warm air out.',
  focuser:'The focus knob. Turn it slowly until stars become tiny sharp dots – just like focusing binoculars.',
+ cap:'The black lid on the front of the telescope. It keeps dust off the glass. Take it off before you look – with the cap on, the eyepiece is totally dark!',
  dew:'A tube on the front that stops dew (water drops) from forming on the glass on cold nights.',
  visualback:'The ring on the back that eyepieces and cameras attach to.',
  diagonal:'A little box with a mirror that turns the light sideways, so you can look down into the eyepiece instead of lying on the ground.',

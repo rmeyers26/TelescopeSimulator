@@ -68,6 +68,14 @@ focuser:{n:'Focus knob',
  spec:[['Mirror travel','A few mm of mirror motion covers the focus range'],['Longitudinal magnification','≈ 25×']],
  m:['Turn gently at the ends of travel.','Do not lubricate unless instructed by the manual.'],
  t:[['Stiff or gritty','Cold or dirt. Warm up first; service if it persists.'],['Backlash when changing direction','Normal. Finish each focus move in the same direction.']]},
+cap:{n:'Front lens cap',
+ d:'The black plastic cover that pushes onto the front cell to protect the corrector plate. It has a moulded swirl logo in the centre.',
+ p:'Keeps dust, dew, fingerprints and stray light off the corrector when the telescope is not in use.',
+ h:'It is a simple friction fit over the front cell. With the cap on, no light can enter the tube, so the eyepiece is completely dark.',
+ i:'Fits the front cell. Take it off after the telescope is set up and pointed away from the Sun, and put it back on before packing up while the optics are dry.',
+ subs:[['cap','Cap','Push-on cover for the 11-inch front cell.']],
+ spec:[['Fits','CPC / EdgeHD 11 front cell (≈ 33 cm)'],['Material','Moulded plastic']],
+ m:['Let a dewy corrector dry before capping it, so moisture is not trapped.','Store the cap where it will not be stepped on (the table is a good spot).'],t:[['Eyepiece is completely black','The lens cap is still on.']]},
 dew:{n:'Dew shield',
  d:'A glossy black tube that extends the front of the scope past the corrector plate.',
  p:'Slows heat loss from the corrector so dew forms later and blocks stray light.',
@@ -183,5 +191,5 @@ handset:{n:'NexStar-style hand controller',
  spec:[['Display','Two lines of 16 characters, red backlight; long text scrolls'],['Keys','ALIGN, ENTER, BACK, arrows, SOLAR SYSTEM, STARS, DEEP SKY, IDENTIFY, SKY TOUR, SCROLL ▲▼, MENU, HELP, OPTION (logo), OBJECT INFO, MOTOR SPEED'],['Rates','1 = ½× sidereal … 9 ≈ 3.5°/s; UP/DOWN reverse at rates 1–6'],['Port','RS-232 jack (not simulated)']],
  m:['Keep the cable strain-relieved.'],t:[['No response','Check cable and power.']]}
 };
-const GROUPS=[['Optical tube',['tube','corrector','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','kit','finder','telrad','starsense','dovetail']],['Mount',['fork','power','tripod','handset']]];
+const GROUPS=[['Optical tube',['tube','corrector','cap','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','kit','finder','telrad','starsense','dovetail']],['Mount',['fork','power','tripod','handset']]];
 
