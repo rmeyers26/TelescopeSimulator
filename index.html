@@ -609,7 +609,9 @@ M('dovetail',gDove,new THREE.BoxGeometry(.055,.015,.36),'silver',{p:[0,.158,-.03
 
 // fork (rotates with azimuth). Two arms (CPC style) or one arm + drive housing; switch with the toolbar buttons
 const rotZ=g=>{g.rotateZ(Math.PI/2);return g;};
-const gFB=G('fork',azG,V3(0,0.1,0));
+// The fork arms, the rotating azimuth drive housing and the port panel are one moulded housing on the CPC, so they share one explode offset and move as a single piece.
+const FORK_EXP=V3(0,.1,0);
+const gFB=G('fork',azG,FORK_EXP);
 M('fork',gFB,lathe([[.0,.03],[.055,.03],[.07,.05],[.078,.066],[.092,.07],[.14,.067],[.166,.058],[.178,.04],[.181,.014],[.176,0]],72),'blackg',{p:[0,0,0],sub:'base'});   // domed drum with a deep centre well
 M('fork',gFB,new THREE.TorusGeometry(.082,.006,10,64),'gloss',{p:[0,.069,0],r:[Math.PI/2,0,0],sub:'base'});             // glossy ring round the well
 M('fork',gFB,ribbed(.045,.03,3,.25),'blackg',{p:[0,.045,0],sub:'base'});                         // three-lobed azimuth cap in the well
@@ -625,7 +627,7 @@ const FOOT_GEO=(function(){const sh=new THREE.Shape();             // fillet in 
   sh.moveTo(.15,.066);sh.quadraticCurveTo(.2,.075,.205,.2);sh.lineTo(.215,.2);sh.lineTo(.215,.03);sh.quadraticCurveTo(.2,.004,.17,.004);sh.lineTo(.15,.004);sh.closePath();
   const g=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:true,bevelSize:.022,bevelThickness:.03,bevelSegments:6,curveSegments:20});g.translate(0,0,-.1);return g;})();
 function buildArm(sx){
-  const g=G('fork',azG,V3(sx*0.35,0.12,0)),sub=sx>0?'arm':'arm2';
+  const g=G('fork',azG,FORK_EXP),sub=sx>0?'arm':'arm2';
   M('fork',g,ARM_GEO,'blackg',{p:[sx*.2325,0,0],sub});                          // curved arm with rounded edges
   {const f=M('fork',g,FOOT_GEO,'blackg',{p:[0,0,0],sub});if(sx<0)f.scale.x=-1;}     // flared foot blending the arm into the drum
   M('fork',g,rotZ(new THREE.CylinderGeometry(.078,.078,.012,40)),'rubber',{p:[sx*.2765,.5,0],sub});     // clutch wheel with three spokes
@@ -694,18 +696,18 @@ const triTxt=()=>`Head ${Math.round(TRI.H*1000)} mm · footprint Ø${Math.round(
 setTripod(.55);
 
 // port panel on the front of the fork base, where the handset cord plugs in (like the real CPC base)
-const gPort=G('base',azG,V3(0,0,.3));
+const gPort=G('fork',azG,FORK_EXP);
 (function(){const sh=new THREE.Shape();                 // (z,y) profile: raised plateau on the drum that slopes down over the front edge
   sh.moveTo(.06,.064);sh.lineTo(.14,.074);sh.quadraticCurveTo(.15,.0755,.16,.072);sh.lineTo(.192,.058);sh.quadraticCurveTo(.2,.054,.199,.04);sh.lineTo(.193,.008);sh.lineTo(.06,.008);sh.closePath();
   const g=new THREE.ExtrudeGeometry(sh,{depth:.23,bevelEnabled:true,bevelSize:.006,bevelThickness:.006,bevelSegments:3,curveSegments:12});g.translate(0,0,-.115);g.rotateY(-Math.PI/2);
-  M('base',gPort,g,'blackg',{p:[0,0,0],sub:'drive'});
+  M('fork',gPort,g,'blackg',{p:[0,0,0],sub:'base'});
   const rx=-Math.PI/2+.36,cz=.17,cy=.0672,nz=.352,ny=.936,sz=.936,sy=-.352;                 // panel centre, outward normal (n) and down-slope direction (s)
-  M('base',gPort,new THREE.PlaneGeometry(.2,.075),'panel',{p:[0,cy+ny*.0068,cz+nz*.0068],r:[rx,0,0],sub:'drive',noShadow:true});
-  [-.072,-.048,-.028,.04,.066].forEach(x=>M('base',gPort,new THREE.BoxGeometry(.014,.004,.011),'black',{p:[x,cy+sy*.015+ny*.0078,cz+sz*.015+nz*.0078],r:[rx,0,0],sub:'drive'}));   // sockets A B B C D
+  M('fork',gPort,new THREE.PlaneGeometry(.2,.075),'panel',{p:[0,cy+ny*.0068,cz+nz*.0068],r:[rx,0,0],sub:'base',noShadow:true});
+  [-.072,-.048,-.028,.04,.066].forEach(x=>M('fork',gPort,new THREE.BoxGeometry(.014,.004,.011),'black',{p:[x,cy+sy*.015+ny*.0078,cz+sz*.015+nz*.0078],r:[rx,0,0],sub:'base'}));   // sockets A B B C D
   // on/off switch (E) and 12 V input jack (F) on the right shoulder of the drum
-  M('base',gPort,new THREE.CylinderGeometry(.014,.014,.006,24),'black',{p:[.142,.058,.098],r:[-.5,0,-.35],sub:'drive'});
-  M('base',gPort,new THREE.CylinderGeometry(.009,.009,.008,20),'orange',{p:[.142,.06,.098],r:[-.5,0,-.35],sub:'drive'});
-  M('base',gPort,new THREE.CylinderGeometry(.007,.007,.006,16),'silver',{p:[.162,.05,.06],r:[-.3,0,-.6],sub:'drive'});
+  M('fork',gPort,new THREE.CylinderGeometry(.014,.014,.006,24),'black',{p:[.142,.058,.098],r:[-.5,0,-.35],sub:'base'});
+  M('fork',gPort,new THREE.CylinderGeometry(.009,.009,.008,20),'orange',{p:[.142,.06,.098],r:[-.5,0,-.35],sub:'base'});
+  M('fork',gPort,new THREE.CylinderGeometry(.007,.007,.006,16),'silver',{p:[.162,.05,.06],r:[-.3,0,-.6],sub:'base'});
 })();
 // hand controller: sits in a cradle bolted to the outer face of an arm, with a coiled cord down to the port panel.
 // buildHC(sx) makes the left-arm version (sx=-1, two-arm mode) or the right-arm version (sx=+1, one-arm mode)
@@ -739,7 +741,7 @@ BASE.foam=new THREE.MeshStandardMaterial({color:0x121316,roughness:1,metalness:0
 BASE.case=new THREE.MeshStandardMaterial({color:0xaeb3bb,metalness:.85,roughness:.35});
 [['f80A',0x2f6fe0],['f58',0x2f9a3a],['f56',0x8fd05a],['f25',0xc8281e],['f21',0xe87a1c],['f12',0xe8d41c],['fMoon',0x8d939c]].forEach(([k,c])=>{BASE[k]=new THREE.MeshStandardMaterial({color:c,roughness:.15,metalness:0,transparent:true,opacity:.82});});
 const kitRoot=new THREE.Group();kitRoot.position.set(1.7,.77,.6);kitRoot.rotation.y=2.4;scene.add(kitRoot);
-const gKit=G('kit',kitRoot,V3(0,.3,0));
+const gKit=G('kit',kitRoot,V3(0,0,0));
 (function(){
   M('kit',gKit,new THREE.BoxGeometry(.38,.05,.26),'case',{p:[0,.025,0],sub:'case'});
   M('kit',gKit,new THREE.BoxGeometry(.35,.012,.23),'foam',{p:[0,.052,0],sub:'case'});                     // die-cut foam
@@ -952,19 +954,19 @@ dovetail:{n:'Dovetail rail',
  subs:[['bar','Bar','Aluminium rail.'],['bolts','Bolts','Fixings to the tube.']],
  spec:[['Style','Vixen ≈ 44 mm / Losmandy D ≈ 75 mm wide'],['Fork mounts','The tube usually attaches via fork pivots instead']],
  m:['Check clamps before slewing.'],t:[['Accessory slips','Tighten clamp; use a stop screw.']]},
-fork:{n:'Fork arms and drive housing',
- d:'The fork rises from the azimuth platform and holds the tube at its balance point. Two-arm forks, as on the CPC series, hold the tube on both sides; a one-arm design hangs it from one side with a drive housing on the other. Use the 2 arms / 1 arm buttons to compare.',
+fork:{n:'Fork arms and azimuth drive housing (one piece)',
+ d:'On the CPC the two fork arms and the rotating azimuth drive housing are a single moulded piece that turns on the fixed base. The fork rises from the azimuth platform and holds the tube at its balance point. Two-arm forks, as on the CPC series, hold the tube on both sides; a one-arm design hangs it from one side with a drive housing on the other. Use the 2 arms / 1 arm buttons to compare.',
  p:'Provide the altitude axis for the tube to pitch up and down.',
  h:'A motor and gear train in an arm (and the drive housing in one-arm mode) pitch the tube about its balance point. A one-arm design needs a very stiff arm and pivot because the tube hangs from one side.',
  i:'Rotates in azimuth with the base; the tube hangs between the arms. Moving the fork in azimuth and tube in altitude points the scope anywhere above the horizon.',
- subs:[['base','Fork base','Disc joining the arm to the azimuth drive.'],['arm','Fork arm','Curved arm that carries the tube (right side, with handle).'],['arm2','Second arm','Left arm, shown in two-arm mode.'],['handle','Carry handle','Lift point for moving the mount.'],['pivot','Pivot adapter','Steel hub where the tube attaches to an arm.'],['altdrive','Altitude drive housing','One-arm mode: gear housing on the free side of the tube.'],['clutch','Clutch knobs','Release the drive for manual movement.']],
+ subs:[['base','Azimuth drive housing','Rotating drum moulded in one piece with both arms; carries the port panel, power switch and 12 V jack, and turns on the fixed base below.'],['arm','Fork arm','Curved arm that carries the tube (right side, with handle).'],['arm2','Second arm','Left arm, shown in two-arm mode.'],['handle','Carry handle','Lift point for moving the mount.'],['pivot','Pivot adapter','Steel hub where the tube attaches to an arm.'],['altdrive','Altitude drive housing','One-arm mode: gear housing on the free side of the tube.'],['clutch','Clutch knobs','Release the drive for manual movement.']],
  spec:[['Altitude travel (sim)','0–90°'],['Mount type','Computerised alt-azimuth fork (1 or 2 arms shown)'],['Fork width','585 mm at the arms, 607 mm including the handle (CPC Deluxe 11 HD drawing)'],['Axis height','532 mm above the bottom of the base'],['Height, OTA level','690 mm base to top of tube'],['Height, OTA vertical','898 mm base to front of tube'],['Pivot position','366 mm behind the front of the OTA, 285 mm ahead of the rear end'],['Clearance','124 mm between the rear of the vertical OTA and the base']],
  m:['Release or engage clutches only as the manual describes.','Check pivot bolts for play.'],t:[['Slipping on slews','Clutch not tight; rebalance the tube.']]},
-base:{n:'Azimuth drive base',
- d:'A round housing between tripod head and fork containing the azimuth motor, gears and electronics.',
- p:'Turns the fork about the vertical axis.',
+base:{n:'Fixed base (azimuth bearing)',
+ d:'The fixed, flared saucer that bolts to the tripod head. The one-piece fork and azimuth drive housing turns on it.',
+ p:'Holds the azimuth bearing and gear that the fork drives against.',
  h:'A motor and worm gear rotate the fork. Encoders report angle; the hand controller turns encoder counts into sky coordinates after alignment.',
- i:'Mounts on the tripod head and carries the fork. Connectors for power and hand controller are here.',
+ i:'Mounts on the tripod head with three bolts. The ports and power switch are on the rotating housing above it, part of the fork.',
  subs:[['drive','Drive housing','Motor and gears.'],['ring','Bearing ring','Reduces friction.']],
  spec:[['Azimuth travel (sim)','360° continuous']],
  m:['Keep dry.','Use clean power supply.'],t:[['Jerky motion','Low battery; check power supply.']]},
