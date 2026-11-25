@@ -27,6 +27,7 @@ const KID={
  baffle:'A black tube in the middle that stops stray light from sneaking into your eyepiece, so the sky looks dark and stars look sharp.',
  rearcell:'The black back end of the tube. It holds the big mirror, the focus knob and the vents that let warm air out.',
  focuser:'The focus knob. Turn it slowly until stars become tiny sharp dots – just like focusing binoculars.',
+ cap:'The black lid on the front of the telescope. It keeps dust off the glass. Take it off before you look – with the cap on, the eyepiece is totally dark!',
  dew:'A tube on the front that stops dew (water drops) from forming on the glass on cold nights.',
  visualback:'The ring on the back that eyepieces and cameras attach to.',
  diagonal:'A little box with a mirror that turns the light sideways, so you can look down into the eyepiece instead of lying on the ground.',
@@ -38,6 +39,7 @@ const KID={
  dovetail:'A metal rail on top of the tube where finders and pointers clip on.',
  fork:'The two black arms and round base. Motors inside turn the telescope left-right and up-down to find and follow stars.',
  tripod:'The three-legged stand. It holds everything steady. Lower legs = less wobble.',
+ power:'A big rechargeable battery. A cable carries 12 volts from it to the telescope so the motors and hand controller work far from a wall plug. Watch the % on its screen go down as you use the telescope!',
  handset:'The hand controller. Press buttons to move the telescope, or pick an object and press ENTER – the telescope goes there by itself!'};
 const edu={on:false};
 function showInfo(){
@@ -69,3 +71,35 @@ function focusPart(id){
 renderParts();showInfo();
 
 
+
+/* ---- phone bottom sheet: three sizes (peek = tabs only, half, tall) plus free dragging ---- */
+const sheet={h:0};
+function sheetSizes(){const H=innerHeight;return {peek:64,mid:Math.round(H*.4),full:Math.round(H*.86)};}
+function setSheet(px,snap){const S=sheetSizes(),H=innerHeight;px=clamp(px,S.peek,S.full);
+  if(snap){const c=[S.peek,S.mid,S.full];px=c.reduce((a,b)=>Math.abs(b-px)<Math.abs(a-px)?b:a);}
+  sheet.h=px;document.documentElement.style.setProperty('--sheet',px+'px');$('#dock').classList.toggle('min',px<=S.peek+4);if(typeof resize==='function')resize();}
+(function(){const g=$('#grab');let y0=null,h0=0,moved=0;
+  g.addEventListener('pointerdown',e=>{g.setPointerCapture(e.pointerId);y0=e.clientY;h0=$('#dock').getBoundingClientRect().height;moved=0;$('#dock').classList.add('dragging');});
+  g.addEventListener('pointermove',e=>{if(y0===null)return;const d=y0-e.clientY;moved=Math.max(moved,Math.abs(d));setSheet(h0+d,false);});
+  const end=()=>{if(y0===null)return;$('#dock').classList.remove('dragging');const S=sheetSizes();
+    if(moved<6)setSheet(h0>S.peek+4?S.peek:S.mid,true);else setSheet(sheet.h,true);y0=null;};   // a tap toggles hidden / half
+  g.addEventListener('pointerup',end);g.addEventListener('pointercancel',end);})();
+// on a phone, tapping a tab while the sheet is hidden opens it again
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b&&matchMedia('(max-width:780px)').matches&&$('#dock').classList.contains('min'))setSheet(sheetSizes().mid,true);});
+
+/* ---- haptic (vibration) feedback on phones ----
+   Android/Chrome: Vibration API. iPhone Safari has no vibration API, but toggling a hidden <input type="checkbox" switch>
+   gives a light system "tick" on iOS 18+, so we use that as a fallback (it simply does nothing on older iPhones). */
+const HAP={on:true,last:0};try{HAP.on=localStorage.getItem('c11hap')!=='0';}catch(_){}
+const HAP_PAT={tap:8,key:12,hold:18,power:[25,60,25],arrive:[20,40,20],success:[30,50,30,50,70],warn:[90,50,90]};
+function haptic(kind){
+  if(!HAP.on)return;const now=performance.now();if(kind==='tap'&&now-HAP.last<60)return;HAP.last=now;
+  const p=HAP_PAT[kind]||HAP_PAT.tap;
+  if(navigator.vibrate){try{navigator.vibrate(p);}catch(_){}return;}
+  const sw=document.querySelector('#hapSw');if(!sw)return;const n=Array.isArray(p)?Math.ceil(p.length/2):1;   // iOS: one tick per pulse
+  for(let i=0;i<n;i++)setTimeout(()=>sw.click(),i*90);}
+function setHap(v){HAP.on=v;try{localStorage.setItem('c11hap',v?'1':'0');}catch(_){}$('#bHap').classList.toggle('on',v);if(v)haptic('key');}
+$('#bHap').classList.toggle('on',HAP.on);$('#bHap').onclick=()=>setHap(!HAP.on);
+// a light tick for every button press (touch screens only); specific actions add stronger patterns
+document.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;const b=e.target.closest('button,.pl,[data-kt],[data-w],[data-scope],[data-ms],[data-ep]');if(!b)return;
+  haptic(b.closest('.hc,.kgrid')?'key':'tap');},{passive:true});

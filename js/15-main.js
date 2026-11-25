@@ -8,17 +8,19 @@
 function resize(){                                // keep the telescope centred in the part of the screen the dock does not cover
   const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;
   const mobile=matchMedia('(max-width:780px)').matches,minimized=$('#dock').classList.contains('min');
-  if(mobile)camera.setViewOffset(w,h,0,minimized?0:Math.round(h*.25),w,h);else camera.setViewOffset(w,h,200,0,w,h);
+  const dh=mobile?$('#dock').getBoundingClientRect().height||h*.4:0;   // phone: shift the view up by half the sheet so the scope sits in the visible part
+  if(mobile)camera.setViewOffset(w,h,0,Math.round(dh/2),w,h);else camera.setViewOffset(w,h,200,0,w,h);
   camera.updateProjectionMatrix();
 }
-addEventListener('resize',resize);$('#tabs').addEventListener('click',()=>setTimeout(resize,0));resize();
+addEventListener('resize',()=>{if(matchMedia('(max-width:780px)').matches&&sheet.h)setSheet(sheet.h,true);resize();});
+$('#dock').addEventListener('transitionend',resize);$('#tabs').addEventListener('click',()=>setTimeout(resize,0));resize();
 let last=performance.now(),hudT=0,frame=0;
 function grainShift(t){const g=$('#grain');g.style.transform=`translate(${(Math.sin(t*37)*20)|0}px,${(Math.cos(t*29)*20)|0}px)`;}
 function loop(now){
   requestAnimationFrame(loop);
   const dt=clamp((now-last)/1000,0,.05);last=now;frame++;const t=now/1000;   // dt never negative (the first frame's timestamp can precede start-up)
   simMs+=dt*1000*speed;
-  pollPad(dt);feedMount();driver.update(dt);computeSky();
+  pollPad(dt);feedMount();if(POWER.on)driver.update(dt);computeSky();   // no power: motors stop and tracking pauses
   // mount pose
   const tr=driver.truth();azG.rotation.y=-tr.az*D2R;altG.rotation.x=tr.alt*D2R;
   // explode (global slider, plus a single part pulled out on request)
@@ -40,7 +42,8 @@ function loop(now){
   {const az=driver.state().truth.az;if(follow.on&&follow.prev!=null&&cam.mode==='orbit'&&!cam.tw){const d=wrap180(az-follow.prev);if(Math.abs(d)>.02&&Math.abs(d)<30)cam.yaw+=d*D2R;}follow.prev=az;}
   if(frame%12===0){hc3Lcd();$('#bStar').classList.toggle('on',!hidden.has('starsense'));}
   if(!dewS.e)dewS.e=EXPL.find(e=>e.part==='dew');dewS.t+=(dewS.to-dewS.t)*Math.min(1,dt*3.2);if(Math.abs(dewS.to-dewS.t)<.0005)dewS.t=dewS.to;dewS.e.base.z=-.9*dewS.t;
-  stepPhoton(dt);grainShift(t);
+  {if(!CAP.e)CAP.e=EXPL.find(e=>e.part==='cap');CAP.e.base.z=dewS.t<.05?-.337:0;}   // with the dew shield fitted, the cap sits on the shield's front instead of the corrector cell
+  stepPhoton(dt);if(frame%3===0)updPowerCable();{const st=driver.state();updPowerStation(dt,st.slewing||st.moving,st.tracking!=='off');if(loop.sl&&!st.slewing)haptic('arrive');loop.sl=st.slewing;}   // buzz when a GoTo arrivesgrainShift(t);
   applyCamera();if(labState.on||frame%30===0)updLabels();
   renderer.render(scene,camera);
   if(frame===12&&!homeState.thumb){try{homeState.thumb=renderer.domElement.toDataURL('image/jpeg',.82);const im=document.querySelector('#home .scard .im');if(im){im.style.backgroundImage=`url(${homeState.thumb})`;im.textContent='';}}catch(_){}}
@@ -49,7 +52,7 @@ function loop(now){
 }
 function uiTick(){
   const st=driver.state();
-  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br><span class="hx">Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br></span>${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
+  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br><span class="hx">Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br></span>${POWER.on?'':'<b style="color:#ff6b5b">⏻ POWER OFF</b> · '}${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
   if(curTab==='ctrl'){hcDraw();drawEyepiece($('#epMini'));if(edu.on){$('#kstat').textContent=kidStatus();const nw=performance.now();if(!(uiTick.kt>nw-2000)){uiTick.kt=nw;renderKidTiles();}}}
   else if(curTab==='sky'){updSelPos();drawSkyChart($('#skyc'));drawEyepiece($('#epBig'));
     const T=st.truth;$('#truth').innerHTML=`<b>Truth</b> (where the tube points): Az ${T.az.toFixed(2)}° Alt ${T.alt.toFixed(2)}°<br><b>Mount reports</b>: Az ${st.az.toFixed(2)}° Alt ${st.alt.toFixed(2)}°<br><b>Error</b>: ${Math.hypot(wrap180(T.az-st.az)*Math.cos(T.alt*D2R),T.alt-st.alt).toFixed(2)}° ${st.aligned?'(after alignment)':'(not aligned yet)'}`;
@@ -62,7 +65,7 @@ function uiTick(){
 // Start in Phoenix, AZ at 10 pm tonight (local time), tube on Polaris, Saturn selected, 13 mm eyepiece
 (function(){setLocation(0);const SAT=OBJ.find(o=>o.id==='saturn');selObj=SAT;HC.last=SAT;fillSelBox();setEp(3);
   setTimeout(()=>toast(`${loc.name} · ${localTimeTxt()}. The scope is on Polaris; Saturn is selected${SAT.alt>0?'':' (below the horizon right now)'}.`,5500),700);})();
-window.__c11={driver,OBJ,key,doGoto,setSpeed,cam,setArms,ALLM,bump:()=>{simMs+=30*60000;computeSky();}};   // small debug hook
+window.__c11={driver,OBJ,key,doGoto,setSpeed,cam,setArms,ALLM,camera,bump:()=>{simMs+=30*60000;computeSky();}};   // small debug hook
 fillSelBox();hcDraw();
 // CPC 11 drawing: the altitude axis is 366 mm behind the front of the OTA and 285 mm in front of the rear end, so slide the whole OTA forward on its pivot.
 {const otaG=new THREE.Group();[...altG.children].filter(c=>c!==gDrv).forEach(c=>otaG.add(c));altG.add(otaG);otaG.position.z=-.0835;}

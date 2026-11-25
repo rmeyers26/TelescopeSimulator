@@ -38,7 +38,7 @@ $('#p-miss').addEventListener('click',e=>{const b=e.target.closest('[data-ms]');
 function missionsTick(dt){
   {const st=driver.state();if(st.slewing||st.moving)MSN.armed=true;}   // badges only count after the child has moved the telescope (it starts on Polaris)
   if(MSN.armed)for(const m of MISSIONS){if(MSN.done[m.id])continue;const o=msHit(m);MSN.hold[m.id]=o?(MSN.hold[m.id]||0)+dt:0;
-    if(MSN.hold[m.id]>2){MSN.done[m.id]=Date.now();try{localStorage.setItem('c11badges',JSON.stringify(MSN.done));}catch(_){}
+    if(MSN.hold[m.id]>2){MSN.done[m.id]=Date.now();haptic('success');try{localStorage.setItem('c11badges',JSON.stringify(MSN.done));}catch(_){}
       const r=$('#reward');r.innerHTML=`<div><div class="big">${m.b}</div><h2>Mission complete!</h2><p>${m.t}</p><p class="mu sm">You found ${o.name}. ${MISSIONS.filter(x=>MSN.done[x.id]).length}/${MISSIONS.length} badges.</p><button class="b on" id="rwOk">Awesome!</button></div>`;
       r.style.display='flex';$('#rwOk').onclick=()=>{r.style.display='none';};renderMissions();}}
   if(curTab==='miss'){drawEyepiece($('#cmp0'),NAKED);drawEyepiece($('#cmp1'),EPS[0]);drawEyepiece($('#cmp2'),EPS[epI]);$('#cmpT').textContent=`Telescope ${EPS[epI].n} (${EPS[epI].fov<1?EPS[epI].fov.toFixed(2):EPS[epI].fov.toFixed(1)}°, ${Math.round(EPS[epI].mag)}×)`;}

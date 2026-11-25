@@ -23,19 +23,21 @@ class SimDriver extends TelescopeDriver{
   constructor(){
     super();
     // `err` is the (hidden) real-world orientation error of a freshly set-up mount: not levelled, north not exact.
-    this.s={enc:{az:0,alt:0},err:{az:(Math.random()<.5?-1:1)*(1.5+Math.random()*2.5),alt:(Math.random()-.5)*2},corr:{az:0,alt:0},
+    this.s={enc:{az:0,alt:0},err:{az:(Math.random()<.5?-1:1)*(1.5+Math.random()*2.5),alt:(Math.random()-.5)*2},corr:{az:0,alt:0,a:0,b:0},tilt:{a:0,b:0},
             man:{az:0,alt:0},manRate:0.1,goto:null,moving:false,tracking:'off',lock:null,parked:false,align:[],slewMax:5,onArrive:null};
   }
   get kind(){return 'simulated';}
-  truth(){const s=this.s;return {az:norm360(s.enc.az+s.err.az),alt:s.enc.alt+s.err.alt};}     // where the tube really points
-  reported(){const s=this.s;return {az:norm360(s.enc.az+s.corr.az),alt:s.enc.alt+s.corr.alt};}// where the mount believes it points
+  // A tilted tripod adds an altitude error that changes as the fork turns: tilt.a*cos(az) + tilt.b*sin(az).
+  truth(){const s=this.s,A=s.enc.az*D2R;return {az:norm360(s.enc.az+s.err.az),alt:s.enc.alt+s.err.alt+s.tilt.a*Math.cos(A)+s.tilt.b*Math.sin(A)};}     // where the tube really points
+  corrAlt(az){const c=this.s.corr,A=az*D2R;return c.alt+c.a*Math.cos(A)+c.b*Math.sin(A);}   // the alignment's altitude correction at a given encoder azimuth
+  reported(){const s=this.s;return {az:norm360(s.enc.az+s.corr.az),alt:s.enc.alt+this.corrAlt(s.enc.az)};}// where the mount believes it points
   state(){
     const s=this.s,r=this.reported(),t=this.truth(),jd=jdNow(),re=horToEq(r.alt,r.az,jd),te=horToEq(t.alt,t.az,jd);
     return {az:r.az,alt:r.alt,ra:re.ra,dec:re.dec,truth:{az:t.az,alt:t.alt,ra:te.ra,dec:te.dec},tracking:s.tracking,slewing:!!s.goto,moving:s.moving||!!s.goto,aligned:s.align.length,parked:s.parked};
   }
   gotoRaDec(ra,dec){
     const s=this.s;if(s.parked)this.unpark();
-    const h=eqToHor(ra,dec,jdNow());if(h.alt-s.corr.alt<0)return {ok:false,reason:'below horizon'};
+    const h=eqToHor(ra,dec,jdNow());if(h.alt-this.corrAlt(h.az-s.corr.az)<0)return {ok:false,reason:'below horizon'};
     s.goto={ra,dec};s.lock=null;return {ok:true};
   }
   setManual(az,alt,rate){const s=this.s;s.man.az=az;s.man.alt=alt;s.manRate=rate;if((az||alt)&&s.parked)this.unpark();}
@@ -45,15 +47,22 @@ class SimDriver extends TelescopeDriver{
   unpark(){this.s.parked=false;}
   setTracking(m){this.s.tracking=m;if(m!=='off')this._relock();}
   _relock(){const s=this.s,r=this.reported(),e=horToEq(r.alt,r.az,jdNow());s.lock={ra:e.ra,dec:e.dec,t:simMs};}
-  addAlignPoint(o){                          // user has centred star `o`; learn the offset between encoders and sky
-    const s=this.s,m={az:wrap180(o.az-s.enc.az),alt:o.alt-s.enc.alt};s.align.push(m);
-    s.corr={az:s.align.reduce((a,b)=>a+b.az,0)/s.align.length,alt:s.align.reduce((a,b)=>a+b.alt,0)/s.align.length};
-    return s.align.length;
+  addAlignPoint(o){                          // user has centred object `o`; learn the offset between encoders and sky
+    const s=this.s,m={az:wrap180(o.az-s.enc.az),alt:o.alt-s.enc.alt,at:s.enc.az};s.align.push(m);
+    const n=s.align.length,az=s.align.reduce((a,b)=>a+b.az,0)/n;
+    if(n<3){s.corr={az,alt:s.align.reduce((a,b)=>a+b.alt,0)/n,a:0,b:0};return n;}      // 1–2 objects: a simple offset
+    // 3+ objects: least-squares fit of alt error = c + a·cos(az) + b·sin(az), which also measures the tripod tilt
+    const M=[[0,0,0],[0,0,0],[0,0,0]],v=[0,0,0];
+    for(const p of s.align){const r=[1,Math.cos(p.at*D2R),Math.sin(p.at*D2R)];for(let i=0;i<3;i++){v[i]+=r[i]*p.alt;for(let j=0;j<3;j++)M[i][j]+=r[i]*r[j];}}
+    const det=m=>m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]),D=det(M);
+    if(Math.abs(D)<1e-6){s.corr={az,alt:s.align.reduce((a,b)=>a+b.alt,0)/n,a:0,b:0};return n;}
+    const sol=[0,1,2].map(k=>det(M.map((row,i)=>row.map((x,j)=>j===k?v[i]:x)))/D);
+    s.corr={az,alt:sol[0],a:sol[1],b:sol[2]};return n;
   }
-  clearAlign(){this.s.align=[];this.s.corr={az:0,alt:0};}
+  clearAlign(){this.s.align=[];this.s.corr={az:0,alt:0,a:0,b:0};}
   autoAlign(){                               // plate-solve: the camera recovers the true pointing, with a few arc-minutes of residual
     const s=this.s,t=this.truth(),m={az:wrap180(t.az-s.enc.az)+(Math.random()-.5)*.06,alt:t.alt-s.enc.alt+(Math.random()-.5)*.06};
-    s.align=[m,m,m];s.corr={az:m.az,alt:m.alt};return 3;
+    s.align=[m,m,m];s.corr={az:m.az,alt:s.err.alt+(Math.random()-.5)*.06,a:s.tilt.a,b:s.tilt.b};return 3;   // plate solving measures the whole model
   }
   update(dt){
     const s=this.s,jd=jdNow(),manual=(Math.abs(s.man.az)>.01||Math.abs(s.man.alt)>.01)&&!s.parked;
@@ -62,7 +71,7 @@ class SimDriver extends TelescopeDriver{
     else if(s.goto){
       let tAz,tAlt;
       if(s.goto.enc){tAz=s.goto.enc.az;tAlt=s.goto.enc.alt;}
-      else{const h=eqToHor(s.goto.ra,s.goto.dec,jd);tAz=norm360(h.az-s.corr.az);tAlt=clamp(h.alt-s.corr.alt,0,90);}
+      else{const h=eqToHor(s.goto.ra,s.goto.dec,jd);tAz=norm360(h.az-s.corr.az);tAlt=clamp(h.alt-this.corrAlt(tAz),0,90);}
       const dA=wrap180(tAz-s.enc.az),dB=tAlt-s.enc.alt,dist=Math.hypot(dA,dB),step=Math.min(s.slewMax,0.3+dist*1.6)*dt;
       s.moving=true;
       if(dist<=step+1e-4){
@@ -74,7 +83,7 @@ class SimDriver extends TelescopeDriver{
       if(s.moving){s.moving=false;this._relock();}
       if(s.tracking!=='off'&&s.lock&&!s.parked){        // follow the sky: fixed RA/Dec advanced by the tracking-mode drift
         const ra=s.lock.ra+TRK_RATE[s.tracking]*(simMs-s.lock.t)/3.6e6,h=eqToHor(ra,s.lock.dec,jd);
-        s.enc.az=norm360(h.az-s.corr.az);s.enc.alt=clamp(h.alt-s.corr.alt,0,90);
+        s.enc.az=norm360(h.az-s.corr.az);s.enc.alt=clamp(h.alt-this.corrAlt(s.enc.az),0,90);
       }
     }
   }

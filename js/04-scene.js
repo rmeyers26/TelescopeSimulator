@@ -137,6 +137,22 @@ const gCor=G('corrector',altG,V3(0,0,-0.32));
 M('corrector',gCor,cylZ(.1397,.1397,.004,64),'glass',{p:[0,0,-.28],sub:'plate',clip:true,noShadow:true});
 M('corrector',gCor,cylZ(.158,.158,.1,72,true),'blackg',{p:[0,0,-.25],sub:'cell',clip:true});
 M('corrector',gCor,new THREE.RingGeometry(.1397,.158,72),'blackg',{p:[0,0,-.3],sub:'cell',clip:true});
+
+/* ---- front lens cap for the corrector: black disc with a raised rim and an embossed swirl logo ---- */
+const CAP={on:false};
+const capTex=canvasTex(256,256,(x,w,h)=>{x.fillStyle='#0e0f12';x.fillRect(0,0,w,h);
+  x.strokeStyle='rgba(255,255,255,.10)';x.lineWidth=3;x.beginPath();x.arc(128,128,52,0,7);x.stroke();               // embossed centre ring
+  x.strokeStyle='rgba(255,255,255,.16)';x.lineWidth=5;x.beginPath();x.arc(120,128,30,-2.3,2.3);x.stroke();            // swirl logo (moulded, black on black)
+  x.strokeStyle='rgba(255,255,255,.12)';x.lineWidth=3;x.beginPath();x.arc(140,128,20,-2.5,2.5);x.stroke();
+  x.strokeStyle='rgba(255,255,255,.07)';x.lineWidth=2;x.beginPath();x.arc(128,128,122,0,7);x.stroke();},true);
+BASE.cap=new THREE.MeshStandardMaterial({map:capTex,color:0xffffff,roughness:.35,metalness:.1});
+function buildCap(g,flat){                       // flat=true: lying face-up on the table
+  const disc=new THREE.CylinderGeometry(.163,.163,.008,72),face=new THREE.CircleGeometry(.158,72),rim=new THREE.CylinderGeometry(.165,.165,.022,72,1,true);
+  if(!flat){disc.rotateX(Math.PI/2);face.rotateY(Math.PI);rim.rotateX(Math.PI/2);}else face.rotateX(-Math.PI/2);
+  M('cap',g,disc,'gloss',{p:flat?[0,.004,0]:[0,0,-.309],sub:'cap'});
+  M('cap',g,face,'cap',{p:flat?[0,.0085,0]:[0,0,-.3135],sub:'cap',noShadow:true});
+  M('cap',g,rim,'gloss',{p:flat?[0,.011,0]:[0,0,-.302],sub:'cap'});}
+const gCap=G('cap',altG,V3(0,0,-0.7));buildCap(gCap,false);
 const gSec=G('secondary',altG,V3(0,0,-0.17));
 M('secondary',gSec,cylZ(.052,.052,.012,48),'rubber',{p:[0,0,-.296],sub:'holder',clip:true});
 M('secondary',gSec,cylZ(.046,.046,.045,48),'black',{p:[0,0,-.2575],sub:'holder',clip:true});
@@ -152,6 +168,17 @@ const gBaf=G('baffle',altG,V3(0,0.12,0));
 M('baffle',gBaf,cylZ(.032,.032,.28,32,true),'black',{p:[0,0,.16],sub:'tube',clip:true});
 M('baffle',gBaf,cylZ(.04,.032,.015,32,true),'black',{p:[0,0,.02],sub:'flare',clip:true});
 const gRear=G('rearcell',altG,V3(0,0,0.58));
+// ---- inside the tube, normally hidden: shown in colour (like Celestron's cutaway art) when Cutaway is on ----
+BASE.liner=new THREE.MeshStandardMaterial({color:0xd3dcc6,roughness:.85,metalness:0,side:THREE.DoubleSide});   // pale inner wall
+BASE.cast=new THREE.MeshStandardMaterial({color:0x8a3a33,roughness:.55,metalness:.2,side:THREE.DoubleSide});   // maroon rear casting / mirror cell
+M('tube',gTube,cylZ(.1475,.1475,.41,72,true),'liner',{p:[0,0,0.0075],sub:'inside',clip:true,noShadow:true});
+M('rearcell',gRear,cylZ(.146,.146,.045,64,true),'cast',{p:[0,0,.247],sub:'casting',clip:true});            // inner wall of the rear cell
+M('rearcell',gRear,new THREE.RingGeometry(.036,.146,64),'cast',{p:[0,0,.268],sub:'casting',clip:true});    // back plate (inside face)
+M('rearcell',gRear,cylZ(.05,.05,.075,48,true),'cast',{p:[0,0,.235],sub:'casting',clip:true});              // central hub the primary mirror slides on
+M('rearcell',gRear,cylZ(.05,.036,.004,48),'cast',{p:[0,0,.198],sub:'casting',clip:true});
+[0,1,2].forEach(k=>{const a=k*2.094+.3,rib=M('rearcell',gRear,new THREE.BoxGeometry(.006,.09,.03),'cast',{p:[Math.cos(a)*.097,Math.sin(a)*.097,.252],sub:'casting',clip:true});rib.rotation.z=a-Math.PI/2;});   // stiffening ribs
+M('rearcell',gRear,cylZ(.004,.004,.085,12),'silver',{p:[.1,-.025,.235],sub:'casting',clip:true});         // focus screw that pushes the mirror
+M('rearcell',gRear,new THREE.BoxGeometry(.03,.012,.012),'silver',{p:[.088,-.025,.2],sub:'casting',clip:true});   // and its bracket on the mirror carrier
 M('rearcell',gRear,cylZ(.075,.15,.012,64,true),'blackg',{p:[0,0,.283],sub:'cone',clip:true});   // nearly flat rear face
 M('rearcell',gRear,cylZ(.153,.153,.05,64,true),'blackg',{p:[0,0,.24],sub:'cone',clip:true});
 M('rearcell',gRear,cylZ(.153,.153,.024,64,true),'blackg',{p:[0,0,.265],sub:'cone',clip:true});
@@ -271,6 +298,15 @@ const gTel=G('telrad',altG,V3(0,0.32,0));      // Telrad reflex sight: long batt
   const ang=Math.atan2(.033,.022),cz=.089,cy=yT+.0585;
   tm(new THREE.BoxGeometry(W-.004,.04,.003),'grip',[0,cy+.002,cz+.005],'window',[-(Math.PI/2-ang)+.12,0,0]);
   tm(new THREE.PlaneGeometry(W-.012,.034),'glass',[0,cy+.003,cz+.0072],'window',[-(Math.PI/2-ang)+.12,0,0]);
+  // the Telrad's bullseye: three red rings (0.5°, 2° and 4°) with four gaps, projected onto the glass so you see them from behind.
+  // Drawn on a canvas and kept glowing (userData.glow) so the rings stay bright red in the 3D view.
+  const rt=canvasTex(256,256,(x,w,h)=>{x.clearRect(0,0,w,h);x.strokeStyle='#ff0000';x.lineCap='butt';x.shadowColor='#ff0000';x.shadowBlur=6;
+    [[100,9],[52,8],[13,7]].forEach(([r,lw],i)=>{x.lineWidth=lw;const g=i===2?0:.16;for(let q=0;q<4;q++){x.beginPath();x.arc(128,128,r,q*Math.PI/2+g+Math.PI/4,(q+1)*Math.PI/2-g+Math.PI/4);x.stroke();}});},true);
+  const wb=tm(new THREE.PlaneGeometry(W-.014,.032),'white',[0,cy+.0032,cz+.0078],'window',[-(Math.PI/2-ang)+.12,0,0]);   // bright white reflector behind the rings, as on the real glass
+  wb.material=new THREE.MeshStandardMaterial({color:0xeef2f6,roughness:.25,metalness:.15,transparent:true,opacity:.85,side:THREE.DoubleSide});wb.userData.o0={t:true,o:.85,d:true};
+  const rm=tm(new THREE.PlaneGeometry(.034,.034),'glass',[0,cy+.0035,cz+.0085],'window',[-(Math.PI/2-ang)+.12,0,0]);
+  rm.material=new THREE.MeshStandardMaterial({map:rt,emissiveMap:rt,emissive:0xd00000,emissiveIntensity:1,color:0xff2020,transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:1,metalness:0});
+  rm.userData.o0={t:true,o:1,d:false};rm.userData.glow=true;rm.renderOrder=3;
   [-1,1].forEach(sd=>tm(side([[.076,yT+.074],[.1,yT+.04],[.104,yT+.05],[.082,yT+.08]],.003),'grip',[sd*(W/2-.0015),0,0],'window'));   // raised side cheeks of the window
   // back face: three knurled adjustment knobs and four silver screws
   [[-.014,yb+.05],[.014,yb+.05],[-.016,yb+.016]].forEach(([x,y])=>{
@@ -363,6 +399,7 @@ M('fork',gBase,lathe([[.12,0],[.16,.004],[.178,.014],[.186,.03],[.187,.05],[.185
 [1.005,1.04].forEach(y=>M('fork',gBase,new THREE.TorusGeometry(y<1.01?.18:.1865,.0018,6,72),'grip',{p:[0,y,0],r:[Math.PI/2,0,0],sub:'base'}));   // moulded grooves round the band   // flared drive base (dia about 345 mm in the drawing)
 for(let k=0;k<3;k++){const a=k*2.094+1.05;M('fork',gBase,new THREE.CylinderGeometry(.009,.009,.007,6),'silver',{p:[Math.sin(a)*.13,.974,Math.cos(a)*.13],sub:'base'});}   // mounting bolts seen under the base
 const gTri=G('tripod',root,V3(0,-0.5,0));
+const LEVEL={legs:[.6,-.4,0],dx:.7,dz:-.4,ok:false};driver.s.tilt={a:LEVEL.dz*.9,b:LEVEL.dx*.9};   // tripod levelling state (Setup step 4); the bubble starts off-centre
 // rounded triangle outline (Minkowski sum of a triangle and a circle); corners point at the legs. Shape y maps to world -z after rotateX(-90deg)
 const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
   for(let k=0;k<3;k++){const a=k*Math.PI*2/3;for(let i=0;i<=12;i++){const d=a+(-1+i/6)*Math.PI/3;pts.push([Math.sin(a)*Rv+Math.sin(d)*rc,-Math.cos(a)*Rv-Math.cos(d)*rc]);}}
@@ -372,32 +409,60 @@ function buildTripod(H,B){
   [...gTri.children].forEach(c=>{gTri.remove(c);const i=ALLM.indexOf(c);if(i>=0)ALLM.splice(i,1);c.geometry.dispose();c.material.dispose();});
   const yT=H*.43;
   const flat=(shape,depth,bev)=>{const g=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:bev,bevelThickness:bev,bevelSegments:3,curveSegments:10});g.rotateX(-Math.PI/2);return g;};
-  M('tripod',gTri,flat(roundTri(.12,.1),.03,.008),'blackg',{p:[0,H-.04,0],sub:'head'});                  // head plate
-  M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.006,24),'bubble',{p:[0,H+.0005,-.06],sub:'head'});   // bubble level
+  const up=V3(0,1,0),orient=(m,p,q)=>{const d=q.clone().sub(p);m.position.copy(p.clone().add(q).multiplyScalar(.5));m.quaternion.setFromUnitVectors(up,d.normalize());};
+  const cyl=(r,p,q,mat,sub,seg)=>{const m=M('tripod',gTri,new THREE.CylinderGeometry(r,r,p.distanceTo(q),seg||20),mat,{sub});orient(m,p,q);return m;};
+  // ---- head: a rounded-triangle plate (corners toward the legs) on a deeper, slightly smaller skirt ----
+  M('tripod',gTri,flat(roundTri(.13,.1),.016,.006),'blackg',{p:[0,H-.022,0],sub:'head'});                 // top plate the mount sits on
+  M('tripod',gTri,flat(roundTri(.11,.095),.03,.01),'blackg',{p:[0,H-.06,0],sub:'head'});                  // rounded skirt under the plate
+  M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.004,24),'blackg',{p:[0,H-.001,-.06],sub:'head'});   // bubble level well
+  M('tripod',gTri,new THREE.CylinderGeometry(.0075,.0075,.006,20),'bubble',{p:[LEVEL.dx*.009,H+.0005,-.06+LEVEL.dz*.009],sub:'head'}).userData.bubble=true;   // the bubble itself (moves while levelling)
   M('tripod',gTri,new THREE.TorusGeometry(.0185,.0025,8,24),'silver',{p:[0,H+.0005,-.06],r:[Math.PI/2,0,0],sub:'head'});
   M('tripod',gTri,new THREE.CylinderGeometry(.006,.006,.022,12),'silver',{p:[0,H+.005,0],sub:'head'});        // locating pin
-  for(let k=0;k<3;k++){const a=k*Math.PI*2/3;M('tripod',gTri,new THREE.CylinderGeometry(.011,.011,.008,6),'silver',{p:[Math.sin(a)*.15,H+.0005,Math.cos(a)*.15],sub:'head'});}   // mounting bolts
-  const up=V3(0,1,0),orient=(m,p,q)=>{const d=q.clone().sub(p);m.position.copy(p.clone().add(q).multiplyScalar(.5));m.quaternion.setFromUnitVectors(up,d.normalize());};
-  const cyl=(r,p,q,mat,sub)=>{const m=M('tripod',gTri,new THREE.CylinderGeometry(r,r,p.distanceTo(q),20),mat,{sub});orient(m,p,q);return m;};
+  for(let k=0;k<3;k++){const a=k*Math.PI*2/3,s=Math.sin(a),c=Math.cos(a);
+    M('tripod',gTri,new THREE.CylinderGeometry(.011,.011,.008,6),'silver',{p:[s*.16,H+.0005,c*.16],sub:'head'});          // mounting bolt near each corner
+    M('tripod',gTri,new THREE.CylinderGeometry(.005,.005,.002,10),'rubber',{p:[s*.12+c*.03,H+.0003,c*.12-s*.03],sub:'head'});   // small screw holes beside it
+    const a2=a+Math.PI/3;M('tripod',gTri,new THREE.CylinderGeometry(.005,.005,.002,10),'rubber',{p:[Math.sin(a2)*.1,H+.0003,Math.cos(a2)*.1],sub:'head'});}
   for(let k=0;k<3;k++){
-    const a=k*Math.PI*2/3,u=V3(Math.sin(a),0,Math.cos(a)),tg=V3(Math.cos(a),0,-Math.sin(a)),top=V3(u.x*.11,H-.035,u.z*.11),bot=V3(u.x*B,0,u.z*B),d=bot.clone().sub(top).normalize();
-    const hEnd=top.clone().addScaledVector(d,.2),mid=top.clone().lerp(bot,.62);
-    cyl(.055,top,hEnd,'blackg','legs');                                             // black casting at the top of each leg
-    M('tripod',gTri,new THREE.SphereGeometry(.055,20,14),'blackg',{p:[hEnd.x,hEnd.y,hEnd.z],sub:'legs'});
-    [-1,1].forEach(sd=>{const m=M('tripod',gTri,new THREE.CylinderGeometry(.012,.012,.03,6),'silver',{sub:'legs'});m.position.copy(top.clone().addScaledVector(d,.06).addScaledVector(tg,sd*.056));m.rotation.z=Math.PI/2;m.rotation.y=-a;});   // pivot bolts
-    cyl(.031,hEnd,mid,'silver','legs');cyl(.025,mid,bot,'silver','legs');          // chrome upper leg and extension
+    const a=k*Math.PI*2/3,u=V3(Math.sin(a),0,Math.cos(a)),tg=V3(Math.cos(a),0,-Math.sin(a));
+    const top=V3(u.x*.2,H-.05,u.z*.2),bot=V3(u.x*B,0,u.z*B),d=bot.clone().sub(top).normalize();
+    // ---- leg casting: a tall rounded block hanging under each corner of the head, gripping the chrome leg ----
+    const cs=new THREE.Shape(),w=.05,hh=.11,r=.035;
+    cs.moveTo(-w+r,-hh);cs.lineTo(w-r,-hh);cs.quadraticCurveTo(w,-hh,w,-hh+r);cs.lineTo(w,hh-r);cs.quadraticCurveTo(w,hh,w-r,hh);cs.lineTo(-w+r,hh);cs.quadraticCurveTo(-w,hh,-w,hh-r);cs.lineTo(-w,-hh+r);cs.quadraticCurveTo(-w,-hh,-w+r,-hh);
+    const cg=new THREE.ExtrudeGeometry(cs,{depth:.075,bevelEnabled:true,bevelSize:.014,bevelThickness:.014,bevelSegments:4,curveSegments:8});cg.translate(0,0,-.0375);
+    const cast=M('tripod',gTri,cg,'blackg',{sub:'legs'});const cc=top.clone().addScaledVector(d,.08);cast.position.copy(cc);
+    cast.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(tg,d.clone().negate(),tg.clone().cross(d.clone().negate())));
+    // arm from the head skirt out to the casting
+    cyl(.026,V3(u.x*.09,H-.05,u.z*.09),top.clone().addScaledVector(d,.02),'blackg','head',16);
+    // big hex pivot bolt through the casting, with a washer, on both sides
+    [-1,1].forEach(sd=>{const p=cc.clone().addScaledVector(d,-.04).addScaledVector(tg,sd*.068);
+      const bolt=M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.012,6),'silver',{sub:'legs'});bolt.position.copy(p);bolt.quaternion.setFromUnitVectors(up,tg);
+      const wa=M('tripod',gTri,new THREE.CylinderGeometry(.021,.021,.003,20),'silver',{sub:'legs'});wa.position.copy(p.clone().addScaledVector(tg,-sd*.007));wa.quaternion.setFromUnitVectors(up,tg);});
+    const hEnd=top.clone().addScaledVector(d,.17),mid=top.clone().lerp(bot,.62);
+    cyl(.031,hEnd,mid,'silver','legs',24);cyl(.025,mid,bot,'silver','legs',24);         // chrome upper leg and extension
     cyl(.04,mid.clone().addScaledVector(d,-.025),mid.clone().addScaledVector(d,.025),'rubber','locks');   // extension lock collar
     cyl(.032,bot.clone().addScaledVector(d,-.06),bot,'blackg','feet');
     M('tripod',gTri,new THREE.SphereGeometry(.034,14,10),'rubber',{p:[bot.x,.03,bot.z],sub:'feet'});
-    cyl(.011,V3(0,yT-.02,0),top.clone().lerp(bot,.78),'blackg','tray');                // spreader brace to the leg
+    // curved support arm under the head, from the centre column out to the casting
+    const crv=new THREE.QuadraticBezierCurve3(V3(0,H-.2,0),V3(u.x*.06,H-.08,u.z*.06),top.clone().addScaledVector(d,.12).addScaledVector(u,-.04));
+    M('tripod',gTri,new THREE.TubeGeometry(crv,16,.012,8,false),'blackg',{sub:'head'});
+    // flat spreader bar from the central hub to the leg
+    const p0=V3(u.x*.05,yT-.045,u.z*.05),p1=top.clone().lerp(bot,.8),bar=M('tripod',gTri,new THREE.BoxGeometry(.03,p0.distanceTo(p1),.008),'blackg',{sub:'tray'});
+    orient(bar,p0,p1);bar.rotateY(Math.PI/2);
   }
-  const ts=roundTri(.3,.16);for(let k=0;k<3;k++){const a=k*2*Math.PI/3+Math.PI/3,h=new THREE.Path();h.absarc(Math.sin(a)*.22,-Math.cos(a)*.22,.052,0,Math.PI*2,true);ts.holes.push(h);}
-  M('tripod',gTri,flat(ts,.018,.006),'blackg',{p:[0,yT,0],sub:'tray'});            // accessory tray with three holes
-  M('tripod',gTri,new THREE.CylinderGeometry(.06,.066,.02,40),'blackg',{p:[0,yT+.03,0],sub:'tray'});
-  M('tripod',gTri,new THREE.CylinderGeometry(.045,.045,.004,40),'silver',{p:[0,yT+.042,0],sub:'tray'});   // medallion
-  // central column from the head down through the leg-support bracket, with the tension knob underneath
+  // ---- accessory tray: deep rounded triangle with a raised rim and two eyepiece holes on each side ----
+  const outer=roundTri(.27,.13),inner=roundTri(.25,.115);
+  const holes=[];for(let k=0;k<3;k++){const a=k*2*Math.PI/3+Math.PI/3,cx=Math.sin(a)*.21,cz=-Math.cos(a)*.21,tx=Math.cos(a),tz=Math.sin(a);
+    [-1,1].forEach(sd=>{const h=new THREE.Path();h.absarc(cx+tx*sd*.085,cz+tz*sd*.085,.03,0,Math.PI*2,true);holes.push(h);});}
+  const floor=roundTri(.27,.13);floor.holes.push(...holes);
+  M('tripod',gTri,flat(floor,.012,.004),'blackg',{p:[0,yT,0],sub:'tray'});                                   // tray floor with six holes
+  const rim=roundTri(.27,.13);const ip=new THREE.Path(inner.getPoints(8).reverse());rim.holes.push(ip);
+  M('tripod',gTri,flat(rim,.045,.006),'blackg',{p:[0,yT,0],sub:'tray'});                                     // raised rim around it
+  // central spreader hub with the brushed CELESTRON medallion
+  M('tripod',gTri,flat(roundTri(.03,.035),.03,.006),'blackg',{p:[0,yT-.06,0],sub:'tray'});
+  M('tripod',gTri,new THREE.CylinderGeometry(.045,.045,.004,40),'silver',{p:[0,yT+.018,0],sub:'tray'});
+  // central column from the head down through the tray, with the tension knob underneath
   M('tripod',gTri,new THREE.CylinderGeometry(.012,.012,H-yT+.05,14),'silver',{p:[0,(H+yT-.05)/2-.02,0],sub:'tray'});
-  M('tripod',gTri,new THREE.CylinderGeometry(.03,.03,.03,16),'blackg',{p:[0,yT-.06,0],sub:'tray'});
+  M('tripod',gTri,new THREE.CylinderGeometry(.03,.03,.03,16),'rubber',{p:[0,yT-.08,0],sub:'tray'});
 }
 const TRI={t:.55,H:0,B:0};
 // CPC Deluxe 1100 HD drawing (OTA level): altitude axis is 530 mm above the tripod head, top of tube 689 mm above it.
@@ -409,19 +474,80 @@ const triTxt=()=>`Head ${Math.round(TRI.H*1000)} mm · footprint Ø${Math.round(
 setTripod(.55);
 
 // port panel on the front of the fork base, where the handset cord plugs in (like the real CPC base)
+const POWER_HIT=[];                 // meshes that act as the power switch when tapped
 const gPort=G('fork',azG,FORK_EXP);
 (function(){const sh=new THREE.Shape();                 // (z,y) profile: low hump on the drum that drops to a 45-degree front facet carrying the plate
   sh.moveTo(.05,.066);sh.quadraticCurveTo(.1,.078,.14,.078);sh.lineTo(.148,.0765);sh.lineTo(.2,.03);sh.quadraticCurveTo(.206,.022,.203,.012);sh.lineTo(.196,0);sh.lineTo(.05,0);sh.closePath();
-  const g=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:true,bevelSize:.01,bevelThickness:.012,bevelSegments:5,curveSegments:14});g.translate(0,0,-.1);g.rotateY(-Math.PI/2);
+  const g=new THREE.ExtrudeGeometry(sh,{depth:.16,bevelEnabled:true,bevelSize:.01,bevelThickness:.012,bevelSegments:5,curveSegments:14});g.translate(0,0,-.08);g.rotateY(-Math.PI/2);
   M('fork',gPort,g,'blackg',{p:[0,0,0],sub:'base'});
   const ang=Math.atan2(.0465,.052),rx=-(Math.PI/2-ang),nz=Math.sin(ang),ny=Math.cos(ang),cz=.174,cy=.0533,o=.0115;   // facet centre and outward normal
-  M('fork',gPort,new THREE.PlaneGeometry(.17,.073),'panel',{p:[0,cy+ny*o,cz+nz*o],r:[rx,0,0],sub:'base',noShadow:true});
+  M('fork',gPort,new THREE.PlaneGeometry(.162,.07),'panel',{p:[0,cy+ny*o,cz+nz*o],r:[rx,0,0],sub:'base',noShadow:true});
   // red-lit power switch on the right shoulder, silver 12 V post on the left shoulder
-  M('fork',gPort,new THREE.CylinderGeometry(.014,.015,.008,28),'black',{p:[.135,.062,.115],r:[-.45,0,-.4],sub:'base'});
-  const sw=M('fork',gPort,new THREE.CylinderGeometry(.009,.009,.006,24),'black',{p:[.136,.065,.117],r:[-.45,0,-.4],sub:'base'});sw.material.color.set(0x5a0a08);sw.material.emissive=new THREE.Color(0xc4161c);sw.material.emissiveIntensity=.6;
-  M('fork',gPort,new THREE.CylinderGeometry(.008,.008,.004,6),'silver',{p:[-.14,.06,.11],r:[-.45,0,.4],sub:'base'});
-  M('fork',gPort,new THREE.CylinderGeometry(.004,.004,.008,12),'silver',{p:[-.14,.064,.112],r:[-.45,0,.4],sub:'base'});
+  // On/Off switch (red LED) on the right shoulder and 12 V jack on the left shoulder, beside the port housing (as on the CPC Deluxe HD)
+  const shoulder=(sx)=>{const x=sx*.128,z=.118,rad=V3(x,0,z).normalize(),ax=rad.multiplyScalar(Math.sin(.85)).add(V3(0,Math.cos(.85),0)).normalize();
+    return {p:V3(x,.05,z),q:new THREE.Quaternion().setFromUnitVectors(V3(0,1,0),ax),ax};};
+  const put=(m,S,lift)=>{m.position.copy(S.p).addScaledVector(S.ax,lift);m.quaternion.copy(S.q);return m;};
+  const R=shoulder(1),Lf=shoulder(-1);
+  put(M('fork',gPort,new THREE.CylinderGeometry(.015,.016,.006,28),'black',{sub:'base'}),R,.002);                                   // switch bezel
+  const sw=put(M('fork',gPort,new THREE.CylinderGeometry(.0105,.0105,.006,24),'black',{sub:'base'}),R,.005);sw.material.color.set(0x5a0a08);sw.userData.led=true;sw.userData.powerSwitch=true;   // red-lit switch: tap it to turn the telescope on/off
+  {const ht=new THREE.Mesh(new THREE.SphereGeometry(.03,10,8),new THREE.MeshBasicMaterial({visible:false}));put(ht,R,.01);ht.userData.powerHit=true;gPort.add(ht);POWER_HIT.push(ht,sw);}   // larger invisible tap target
+  put(M('fork',gPort,new THREE.BoxGeometry(.03,.008,.03),'black',{sub:'base'}),Lf,.002);                                            // 12 V jack: square boss…
+  put(M('fork',gPort,new THREE.CylinderGeometry(.009,.009,.004,20),'gloss',{sub:'base'}),Lf,.007);                                  // …socket…
+  put(M('fork',gPort,new THREE.CylinderGeometry(.0028,.0028,.006,12),'silver',{sub:'base'}),Lf,.009).userData.jack=true;            // …and centre pin
 })();
+
+
+/* ---- portable power station on the ground (modelled on a ~300 Wh unit such as the Jackery Explorer 300: 23 x 14 x 17 cm) ---- */
+BASE.psBody=new THREE.MeshStandardMaterial({color:0x18191c,roughness:.6,metalness:.1});
+BASE.psOrange=new THREE.MeshStandardMaterial({color:0xd8500f,roughness:.65,metalness:0});
+const psTex=canvasTex(512,300,()=>{},true);
+const POWER={on:true,boot:0};       // telescope power switch state
+const PS={wh:293,used:0,lastMs:null,out:0,pct:100};
+function drawPsPanel(){const c=psTex.image,x=c.getContext('2d'),W=c.width,H=c.height;
+  x.fillStyle='#16171a';x.fillRect(0,0,W,H);x.strokeStyle='#2b2d33';x.lineWidth=6;x.strokeRect(3,3,W-6,H-6);
+  const box=(a,b,w,h,t)=>{x.strokeStyle='#e8601c';x.lineWidth=2.5;x.beginPath();x.roundRect?x.roundRect(a,b,w,h,10):x.rect(a,b,w,h);x.stroke();if(t){x.fillStyle='#bfc3cb';x.font='bold 13px system-ui';x.textAlign='center';x.fillText(t,a+w/2,b+h+16);}};
+  x.fillStyle='#e8601c';x.font='bold 24px system-ui';x.textAlign='left';x.fillText('POWER',26,52);x.fillStyle='#bfc3cb';x.font='bold 15px system-ui';x.fillText('STATION 300',28,74);
+  x.fillStyle='#000';x.fillRect(170,22,170,70);x.fillStyle='#e9eef7';x.font='bold 13px system-ui';x.textAlign='center';x.fillText('INPUT',205,44);x.fillText('OUTPUT',305,44);
+  x.font='bold 20px monospace';x.fillText('0W',205,74);x.fillText(Math.round(PS.out)+'W',305,74);
+  x.strokeStyle='#e8601c';x.lineWidth=4;x.beginPath();x.arc(255,57,25,-Math.PI/2,-Math.PI/2+Math.PI*2*PS.pct/100);x.stroke();x.fillStyle='#fff';x.font='bold 15px system-ui';x.fillText(Math.round(PS.pct)+'%',255,62);
+  x.fillStyle='#0b0b0d';x.beginPath();x.arc(440,62,38,0,7);x.fill();x.fillStyle='#8a8d95';x.font='11px system-ui';x.fillText('12V,10A',440,58);x.fillText('DC',440,74);
+  box(22,128,92,120,'INPUT');x.fillStyle='#0b0b0d';x.beginPath();x.arc(68,190,15,0,7);x.fill();x.strokeStyle='#bbb';x.lineWidth=3;x.beginPath();x.arc(68,190,10,0,7);x.stroke();
+  box(134,118,92,130,'USB');x.fillStyle='#0b0b0d';[[180,145,28,10],[180,180,30,16],[180,215,30,16]].forEach(([a,b,w,h])=>x.fillRect(a-w/2,b-h/2,w,h));
+  box(246,118,244,130,'AC 300W');[[310,170],[425,170]].forEach(([a,b])=>{x.fillStyle='#0b0b0d';x.fillRect(a-36,b-34,72,68);x.fillStyle='#2b2d33';x.fillRect(a-16,b-18,6,22);x.fillRect(a+10,b-18,6,22);x.beginPath();x.arc(a,b+16,7,0,7);x.fill();});
+  psTex.needsUpdate=true;}
+const gPS=G('power',root,V3(.25,.15,.25));EXPL[EXPL.length-1].base.set(.9,0,-.3);   // on the ground, outside the tripod legs, on the side you see first
+(function(){
+  const sh=new THREE.Shape(),w=.23,h=.15,r=.025;sh.moveTo(-w/2+r,0);sh.lineTo(w/2-r,0);sh.quadraticCurveTo(w/2,0,w/2,r);sh.lineTo(w/2,h-r);sh.quadraticCurveTo(w/2,h,w/2-r,h);sh.lineTo(-w/2+r,h);sh.quadraticCurveTo(-w/2,h,-w/2,h-r);sh.lineTo(-w/2,r);sh.quadraticCurveTo(-w/2,0,-w/2+r,0);
+  const body=new THREE.ExtrudeGeometry(sh,{depth:.12,bevelEnabled:true,bevelSize:.008,bevelThickness:.008,bevelSegments:3,curveSegments:8});body.translate(0,0,-.06);
+  M('power',gPS,body,'psBody',{p:[0,.038,0],sub:'body'});
+  [-1,1].forEach(sd=>{M('power',gPS,new THREE.BoxGeometry(.012,.12,.124),'psOrange',{p:[sd*.117,.11,0],sub:'body'});            // orange vented end panels
+    for(let i=0;i<9;i++)M('power',gPS,new THREE.BoxGeometry(.004,.006,.1),'black',{p:[sd*.1235,.064+i*.011,0],sub:'body'});});
+  const hs=new THREE.Shape();hs.moveTo(-.09,0);hs.lineTo(-.09,.035);hs.quadraticCurveTo(-.09,.07,-.05,.07);hs.lineTo(.05,.07);hs.quadraticCurveTo(.09,.07,.09,.035);hs.lineTo(.09,0);hs.lineTo(.07,0);hs.lineTo(.07,.03);hs.quadraticCurveTo(.07,.05,.05,.05);hs.lineTo(-.05,.05);hs.quadraticCurveTo(-.07,.05,-.07,.03);hs.lineTo(-.07,0);hs.closePath();
+  const hg=new THREE.ExtrudeGeometry(hs,{depth:.05,bevelEnabled:true,bevelSize:.006,bevelThickness:.006,bevelSegments:3,curveSegments:10});hg.translate(0,0,-.025);
+  M('power',gPS,hg,'psBody',{p:[0,.196,0],sub:'handle'});                                                                          // carry handle
+  {const pm=M('power',gPS,new THREE.PlaneGeometry(.2,.117),'black',{p:[0,.11,.0695],sub:'panel',noShadow:true});pm.material.map=psTex;pm.material.color.set(0xffffff);pm.material.metalness=0;pm.material.roughness=.5;pm.material.emissiveMap=psTex;}   // front panel (lit screen)          // front panel
+  M('power',gPS,cylZ(.012,.012,.03,20),'black',{p:[.072,.142,.075],sub:'plug'}).userData.plug=true;                                // 12 V car plug in the DC socket
+  M('power',gPS,cylZ(.0085,.0085,.022,16),'psOrange',{p:[.072,.142,.093],sub:'plug'});
+  drawPsPanel();
+})();
+gPS.rotation.y=Math.atan2(.9,-.3)+.35;   // front panel faces outward, toward the observer
+const psCable=M('power',gPS.parent,new THREE.BufferGeometry(),'rubber',{sub:'cable',noShadow:true});psCable.userData.part='power';
+const psTmp={a:new THREE.Vector3(),b:new THREE.Vector3(),key:''};
+function updPowerCable(){                                        // cable from the power station's 12 V socket to the jack on the drive base (rebuilt only when something moved)
+  const plug=ALLM.find(m=>m.userData.plug),jack=ALLM.find(m=>m.userData.jack);if(!plug||!jack)return;
+  plug.updateWorldMatrix(true,false);jack.updateWorldMatrix(true,false);
+  const a=psTmp.a.set(0,0,.03).applyMatrix4(plug.matrixWorld),b=jack.getWorldPosition(psTmp.b);
+  const key=[a.x,a.z,b.x,b.y,b.z].map(v=>v.toFixed(3)).join();if(key===psTmp.key)return;psTmp.key=key;
+  const fw=V3(Math.sin(gPS.rotation.y),0,Math.cos(gPS.rotation.y));                // out of the front panel, then down to the ground
+  const out=a.clone().addScaledVector(fw,.07).setY(.05),gnd=a.clone().addScaledVector(fw,.12).lerp(V3(b.x,0,b.z),.35).setY(.033);
+  const dir=V3(b.x,0,b.z).normalize(),mid=V3(b.x,0,b.z).addScaledVector(dir,.28).setY(.25),hang=V3(b.x,0,b.z).addScaledVector(dir,.12).setY(b.y-.25);   // sags outside the tripod legs, then rises to the jack
+  const near=b.clone().addScaledVector(dir,.035).add(V3(0,-.02,0));
+  psCable.geometry.dispose();psCable.geometry=new THREE.TubeGeometry(new THREE.CatmullRomCurve3([a,out,gnd,mid,hang,near,b]),120,.005,8);}
+function updPowerStation(dt,slewing,tracking){              // battery drains with the simulated clock; output shows a rough load
+  PS.out=!POWER.on?0:(slewing?28:tracking?14:7);
+  if(PS.lastMs!==null){const h=(simMs-PS.lastMs)/3.6e6;if(h>0&&h<12)PS.used+=PS.out*1.15*h;}PS.lastMs=simMs;   // 15% conversion loss
+  PS.pct=clamp(100-PS.used/PS.wh*100,0,100);if(!updPowerStation.t||performance.now()-updPowerStation.t>1000){updPowerStation.t=performance.now();drawPsPanel();}}
+
 // hand controller: sits in a cradle bolted to the outer face of an arm, with a coiled cord down to the port panel.
 // buildHC(sx) makes the left-arm version (sx=-1, two-arm mode) or the right-arm version (sx=+1, one-arm mode)
 function buildHC(sx,zc){
@@ -432,13 +558,24 @@ function buildHC(sx,zc){
   M('handset',g,new THREE.BoxGeometry(.03,.2,.07),'rubber',{p:[sx*.297,yc,zc],sub:'body'});               // handset body
   M('handset',g,new THREE.PlaneGeometry(.064,.195).rotateY(sx*Math.PI/2),'hcb',{p:[sx*.3125,yc,zc],sub:'body'}).userData.keypad=true;   // keypad face
   // coiled cord: path from handset bottom, around the arm's front edge, to the panel; a helix is wound around that path
-  const P=[V3(sx*.3,yc-.12,zc),V3(sx*.31,.12,zc+.02),V3(sx*.3,.085,.12),V3(sx*.29,.075,.21),V3(sx*.2,.082,.235),V3(sx*.12,.08,.222),V3(sx*.072,.074,.19)];
-  const path=new THREE.CatmullRomCurve3(P),N=1800,pts=[];let nrm=V3(1,0,0);
+  // The cord ends in a plug seated in the HAND CONTROL port on the front plate (port position computed from the plate layout)
+  const fa=Math.atan2(.0465,.052),fn=V3(0,Math.cos(fa),Math.sin(fa)),fup=V3(0,Math.sin(fa),-Math.cos(fa));       // plate normal and up-slope direction
+  const port=V3(0,.0533,.174).addScaledVector(fn,.0115).add(V3((86/512-.5)*.162,0,0)).addScaledVector(fup,(.5-(124/220))*.07);
+  const Q=sx<0?V3(-.112,.078,.222):V3(-.02,.09,.245);                                                                  // where the coils end, at the drum's front edge
+  const P=sx<0?[V3(-.3,yc-.12,zc),V3(-.31,.12,zc+.02),V3(-.3,.085,.12),V3(-.28,.077,.205),V3(-.19,.08,.235),Q]
+              :[V3(.3,yc-.12,zc),V3(.31,.12,zc+.02),V3(.3,.085,.12),V3(.29,.075,.21),V3(.2,.082,.24),V3(.08,.088,.25),Q];
+  const path=new THREE.CatmullRomCurve3(P),N=1500,pts=[];let nrm=V3(1,0,0);
   for(let i=0;i<=N;i++){const t=i/N,c=path.getPoint(t),T=path.getTangent(t);
-    nrm=nrm.clone().sub(T.clone().multiplyScalar(nrm.dot(T))).normalize();const bn=T.clone().cross(nrm),a=t*Math.PI*2*50;
-    pts.push(c.clone().addScaledVector(nrm,Math.cos(a)*.009).addScaledVector(bn,Math.sin(a)*.009));}
+    nrm=nrm.clone().sub(T.clone().multiplyScalar(nrm.dot(T))).normalize();const bn=T.clone().cross(nrm),a=t*Math.PI*2*44,rr=.009*Math.min(1,(1-t)*8);   // coils taper to a straight lead
+    pts.push(c.clone().addScaledVector(nrm,Math.cos(a)*rr).addScaledVector(bn,Math.sin(a)*rr));}
   M('handset',g,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),N,.0032,6),'rubber',{sub:'cable',noShadow:true});
-  M('handset',g,new THREE.CylinderGeometry(.009,.009,.035,12).rotateZ(Math.PI/2),'rubber',{p:[sx*.15,.084,.232],sub:'cable'});   // ferrite bead
+  // straight lead from the coils into the port, with a ferrite bead, a strain relief and the plug body
+  const lead=new THREE.CatmullRomCurve3([Q,Q.clone().lerp(port,.5).add(V3(0,-.004,.025)),port.clone().addScaledVector(fn,.035),port.clone().addScaledVector(fn,.02)]);
+  M('handset',g,new THREE.TubeGeometry(lead,40,.0032,6),'rubber',{sub:'cable',noShadow:true});
+  {const fb=M('handset',g,new THREE.CylinderGeometry(.0075,.0075,.026,12),'rubber',{sub:'cable'});fb.position.copy(lead.getPoint(.3));fb.quaternion.setFromUnitVectors(V3(0,1,0),lead.getTangent(.3));}   // ferrite bead
+  const qn=new THREE.Quaternion().setFromUnitVectors(V3(0,1,0),fn);
+  {const sr=M('handset',g,new THREE.CylinderGeometry(.0035,.005,.014,10),'rubber',{sub:'cable'});sr.position.copy(port).addScaledVector(fn,.024);sr.quaternion.copy(qn);}
+  {const pl=M('handset',g,new THREE.BoxGeometry(.014,.016,.009),'grip',{sub:'cable'});pl.position.copy(port).addScaledVector(fn,.009);pl.quaternion.copy(qn);}   // RJ-style plug seated in the port
   return g;
 }
 const gHCL=buildHC(-1,0),gHCR=buildHC(1,.02);gHCR.visible=false;
@@ -453,7 +590,10 @@ const pad=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.03,64),new THREE.Me
 BASE.foam=new THREE.MeshStandardMaterial({color:0x121316,roughness:1,metalness:0});
 BASE.case=new THREE.MeshStandardMaterial({color:0xaeb3bb,metalness:.85,roughness:.35});
 [['f80A',0x2f6fe0],['f58',0x2f9a3a],['f56',0x8fd05a],['f25',0xc8281e],['f21',0xe87a1c],['f12',0xe8d41c],['fMoon',0x8d939c]].forEach(([k,c])=>{BASE[k]=new THREE.MeshStandardMaterial({color:c,roughness:.15,metalness:0,transparent:true,opacity:.82});});
-const kitRoot=new THREE.Group();kitRoot.position.set(1.7,.77,.6);kitRoot.rotation.y=2.4;scene.add(kitRoot);
+const kitRoot=new THREE.Group();kitRoot.position.set(1.876,.77,.696);kitRoot.rotation.y=2.4;scene.add(kitRoot);
+const gCapT=new THREE.Group();gCapT.position.set(1.477,.77,.445);scene.add(gCapT);buildCap(gCapT,true);   // where the cap rests on the table when it is off the scope
+function setCap(v){CAP.on=v;gCap.visible=v;gCapT.visible=!v;$$('.capb').forEach(b=>{b.classList.toggle('on',v);b.textContent=v?'Lens cap: ON':'Lens cap: OFF';});}
+setCap(false);
 const gKit=G('kit',kitRoot,V3(0,0,0));
 (function(){
   M('kit',gKit,new THREE.BoxGeometry(.38,.05,.26),'case',{p:[0,.025,0],sub:'case'});
@@ -570,3 +710,5 @@ function updateDome(){
   starMat.uniforms.op.value=Math.min(starMat.uniforms.op.value,1-day);hemi.intensity=.5+.5*day;
 }
 
+
+document.addEventListener('click',e=>{if(e.target.closest('[data-cap]'))setCap(!CAP.on);});

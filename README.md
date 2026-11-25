@@ -31,6 +31,7 @@ js/12-sky-eyepiece.js sky chart, eyepiece views, seeing & light pollution, locat
 js/13-learn.js        guided lessons (Follow the light, Find the North Star, …)
 js/14-link.js         Link tab (future real-hardware connection)
 js/15-main.js         start-up and the animation loop
+js/16-align-wizard.js  Easy alignment wizard: 1-planet (Solar System) and 3-star alignment + tracking demo
 ```
 
 ### Why plain scripts instead of ES modules?

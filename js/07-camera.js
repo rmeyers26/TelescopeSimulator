@@ -31,7 +31,7 @@ function viewFrom(kind){
   else if(kind==='right'||kind==='side')off=ax.clone().multiplyScalar(2.6);   // right/left as seen by an observer standing behind the eyepiece
   else if(kind==='left')off=ax.clone().multiplyScalar(-2.6);
   else if(kind==='top')off=up.clone().multiplyScalar(2.8).add(dir.clone().multiplyScalar(-.05));
-  else if(kind==='cut')off=ax.clone().multiplyScalar(1.5).add(V3(0,.15,0));
+  else if(kind==='cut')off=ax.clone().multiplyScalar(1.5).add(up.clone().multiplyScalar(.95)).add(dir.clone().multiplyScalar(.2)).add(V3(0,.1,0));   // looking into the open wedge
   else if(kind==='light')off=ax.clone().multiplyScalar(.75).add(V3(0,.95,0));    // above the near fork arm, looking into the cut-away tube
   else off=V3(2.2,.9,-2.3).multiplyScalar(1.1);
   tweenTo(toOrbit(piv.clone().add(off),piv));
@@ -66,7 +66,7 @@ function pick(e){
   const shown=o=>{for(;o;o=o.parent)if(!o.visible)return false;return true;};
   const hits=ray.intersectObjects(ALLM.filter(m=>shown(m)&&m.userData.part&&!hidden.has(m.userData.part)),false);
   for(const h of hits){
-    if(cut.on&&h.object.userData.clip){const lp=altG.worldToLocal(h.point.clone());if(lp.x>.001)continue;}
+    if(cut.on&&h.object.userData.clip){const lp=altG.worldToLocal(h.point.clone());if(inCutWedge(lp))continue;}
     selectPart(h.object.userData.part,h.object.userData.sub,true);return;}
   selectPart(null);
 }
@@ -78,14 +78,19 @@ function selectPart(id,sub,openTab){
 function applyHighlight(t){
   const pulse=.45+.25*Math.sin(t*4);
   for(const m of ALLM){const mt=m.material,u=m.userData,on=sel.part&&u.part===sel.part&&(!sel.sub||u.sub===sel.sub);
-    mt.emissive.setHex(on?0x2a7fff:0x000000);mt.emissiveIntensity=on?pulse:0;
+    if(u.glow&&!on){mt.emissive.setHex(0xd00000);mt.emissiveIntensity=1;}else if(u.led&&!on){mt.emissive.setHex(POWER.on?0xff2a18:0x000000);mt.emissiveIntensity=POWER.on?1.1:0;mt.color.setHex(POWER.on?0x8a140c:0x2a0806);}else{mt.emissive.setHex(on?0x2a7fff:0x000000);mt.emissiveIntensity=on?pulse:0;}
     const ghost=sel.part&&sel.isolate&&u.part!==sel.part;
     mt.transparent=ghost?true:u.o0.t;mt.opacity=ghost?.08:u.o0.o;mt.depthWrite=ghost?false:u.o0.d;
     m.visible=!hidden.has(u.part);}
 }
 function toggleHide(id){hidden.has(id)?hidden.delete(id):hidden.add(id);}
 
-const cut={on:false},optics={on:false},clipPlane=new THREE.Plane();
-function setCut(v){cut.on=v;$('#bCut').classList.toggle('on',v);CLIPM.forEach(m=>{m.material.clippingPlanes=v?[clipPlane]:null;m.material.needsUpdate=true;});if(v)viewFrom('cut');}
-function updateClip(){const n=V3(-1,0,0).transformDirection(altG.matrixWorld),p=V3(0,0,0).applyMatrix4(altG.matrixWorld);clipPlane.setFromNormalAndCoplanarPoint(n,p);}
+// Cutaway: two planes through the tube axis remove a 120° wedge (from 30° below the right side up to the very top),
+// like Celestron's cutaway drawings. clipIntersection=true means only the region behind BOTH planes is cut away.
+const cut={on:false},optics={on:false},clipPlane=new THREE.Plane(),clipPlane2=new THREE.Plane();
+function setCut(v){cut.on=v;$('#bCut').classList.toggle('on',v);CLIPM.forEach(m=>{m.material.clippingPlanes=v?[clipPlane,clipPlane2]:null;m.material.clipIntersection=true;m.material.needsUpdate=true;});if(v)viewFrom('cut');}
+const inCutWedge=lp=>lp.x>.001&&(.5*lp.x+.866*lp.y)>.001;      // altG-local point that the cutaway removes
+function updateClip(){const p=V3(0,0,0).applyMatrix4(altG.matrixWorld);
+  clipPlane.setFromNormalAndCoplanarPoint(V3(-1,0,0).transformDirection(altG.matrixWorld),p);
+  clipPlane2.setFromNormalAndCoplanarPoint(V3(-.5,-.866,0).transformDirection(altG.matrixWorld),p);}
 

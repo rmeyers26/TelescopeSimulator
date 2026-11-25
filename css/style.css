@@ -120,3 +120,33 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
 #lcard{position:fixed;left:8px;bottom:8px;width:min(460px,calc(100vw - var(--dockw) - 16px));background:rgba(12,20,40,.96);border:1px solid var(--ac);border-radius:12px;padding:10px 12px;display:none;z-index:6;font-size:14px}
 @media(max-width:780px){#joy{bottom:calc(50vh + 18px)}#lcard{bottom:calc(50vh + 8px);width:calc(100vw - 16px);font-size:13px}}
 @media(max-width:780px){:root{--dockw:0px}#dock{top:auto;left:0;right:0;width:auto;height:50vh;border-left:0;border-top:1px solid var(--ln)}#dock.min{height:42px}#dock.min .pane{display:none}#tabs .min{display:block}#hud{max-width:calc(100vw - 16px);top:50px;font-size:11px}}
+
+/* levelling widget (Setup step 4) */
+.lvl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}.lvl canvas{width:120px;height:120px;border-radius:50%;background:#000}.lvl .row{gap:4px;margin:0}
+/* phone bottom sheet: drag the handle (or tap it) to resize; the 3D view gets the rest of the screen */
+#grab{display:none}
+@media (max-width:780px){
+  #grab{display:block;height:20px;flex:none;cursor:grab;touch-action:none;position:relative}
+  #grab:before{content:'';position:absolute;left:50%;top:7px;width:44px;height:5px;margin-left:-22px;border-radius:3px;background:#56607d}
+  #dock{height:var(--sheet,40dvh)!important;transition:height .18s ease}#dock.dragging{transition:none}
+  #dock.min{height:var(--sheet,64px)!important}
+  #joy{bottom:calc(var(--sheet,40dvh) + 18px)!important}#lcard{bottom:calc(var(--sheet,40dvh) + 8px)!important}
+  #tabs{padding-top:0}#tabs .min{display:none!important}
+  #hud .chip{display:none}#hud{font-size:10px;padding:3px 7px;line-height:1.4}
+}
+body.edu:not(.fullhc) #p-ctrl .hcpwr{display:none}
+
+/* touch feedback: buttons dip slightly when pressed */
+@media (hover:none){.b,.hc button,.kgrid button,.ktiles button,.wtiles button,.scard,#tabs button,.pl{transition:transform .08s}
+  .b:active,.hc button:active,.kgrid button:active,.kgrid button.act,.ktiles button:active,.wtiles button:active,.scard:active,#tabs button:active,.pl:active{transform:scale(.95)}}
+@media (hover:hover){#bHap{display:none}}
+
+/* Easy alignment wizard (js/16) – floating card over the 3D view, like the lesson card */
+#wiz{position:fixed;left:8px;bottom:8px;width:min(520px,calc(100vw - var(--dockw) - 16px));max-height:calc(100vh - 70px);overflow:auto;background:rgba(12,20,40,.97);border:1px solid var(--ac);border-radius:12px;padding:10px 12px;display:none;z-index:7;font-size:14px}
+#wiz p{margin:6px 0}.wzck{margin:3px 0}.ezrow{justify-content:center;flex-wrap:wrap}
+.wzview{display:flex;gap:10px;align-items:flex-start;margin:6px 0}.wzview canvas{width:150px;height:150px;border-radius:50%;background:#000;flex:none}
+.wzinfo{flex:1;min-width:0}.wzmeter{margin:6px 0;font-size:13px;min-height:2.4em}
+.wzpad{display:grid;grid-template-columns:repeat(3,44px);gap:5px}.wzpad button{height:40px;border-radius:10px;border:1px solid #39435d;background:#1a2133;color:#e8ecf7;font-size:17px;touch-action:none;cursor:pointer}
+.wzpad button.act{background:var(--ac);color:#000}.wzpad .wzst{color:#ff8a8a}
+@media(max-width:780px){#wiz{width:calc(100vw - 16px);bottom:calc(var(--sheet,40dvh) + 8px)!important;max-height:min(54dvh,calc(100dvh - var(--sheet,40dvh) - 70px));font-size:12.5px;padding:8px 10px}#wiz p{margin:4px 0}.wzview canvas{width:110px;height:110px}#wiz .wzinfo .b.sm{padding:3px 7px;font-size:12px}.wzpad{grid-template-columns:repeat(3,38px)}.wzpad button{height:34px}}
+body.night #wiz{border-color:#a00}

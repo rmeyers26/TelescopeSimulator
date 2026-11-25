@@ -11,31 +11,35 @@
 <canvas id="gl"></canvas><div id="vig"></div><canvas id="grain" width="256" height="256"></canvas><div class="lb" id="lbT"></div><div class="lb" id="lbB"></div>
 
 <div id="top">
-  <button class="b" id="bMenu" title="Show all tools">☰<span class="tl"> Menu</span></button><button class="b" id="bHome" title="Back to the home screen to pick a telescope">🏠<span class="tl"> Home</span></button><button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓<span class="tl"> Help</span></button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴<span class="tl"> Night mode</span></button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓<span class="tl"> Education mode</span></button><span class="sep"></span>
+  <button class="b" id="bMenu" title="Show all tools">☰<span class="tl"> Menu</span></button><button class="b" id="bHome" title="Back to the home screen to pick a telescope">🏠<span class="tl"> Home</span></button><button class="b" id="bHelp" title="Show the welcome screen and quick tips">❓<span class="tl"> Help</span></button><button class="b" id="bRed" title="Red night-light mode: keeps your eyes dark-adapted outdoors">🔴<span class="tl"> Night mode</span></button><button class="b" id="bEdu" title="Simple, kid-friendly version">🎓<span class="tl"> Education mode</span></button><button class="b on" id="bHap" title="Buzz the phone when you press buttons">📳<span class="tl"> Haptics</span></button><span class="sep"></span>
   <button class="b on" id="bOrbit" title="Drag to spin around the telescope">Orbit</button><button class="b" id="bWalk" title="Walk around with WASD / the on-screen stick">Walk</button><span class="sep"></span>
   <button class="b" data-v="front" title="View from the front">Front</button><button class="b" data-v="rear" title="View from behind the eyepiece">Rear</button><button class="b" data-v="left" title="Left side">Left</button><button class="b" data-v="right" title="Right side">Right</button><button class="b" data-v="top" title="Look down from above">Top</button><span class="sep"></span>
   <button class="b" id="bLab" title="Show numbered part labels">Labels</button><button class="b on" id="bDip" title="Big Dipper → North Star guide lines in the sky">Dipper guide</button><button class="b" id="bReset" title="Go back to the starting view">Reset view</button><button class="b" id="bMore" title="Show more tools">More ▾</button>
   <span class="adv"><span class="sep"></span><button class="b on" id="bA2" title="Two-arm fork (CPC)">2 arms</button><button class="b" id="bA1" title="One-arm fork for comparison">1 arm</button><span class="sep"></span>
-  <button class="b" id="bStar" title="Fit the optional StarSense camera">StarSense</button><button class="b on" id="bDew" title="Slide the dew shield on or off">Dew shield</button><button class="b" id="bCut" title="Cut the tube open to see inside">Cutaway</button><button class="b" id="bOpt" title="Show light rays">Optics</button><button class="b" id="bCine" title="Slow cinematic camera">Cinematic</button><button class="b on" id="bFol" title="Camera follows the telescope as it turns">Follow</button><span class="sep"></span>
+  <button class="b capb" data-cap title="Put the front lens cap on or take it off">Lens cap: OFF</button><button class="b" id="bStar" title="Fit the optional StarSense camera">StarSense</button><button class="b on" id="bDew" title="Slide the dew shield on or off">Dew shield</button><button class="b" id="bCut" title="Cut the tube open to see inside">Cutaway</button><button class="b" id="bOpt" title="Show light rays">Optics</button><button class="b" id="bCine" title="Slow cinematic camera">Cinematic</button><button class="b on" id="bFol" title="Camera follows the telescope as it turns">Follow</button><span class="sep"></span>
   <label title="Pull the telescope apart">Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label></span>
 </div>
 <div id="hud"></div>
-<div id="redov"></div><div id="dimov"></div><div id="home"></div><div id="welcome"></div><div id="reward"></div><div id="safety"></div><div id="toast"></div>
+<div id="redov"></div><div id="dimov"></div><div id="home"></div><div id="welcome"></div><div id="reward"></div><div id="safety"></div><label id="hapSw" aria-hidden="true" style="position:fixed;left:-99px;top:-99px;opacity:0;pointer-events:none"><input type="checkbox" switch tabindex="-1"></label><div id="toast"></div>
 <div id="joy"><i></i></div>
 <div id="lcard"></div>
+<div id="wiz"></div>
 
-<div id="dock">
+<div id="dock"><div id="grab" title="Drag to resize · tap to hide or show"></div>
   <div id="tabs"></div>
   <div class="pane on" id="p-parts"></div>
   <div class="pane" id="p-info"></div>
   <div class="pane" id="p-ctrl">
     <div id="kidpad">
+      <div class="row" style="justify-content:center"><button class="b on pwrb" data-pwr>⏻ Power: ON</button></div>
+      <div class="row ezrow"><button class="b" data-ezalign="planet">🎯 Easy align: 1 planet</button><button class="b" data-ezalign="stars">⭐ Easy align: 3 stars</button></div>
       <div class="kstat" id="kstat"></div>
       <div class="kgrid"><span></span><button data-kd="alt+">▲</button><span></span><button data-kd="az-">◀</button><button class="kstop" data-kk="stop">STOP</button><button data-kd="az+">▶</button><span></span><button data-kd="alt-">▼</button><span></span></div>
       <div class="row kspd"><span class="mu">Speed</span><button class="b" data-ks="5">🐢 Slow</button><button class="b on" data-ks="7">🚶 Medium</button><button class="b" data-ks="9">🚀 Fast</button></div>
       <h3>Go to…</h3><div class="ktiles" id="ktiles"></div>
       <div class="row"><button class="b sm" id="bFullHC">Show the real hand controller</button></div>
     </div>
+    <div class="row hcpwr" style="justify-content:center"><button class="b on pwrb" data-pwr>⏻ Power: ON</button><span class="mu sm">or tap the red switch on the base</span></div>
     <div class="hc">
       <div class="lcd"><span id="scr" title="more items – use SCROLL">⇕</span><div id="l1"></div><div id="l2"></div><div id="l3" class="dim"></div></div>
       <div class="krow"><button data-k="align">Align</button><button data-k="menu">Menu</button><button data-k="undo">Back</button><button data-k="enter">Enter</button></div>
@@ -103,5 +107,6 @@
 <script src="js/13-learn.js"></script>
 <script src="js/14-link.js"></script>
 <script src="js/15-main.js"></script>
+<script src="js/16-align-wizard.js"></script>
 </body>
 </html>

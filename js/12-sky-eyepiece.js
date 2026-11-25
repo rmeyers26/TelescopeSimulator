@@ -167,7 +167,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('.skyrow [data-se
 const seeTmp=document.createElement('canvas');renderSkyRows();
 function drawEyepiece(c,epo){
   const x=c.getContext('2d'),W=c.width,H=c.height,R=Math.min(W,H)/2-4,cx=W/2,cy=H/2,ep=epo||EPS[epI],fov=ep.fov,ppd=R/(fov/2),st=driver.state(),T=st.truth,jd=jdNow();
-  x.fillStyle='#000';x.fillRect(0,0,W,H);x.save();x.beginPath();x.arc(cx,cy,R,0,7);x.clip();
+  x.fillStyle='#000';x.fillRect(0,0,W,H);x.beginPath();x.arc(cx,cy,R,0,7);x.clip();
+  if(CAP.on&&!ep.eye&&!ep.finder){x.strokeStyle='#222';x.lineWidth=4;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();x.fillStyle='rgba(255,255,255,.55)';x.font=`${Math.max(12,W/24)}px system-ui`;x.textAlign='center';x.fillText('Lens cap is on – nothing to see!',cx,cy-6);x.font=`${Math.max(10,W/34)}px system-ui`;x.fillText('Take it off (Lens cap button or Setup step)',cx,cy+16);return;}
+  x.save();x.beginPath();x.arc(cx,cy,R,0,7);x.clip();
   const lp=lpLoss(),glow=lp/3;                   // 0 dark site .. 1 city
   const day=clamp((SUN.alt+6)/12,0,1),bgN=`rgb(${4+30*glow|0},${6+24*glow|0},${12+20*glow|0})`;x.fillStyle=day>0?`rgba(${40+90*day|0},${60+110*day|0},${90+140*day|0},${.25+.7*day})`:bgN;x.fillRect(0,0,W,H);
   // real orientation: diagonal = mirror left-right; straight-through finder = rotated 180 degrees
