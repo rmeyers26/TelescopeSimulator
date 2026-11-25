@@ -681,10 +681,10 @@ M('fork',gDrv,rotZ(new THREE.CylinderGeometry(.034,.034,.004,24)),'orange',{p:[-
 let armCount=2;
 function setArms(n){armCount=n;gArmL.visible=n===2;gDrv.visible=n===1;gHCL.visible=n===2;gHCR.visible=n===1;$('#bA1').classList.toggle('on',n===1);$('#bA2').classList.toggle('on',n===2);if(sel.part==='fork')showInfo();}
 // base + tripod (static)
-const gBase=G('base',mountG,V3(0,-0.22,0));
-M('base',gBase,lathe([[.12,0],[.165,.006],[.184,.022],[.19,.044],[.188,.062],[.182,.074],[.174,.08],[.12,.08]],72),'blackg',{p:[0,.98,0],sub:'drive'});   // flared drive base (dia about 345 mm in the drawing)
-M('base',gBase,new THREE.TorusGeometry(.176,.003,8,72),'grip',{p:[0,1.0615,0],r:[Math.PI/2,0,0],sub:'ring'});     // seam under the rotating drum
-for(let k=0;k<3;k++){const a=k*2.094+1.05;M('base',gBase,new THREE.CylinderGeometry(.007,.007,.005,6).rotateZ(Math.PI/2).rotateY(a+Math.PI/2),'silver',{p:[Math.sin(a)*.19,1.025,Math.cos(a)*.19],sub:'drive'});}
+// The flared drive base is moulded with the azimuth housing and both arms: one piece that turns on the tripod head.
+const gBase=G('fork',azG,FORK_EXP);gBase.position.y=-1.06;EXPL[EXPL.length-1].base.y=-1.06;
+M('fork',gBase,lathe([[.12,0],[.165,.006],[.184,.022],[.19,.044],[.188,.062],[.182,.074],[.174,.08],[.12,.08]],72),'blackg',{p:[0,.98,0],sub:'base'});   // flared drive base (dia about 345 mm in the drawing)
+for(let k=0;k<3;k++){const a=k*2.094+1.05;M('fork',gBase,new THREE.CylinderGeometry(.007,.007,.005,6).rotateZ(Math.PI/2).rotateY(a+Math.PI/2),'silver',{p:[Math.sin(a)*.19,1.025,Math.cos(a)*.19],sub:'base'});}
 const gTri=G('tripod',root,V3(0,-0.5,0));
 // rounded triangle outline (Minkowski sum of a triangle and a circle); corners point at the legs. Shape y maps to world -z after rotateX(-90deg)
 const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
@@ -990,12 +990,12 @@ dovetail:{n:'Dovetail rail',
  subs:[['bar','Bar','Aluminium rail.'],['bolts','Bolts','Fixings to the tube.']],
  spec:[['Style','Vixen ≈ 44 mm / Losmandy D ≈ 75 mm wide'],['Fork mounts','The tube usually attaches via fork pivots instead']],
  m:['Check clamps before slewing.'],t:[['Accessory slips','Tighten clamp; use a stop screw.']]},
-fork:{n:'Fork arms and azimuth drive housing (one piece)',
- d:'On the CPC the two fork arms and the rotating azimuth drive housing are a single moulded piece that turns on the fixed base. The fork rises from the azimuth platform and holds the tube at its balance point. Two-arm forks, as on the CPC series, hold the tube on both sides; a one-arm design hangs it from one side with a drive housing on the other. Use the 2 arms / 1 arm buttons to compare.',
+fork:{n:'Fork mount: arms, drive base and azimuth housing (one piece)',
+ d:'On the CPC the drive base, the azimuth housing and both fork arms are one moulded piece that bolts onto, and turns above, the tripod head. The fork rises from the azimuth platform and holds the tube at its balance point. Two-arm forks, as on the CPC series, hold the tube on both sides; a one-arm design hangs it from one side with a drive housing on the other. Use the 2 arms / 1 arm buttons to compare.',
  p:'Provide the altitude axis for the tube to pitch up and down.',
  h:'A motor and gear train in an arm (and the drive housing in one-arm mode) pitch the tube about its balance point. A one-arm design needs a very stiff arm and pivot because the tube hangs from one side.',
  i:'Rotates in azimuth with the base; the tube hangs between the arms. Moving the fork in azimuth and tube in altitude points the scope anywhere above the horizon.',
- subs:[['base','Azimuth drive housing','Rotating drum moulded in one piece with both arms; carries the port panel, power switch and 12 V jack, and turns on the fixed base below.'],['arm','Fork arm','Curved arm that carries the tube (right side, with handle).'],['arm2','Second arm','Left arm, shown in two-arm mode.'],['handle','Carry handle','Lift point for moving the mount.'],['pivot','Pivot adapter','Steel hub where the tube attaches to an arm.'],['altdrive','Altitude drive housing','One-arm mode: gear housing on the free side of the tube.'],['clutch','Clutch knobs','Release the drive for manual movement.']],
+ subs:[['base','Drive base and azimuth housing','Flared base and drum moulded in one piece with both arms. Carries the port panel, power switch and 12 V jack, and turns on the tripod head.'],['arm','Fork arm','Curved arm that carries the tube (right side, with handle).'],['arm2','Second arm','Left arm, shown in two-arm mode.'],['handle','Carry handle','Lift point for moving the mount.'],['pivot','Pivot adapter','Steel hub where the tube attaches to an arm.'],['altdrive','Altitude drive housing','One-arm mode: gear housing on the free side of the tube.'],['clutch','Clutch knobs','Release the drive for manual movement.']],
  spec:[['Altitude travel (sim)','0–90°'],['Mount type','Computerised alt-azimuth fork (1 or 2 arms shown)'],['Fork width','585 mm at the arms, 607 mm including the handle (CPC Deluxe 11 HD drawing)'],['Axis height','532 mm above the bottom of the base'],['Height, OTA level','690 mm base to top of tube'],['Height, OTA vertical','898 mm base to front of tube'],['Pivot position','366 mm behind the front of the OTA, 285 mm ahead of the rear end'],['Clearance','124 mm between the rear of the vertical OTA and the base']],
  m:['Release or engage clutches only as the manual describes.','Check pivot bolts for play.'],t:[['Slipping on slews','Clutch not tight; rebalance the tube.']]},
 base:{n:'Fixed base (azimuth bearing)',
@@ -1023,7 +1023,7 @@ handset:{n:'NexStar-style hand controller',
  spec:[['Display','Two lines of 16 characters, red backlight; long text scrolls'],['Keys','ALIGN, ENTER, BACK, arrows, SOLAR SYSTEM, STARS, DEEP SKY, IDENTIFY, SKY TOUR, SCROLL ▲▼, MENU, HELP, OPTION (logo), OBJECT INFO, MOTOR SPEED'],['Rates','1 = ½× sidereal … 9 ≈ 3.5°/s; UP/DOWN reverse at rates 1–6'],['Port','RS-232 jack (not simulated)']],
  m:['Keep the cable strain-relieved.'],t:[['No response','Check cable and power.']]}
 };
-const GROUPS=[['Optical tube',['tube','corrector','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','kit','finder','telrad','starsense','dovetail']],['Mount',['fork','base','tripod','handset']]];
+const GROUPS=[['Optical tube',['tube','corrector','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','kit','finder','telrad','starsense','dovetail']],['Mount',['fork','tripod','handset']]];
 
 /* =====================================================================
    6. SCHEMATIC / OPTICS DIAGRAM (inline SVG)
@@ -1047,7 +1047,7 @@ function schem(sel,rays){
   s+=`<rect ${c('diagonal')} x="303" y="74" width="18" height="22"/><rect ${c('diagonal')} x="307" y="56" width="10" height="20"/>`;
   s+=`<rect ${c('eyepiece')} x="304" y="26" width="16" height="32" rx="3"/>`;
   s+=`<rect ${c('fork')} x="188" y="85" width="24" height="86" rx="4" fill-opacity=".8"/>`;
-  s+=`<rect ${c('base')} x="160" y="171" width="80" height="12" rx="3"/>`;
+  s+=`<rect ${c('fork')} x="160" y="171" width="80" height="12" rx="3"/>`;
   s+=`<path ${c('tripod')} d="M200 183 L140 200 M200 183 L260 200 M200 183 L200 200" fill="none" stroke-width="3"/>`;
   s+=`<rect ${c('handset')} x="222" y="132" width="12" height="22" rx="2"/>`;
   if(rays){[.07,-.07,.12,-.12].forEach(h=>{const p=rayPath(h);s+=`<polyline class="ray" stroke="${h>0?'#ffd54a':'#6ad0ff'}" points="${p.map(q=>X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1)).join(' ')}"/>`;});
@@ -1193,14 +1193,14 @@ const SETUP=[
  {t:'Unpack and carry',b:'Put the round base on a sturdy, flat surface. Lift the scope by the lower part of the fork arm on the hand-control side and by the handle on the opposite side. Keep the boxes for transport. Loosen both clutches slightly when transporting.',w:'Mount the scope on the tripod and bring the tube level before attaching any visual accessories.',part:'fork',view:'left'},
  {t:'Set up the tripod',b:'Hold the tripod head up and spread the legs fully; each leg top presses against the head at full spread. Unscrew the tension knob from the central rod, slide the leg-support bracket (accessory tray) on so each cup sits under a leg, then turn the knob until the bracket is snug.',w:'Do not over-tighten. Re-check the knob after the scope is on the tripod.',part:'tripod'},
  {t:'Set the tripod height',b:'Loosen the extension clamp on a leg, slide it to the length you want and re-tighten. Repeat for all three and make the tripod level. Lower is steadier (best for imaging); a good visual height lets you sit at the eyepiece.',w:'The higher the legs are extended, the less stable the tripod is.',part:'tripod',sub:'locks'},
- {t:'Mount the telescope on the tripod',b:'Drop the centre hole of the base over the positioning pin on the tripod head. Turn the base until its three feet drop into the recesses. Then thread the three mounting bolts up from beneath the tripod head into the base and tighten all three.',part:'base',view:'rear'},
+ {t:'Mount the telescope on the tripod',b:'Drop the centre hole of the base over the positioning pin on the tripod head. Turn the base until its three feet drop into the recesses. Then thread the three mounting bolts up from beneath the tripod head into the base and tighten all three.',part:'fork',view:'rear'},
  {t:'Level the tube and set the clutches',b:'Hold the tube by the rear-cell handle, loosen the altitude locking knob, swing the tube up until it is level with the ground and tighten the knob. The CPC has a dual-axis clutch (altitude knob on the right fork arm, azimuth knob on the base). Both must be tight for GoTo.',w:'Moving the scope by hand with the clutches tight can damage the gears, and any manual move voids the alignment.',part:'fork',view:'right'},
  {t:'Install the star diagonal',b:'This C11 uses the 2-inch procedure (EdgeHD/CPC 9.25 and 11): remove the visual back, thread the 2-inch diagonal’s ring onto the rear cell, and remove the 1.25-inch adapter from the barrel if you want 2-inch eyepieces. On the 8-inch, the 1.25-inch diagonal slides into the visual back and its set screw is tightened. To change the diagonal’s angle, loosen the retaining ring (or set screw), rotate and re-tighten.',part:'diagonal',reveal:['diagonal'],view:'rear'},
  {t:'Insert the eyepiece',b:'Back the thumbscrew on the diagonal out so it does not block the bore, slide the chrome barrel of the eyepiece in, and tighten the thumbscrew. Longer focal length = lower power; this model starts with a 23 mm 2-inch eyepiece in the manual (122× on an 11-inch).',part:'eyepiece',reveal:['eyepiece']},
  {t:'Mount the finderscope',b:'First slide the quick-release mounting bracket off the finder bracket. Fit it over the two holes at the top left of the rear cell (looking from behind the tube) and fasten the two screws. Put the O-ring on the finder, push the eyepiece end through the front ring (no adjustment screws) and then the rear ring, pressing the spring-loaded pivot screw down if needed. Seat the O-ring in the front ring and hand-tighten the two adjustment screws.',w:'If you remove the bracket, never thread the screws all the way back into the rear cell: they can reach and damage the primary mirror.',part:'finder',reveal:['finder'],view:'rear'},
  {t:'Align the finderscope (daytime)',b:'Pick a distant object more than a mile away so there is no parallax. Centre it in the main telescope, lock both clutches, then turn the top and right adjustment screws until the finder cross-hairs sit on the object. The finder image is upside-down and reversed, so each screw can move the view in an unexpected direction at first.',part:'finder',sub:'bracket'},
  {t:'Attach the hand control',b:'The hand control ships in a separate box. Plug its coiled cable (phone-style connector) into the hand control port (A) on the drive base until it clicks. Slide the hand control holder into its slot on the fork arm so the controller can rest there.',part:'handset',reveal:['handset'],view:'left'},
- {t:'Power the telescope',b:'Plug the 12 V car-battery adapter (or optional power supply) into the 12 V input jack (F) on the drive base, then switch the On/Off switch (E) on. The panel on the front of the base carries A hand control, B auxiliary (×2), C PC and D auto-guider ports; the round switch and the jack are on the right shoulder.',part:'base',view:'left'},
+ {t:'Power the telescope',b:'Plug the 12 V car-battery adapter (or optional power supply) into the 12 V input jack (F) on the drive base, then switch the On/Off switch (E) on. The panel on the front of the base carries A hand control, B auxiliary (×2), C PC and D auto-guider ports; the round switch and the jack are on the right shoulder.',part:'fork',view:'left'},
  {t:'Align from the hand control',b:'With the scope powered and level, use ALIGN on the controller (or StarSense AutoAlign if fitted) and follow the prompts. Tracking starts after alignment. Never slew while someone is looking through the eyepiece.',part:'handset',tab:'ctrl'}
 ];
 const SU={on:false,i:0};
