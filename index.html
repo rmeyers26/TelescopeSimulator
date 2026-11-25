@@ -720,8 +720,40 @@ const ground=new THREE.Mesh(new THREE.CircleGeometry(120,64),new THREE.MeshStand
 const pad=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.03,64),new THREE.MeshStandardMaterial({color:0x1c1e22,roughness:.95,envMapIntensity:.1}));pad.position.y=.015;pad.receiveShadow=true;scene.add(pad);
 (function(){const t=new THREE.Group();const top=new THREE.Mesh(new THREE.BoxGeometry(.9,.04,.5),new THREE.MeshStandardMaterial({color:0x4a3a2a,roughness:.8,envMapIntensity:.2}));top.position.y=.75;top.castShadow=top.receiveShadow=true;t.add(top);
   [[-.4,-.22],[.4,-.22],[-.4,.22],[.4,.22]].forEach(([x,z])=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.04,.75,.04),new THREE.MeshStandardMaterial({color:0x888d96,metalness:.8,roughness:.4}));l.position.set(x,.375,z);l.castShadow=true;t.add(l);});
-  const cs=new THREE.Mesh(new THREE.BoxGeometry(.3,.12,.2),new THREE.MeshStandardMaterial({color:0x222,roughness:.6}));cs.position.set(.15,.83,0);cs.castShadow=true;t.add(cs);
   t.position.set(1.7,0,.6);t.rotation.y=-.5;scene.add(t);})();
+
+// Celestron Eyepiece and Filter Kit (1.25"): 32/17/13/8/6 mm Plossls, 2x Barlow, filters #80A blue, #58 green, #56 light green, #25 red, #21 orange, #12 yellow and a Moon filter, in a foam-lined metal case.
+BASE.foam=new THREE.MeshStandardMaterial({color:0x121316,roughness:1,metalness:0});
+BASE.case=new THREE.MeshStandardMaterial({color:0xaeb3bb,metalness:.85,roughness:.35});
+[['f80A',0x2f6fe0],['f58',0x2f9a3a],['f56',0x8fd05a],['f25',0xc8281e],['f21',0xe87a1c],['f12',0xe8d41c],['fMoon',0x8d939c]].forEach(([k,c])=>{BASE[k]=new THREE.MeshStandardMaterial({color:c,roughness:.15,metalness:0,transparent:true,opacity:.82});});
+const kitRoot=new THREE.Group();kitRoot.position.set(1.7,.77,.6);kitRoot.rotation.y=2.4;scene.add(kitRoot);
+const gKit=G('kit',kitRoot,V3(0,.3,0));
+(function(){
+  M('kit',gKit,new THREE.BoxGeometry(.38,.05,.26),'case',{p:[0,.025,0],sub:'case'});
+  M('kit',gKit,new THREE.BoxGeometry(.35,.012,.23),'foam',{p:[0,.052,0],sub:'case'});                     // die-cut foam
+  const lid=new THREE.Group();lid.position.set(0,.05,-.13);lid.rotation.x=-1.75;gKit.add(lid);                // lid hinged along the back edge, standing open
+  M('kit',lid,new THREE.BoxGeometry(.38,.012,.26),'case',{p:[0,0,.13],sub:'case'});
+  M('kit',lid,new THREE.BoxGeometry(.35,.01,.23),'foam',{p:[0,-.009,.13],sub:'case'});
+  [-.12,.12].forEach(x=>M('kit',gKit,new THREE.BoxGeometry(.04,.02,.008),'silver',{p:[x,.04,.134],sub:'case'}));   // latches
+  const rotZ=g=>g.rotateZ(Math.PI/2),rotX=g=>g.rotateX(Math.PI/2);
+  // eyepieces lie along x in the left part of the case (focal length, body radius, body length)
+  [[32,.022,.062],[17,.019,.05],[13,.018,.046],[8,.017,.044],[6,.016,.042]].forEach(([fl,r,L],i)=>{
+    const z=(i-2)*.044,y=.058+r;
+    M('kit',gKit,rotZ(new THREE.CylinderGeometry(.0159,.0159,.032,24)),'silver',{p:[-.168+.016,y,z],sub:'eyepieces'});   // 1.25-inch barrel
+    M('kit',gKit,rotZ(new THREE.CylinderGeometry(r,r,L,28)),'black',{p:[-.152+L/2,y,z],sub:'eyepieces'});
+    M('kit',gKit,rotZ(new THREE.CylinderGeometry(r*.9,r*1.02,.016,28)),'rubber',{p:[-.152+L+.008,y,z],sub:'eyepieces'});  // eyecup
+    M('kit',gKit,rotZ(new THREE.CylinderGeometry(r+.0006,r+.0006,.006,28)),'silver',{p:[-.152+L*.45,y,z],sub:'eyepieces'}); // focal-length band
+  });
+  // 2x Barlow along z at the right edge
+  M('kit',gKit,rotX(new THREE.CylinderGeometry(.0159,.0159,.04,24)),'silver',{p:[.165,.058+.0159,-.075],sub:'barlow'});
+  M('kit',gKit,rotX(new THREE.CylinderGeometry(.021,.021,.085,28)),'black',{p:[.165,.058+.021,-.0],sub:'barlow'});
+  M('kit',gKit,rotX(new THREE.CylinderGeometry(.018,.02,.02,28)),'rubber',{p:[.165,.058+.021,.052],sub:'barlow'});
+  // seven filters in black cells
+  ['f80A','f58','f56','f25','f21','f12','fMoon'].forEach((k,i)=>{const c=i%2,r=(i/2)|0,x=.04+c*.052,z=-.0675+r*.045;
+    M('kit',gKit,new THREE.CylinderGeometry(.0185,.0185,.012,24),'black',{p:[x,.064,z],sub:'filters'});
+    M('kit',gKit,new THREE.CylinderGeometry(.0145,.0145,.014,24),k,{p:[x,.065,z],sub:'filters'});});
+})();
+
 for(let i=0;i<24;i++){const a=Math.random()*Math.PI*2,r=6+Math.random()*30,s=.2+Math.random()*.7,m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),new THREE.MeshStandardMaterial({color:0x3a3530,roughness:1,envMapIntensity:.15}));
   m.position.set(Math.sin(a)*r,s*.4,Math.cos(a)*r);m.rotation.set(Math.random()*3,Math.random()*3,0);m.castShadow=true;scene.add(m);}
 
@@ -858,6 +890,14 @@ diagonal:{n:'Star diagonal',
  subs:[['housing','Housing','Black body.'],['mirror','Mirror','Dielectric-coated flat.'],['barrel','Barrel','Eyepiece socket.'],['thumbscrew','Thumbscrew','Locks the eyepiece.']],
  spec:[['Turn','90°'],['Barrel','2 in (1.25 in via adapter)'],['Image','Upright, mirror-reversed']],
  m:['Keep mirror covered.','Hand-tighten the thumbscrew.'],t:[['Cannot reach focus for a camera','Remove diagonal and use a direct camera adapter.']]},
+kit:{n:'Eyepiece and filter kit (1.25")',
+ d:'Celestron’s 1.25-inch kit in a foam-lined metal case: five Plössl eyepieces (32, 17, 13, 8 and 6 mm), a 2× Barlow lens and seven colour/Moon filters. It sits open on the table beside the scope.',
+ p:'Gives a range of magnifications and lets you try colour filters for planets and a neutral filter for the Moon.',
+ h:'On the C11 (2800 mm) the eyepieces give about 88×, 165×, 215×, 350× and 467×; the Barlow doubles each. Anything above about 660× is beyond the useful limit for an 11-inch, so the 6 mm with the Barlow will look soft.',
+ i:'All the pieces have 1.25-inch barrels, so they fit the 2-inch diagonal through its 1.25-inch adapter. Filters thread onto the eyepiece barrels.',
+ subs:[['case','Metal case','Foam-lined with die-cut slots; lid hinged at the back.'],['eyepieces','Plössl eyepieces','32, 17, 13, 8, 6 mm.'],['barlow','2× Barlow lens','Doubles the magnification of any eyepiece.'],['filters','Filters','#80A blue, #58 green, #56 light green, #25 red, #21 orange, #12 yellow, Moon.']],
+ spec:[['Eyepieces','32, 17, 13, 8, 6 mm Plössl, 1.25 in'],['Barlow','2×'],['Filters','#80A, #58, #56, #25, #21, #12, Moon filter'],['Case','Metal, foam-lined (size and colour not stated by Celestron)'],['Layout on the table','Illustrative: arrangement and case size are the model’s own']],
+ m:['Keep eyepiece caps on in the case.','Handle by the barrel.'],t:[['Dim image with a filter','Filters absorb light: use them on bright targets such as planets and the Moon.']]},
 eyepiece:{n:'Eyepiece',
  d:'The magnifier that you look through, selectable by focal length.',
  p:'Sets magnification and field of view.',
@@ -933,7 +973,7 @@ handset:{n:'NexStar-style hand controller',
  spec:[['Display','Two lines of 16 characters, red backlight; long text scrolls'],['Keys','ALIGN, ENTER, BACK, arrows, SOLAR SYSTEM, STARS, DEEP SKY, IDENTIFY, SKY TOUR, SCROLL ▲▼, MENU, HELP, OPTION (logo), OBJECT INFO, MOTOR SPEED'],['Rates','1 = ½× sidereal … 9 ≈ 3.5°/s; UP/DOWN reverse at rates 1–6'],['Port','RS-232 jack (not simulated)']],
  m:['Keep the cable strain-relieved.'],t:[['No response','Check cable and power.']]}
 };
-const GROUPS=[['Optical tube',['tube','corrector','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','finder','telrad','starsense','dovetail']],['Mount',['fork','base','tripod','handset']]];
+const GROUPS=[['Optical tube',['tube','corrector','secondary','primary','baffle','rearcell','focuser','dew']],['Accessories',['visualback','diagonal','eyepiece','kit','finder','telrad','starsense','dovetail']],['Mount',['fork','base','tripod','handset']]];
 
 /* =====================================================================
    6. SCHEMATIC / OPTICS DIAGRAM (inline SVG)
