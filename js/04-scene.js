@@ -363,6 +363,7 @@ M('fork',gBase,lathe([[.12,0],[.16,.004],[.178,.014],[.186,.03],[.187,.05],[.185
 [1.005,1.04].forEach(y=>M('fork',gBase,new THREE.TorusGeometry(y<1.01?.18:.1865,.0018,6,72),'grip',{p:[0,y,0],r:[Math.PI/2,0,0],sub:'base'}));   // moulded grooves round the band   // flared drive base (dia about 345 mm in the drawing)
 for(let k=0;k<3;k++){const a=k*2.094+1.05;M('fork',gBase,new THREE.CylinderGeometry(.009,.009,.007,6),'silver',{p:[Math.sin(a)*.13,.974,Math.cos(a)*.13],sub:'base'});}   // mounting bolts seen under the base
 const gTri=G('tripod',root,V3(0,-0.5,0));
+const LEVEL={legs:[.6,-.4,0],dx:.7,dz:-.4,ok:false};   // tripod levelling state (Setup step 4); the bubble starts off-centre
 // rounded triangle outline (Minkowski sum of a triangle and a circle); corners point at the legs. Shape y maps to world -z after rotateX(-90deg)
 const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
   for(let k=0;k<3;k++){const a=k*Math.PI*2/3;for(let i=0;i<=12;i++){const d=a+(-1+i/6)*Math.PI/3;pts.push([Math.sin(a)*Rv+Math.sin(d)*rc,-Math.cos(a)*Rv-Math.cos(d)*rc]);}}
@@ -373,7 +374,8 @@ function buildTripod(H,B){
   const yT=H*.43;
   const flat=(shape,depth,bev)=>{const g=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:bev,bevelThickness:bev,bevelSegments:3,curveSegments:10});g.rotateX(-Math.PI/2);return g;};
   M('tripod',gTri,flat(roundTri(.12,.1),.03,.008),'blackg',{p:[0,H-.04,0],sub:'head'});                  // head plate
-  M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.006,24),'bubble',{p:[0,H+.0005,-.06],sub:'head'});   // bubble level
+  M('tripod',gTri,new THREE.CylinderGeometry(.016,.016,.004,24),'blackg',{p:[0,H-.001,-.06],sub:'head'});   // bubble level well
+  M('tripod',gTri,new THREE.CylinderGeometry(.0075,.0075,.006,20),'bubble',{p:[LEVEL.dx*.009,H+.0005,-.06+LEVEL.dz*.009],sub:'head'}).userData.bubble=true;   // the bubble itself (moves while levelling)
   M('tripod',gTri,new THREE.TorusGeometry(.0185,.0025,8,24),'silver',{p:[0,H+.0005,-.06],r:[Math.PI/2,0,0],sub:'head'});
   M('tripod',gTri,new THREE.CylinderGeometry(.006,.006,.022,12),'silver',{p:[0,H+.005,0],sub:'head'});        // locating pin
   for(let k=0;k<3;k++){const a=k*Math.PI*2/3;M('tripod',gTri,new THREE.CylinderGeometry(.011,.011,.008,6),'silver',{p:[Math.sin(a)*.15,H+.0005,Math.cos(a)*.15],sub:'head'});}   // mounting bolts

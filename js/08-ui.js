@@ -69,3 +69,18 @@ function focusPart(id){
 renderParts();showInfo();
 
 
+
+/* ---- phone bottom sheet: three sizes (peek = tabs only, half, tall) plus free dragging ---- */
+const sheet={h:0};
+function sheetSizes(){const H=innerHeight;return {peek:64,mid:Math.round(H*.4),full:Math.round(H*.86)};}
+function setSheet(px,snap){const S=sheetSizes(),H=innerHeight;px=clamp(px,S.peek,S.full);
+  if(snap){const c=[S.peek,S.mid,S.full];px=c.reduce((a,b)=>Math.abs(b-px)<Math.abs(a-px)?b:a);}
+  sheet.h=px;document.documentElement.style.setProperty('--sheet',px+'px');$('#dock').classList.toggle('min',px<=S.peek+4);if(typeof resize==='function')resize();}
+(function(){const g=$('#grab');let y0=null,h0=0,moved=0;
+  g.addEventListener('pointerdown',e=>{g.setPointerCapture(e.pointerId);y0=e.clientY;h0=$('#dock').getBoundingClientRect().height;moved=0;$('#dock').classList.add('dragging');});
+  g.addEventListener('pointermove',e=>{if(y0===null)return;const d=y0-e.clientY;moved=Math.max(moved,Math.abs(d));setSheet(h0+d,false);});
+  const end=()=>{if(y0===null)return;$('#dock').classList.remove('dragging');const S=sheetSizes();
+    if(moved<6)setSheet(h0>S.peek+4?S.peek:S.mid,true);else setSheet(sheet.h,true);y0=null;};   // a tap toggles hidden / half
+  g.addEventListener('pointerup',end);g.addEventListener('pointercancel',end);})();
+// on a phone, tapping a tab while the sheet is hidden opens it again
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b&&matchMedia('(max-width:780px)').matches&&$('#dock').classList.contains('min'))setSheet(sheetSizes().mid,true);});

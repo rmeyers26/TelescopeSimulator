@@ -120,3 +120,17 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
 #lcard{position:fixed;left:8px;bottom:8px;width:min(460px,calc(100vw - var(--dockw) - 16px));background:rgba(12,20,40,.96);border:1px solid var(--ac);border-radius:12px;padding:10px 12px;display:none;z-index:6;font-size:14px}
 @media(max-width:780px){#joy{bottom:calc(50vh + 18px)}#lcard{bottom:calc(50vh + 8px);width:calc(100vw - 16px);font-size:13px}}
 @media(max-width:780px){:root{--dockw:0px}#dock{top:auto;left:0;right:0;width:auto;height:50vh;border-left:0;border-top:1px solid var(--ln)}#dock.min{height:42px}#dock.min .pane{display:none}#tabs .min{display:block}#hud{max-width:calc(100vw - 16px);top:50px;font-size:11px}}
+
+/* levelling widget (Setup step 4) */
+.lvl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}.lvl canvas{width:120px;height:120px;border-radius:50%;background:#000}.lvl .row{gap:4px;margin:0}
+/* phone bottom sheet: drag the handle (or tap it) to resize; the 3D view gets the rest of the screen */
+#grab{display:none}
+@media (max-width:780px){
+  #grab{display:block;height:20px;flex:none;cursor:grab;touch-action:none;position:relative}
+  #grab:before{content:'';position:absolute;left:50%;top:7px;width:44px;height:5px;margin-left:-22px;border-radius:3px;background:#56607d}
+  #dock{height:var(--sheet,40dvh)!important;transition:height .18s ease}#dock.dragging{transition:none}
+  #dock.min{height:var(--sheet,64px)!important}
+  #joy{bottom:calc(var(--sheet,40dvh) + 18px)!important}#lcard{bottom:calc(var(--sheet,40dvh) + 8px)!important}
+  #tabs{padding-top:0}#tabs .min{display:none!important}
+  #hud .chip{display:none}#hud{font-size:10px;padding:3px 7px;line-height:1.4}
+}

@@ -8,10 +8,12 @@
 function resize(){                                // keep the telescope centred in the part of the screen the dock does not cover
   const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;
   const mobile=matchMedia('(max-width:780px)').matches,minimized=$('#dock').classList.contains('min');
-  if(mobile)camera.setViewOffset(w,h,0,minimized?0:Math.round(h*.25),w,h);else camera.setViewOffset(w,h,200,0,w,h);
+  const dh=mobile?$('#dock').getBoundingClientRect().height||h*.4:0;   // phone: shift the view up by half the sheet so the scope sits in the visible part
+  if(mobile)camera.setViewOffset(w,h,0,Math.round(dh/2),w,h);else camera.setViewOffset(w,h,200,0,w,h);
   camera.updateProjectionMatrix();
 }
-addEventListener('resize',resize);$('#tabs').addEventListener('click',()=>setTimeout(resize,0));resize();
+addEventListener('resize',()=>{if(matchMedia('(max-width:780px)').matches&&sheet.h)setSheet(sheet.h,true);resize();});
+$('#dock').addEventListener('transitionend',resize);$('#tabs').addEventListener('click',()=>setTimeout(resize,0));resize();
 let last=performance.now(),hudT=0,frame=0;
 function grainShift(t){const g=$('#grain');g.style.transform=`translate(${(Math.sin(t*37)*20)|0}px,${(Math.cos(t*29)*20)|0}px)`;}
 function loop(now){
