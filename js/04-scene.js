@@ -411,28 +411,34 @@ const triTxt=()=>`Head ${Math.round(TRI.H*1000)} mm · footprint Ø${Math.round(
 setTripod(.55);
 
 // port panel on the front of the fork base, where the handset cord plugs in (like the real CPC base)
+const POWER_HIT=[];                 // meshes that act as the power switch when tapped
 const gPort=G('fork',azG,FORK_EXP);
 (function(){const sh=new THREE.Shape();                 // (z,y) profile: low hump on the drum that drops to a 45-degree front facet carrying the plate
   sh.moveTo(.05,.066);sh.quadraticCurveTo(.1,.078,.14,.078);sh.lineTo(.148,.0765);sh.lineTo(.2,.03);sh.quadraticCurveTo(.206,.022,.203,.012);sh.lineTo(.196,0);sh.lineTo(.05,0);sh.closePath();
-  const g=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:true,bevelSize:.01,bevelThickness:.012,bevelSegments:5,curveSegments:14});g.translate(0,0,-.1);g.rotateY(-Math.PI/2);
+  const g=new THREE.ExtrudeGeometry(sh,{depth:.16,bevelEnabled:true,bevelSize:.01,bevelThickness:.012,bevelSegments:5,curveSegments:14});g.translate(0,0,-.08);g.rotateY(-Math.PI/2);
   M('fork',gPort,g,'blackg',{p:[0,0,0],sub:'base'});
   const ang=Math.atan2(.0465,.052),rx=-(Math.PI/2-ang),nz=Math.sin(ang),ny=Math.cos(ang),cz=.174,cy=.0533,o=.0115;   // facet centre and outward normal
-  M('fork',gPort,new THREE.PlaneGeometry(.17,.073),'panel',{p:[0,cy+ny*o,cz+nz*o],r:[rx,0,0],sub:'base',noShadow:true});
+  M('fork',gPort,new THREE.PlaneGeometry(.162,.07),'panel',{p:[0,cy+ny*o,cz+nz*o],r:[rx,0,0],sub:'base',noShadow:true});
   // red-lit power switch on the right shoulder, silver 12 V post on the left shoulder
-  M('fork',gPort,new THREE.CylinderGeometry(.014,.015,.008,28),'black',{p:[.135,.062,.115],r:[-.45,0,-.4],sub:'base'});
-  const sw=M('fork',gPort,new THREE.CylinderGeometry(.009,.009,.006,24),'black',{p:[.136,.065,.117],r:[-.45,0,-.4],sub:'base'});sw.material.color.set(0x5a0a08);sw.material.emissive=new THREE.Color(0xc4161c);sw.material.emissiveIntensity=.6;
-  M('fork',gPort,new THREE.CylinderGeometry(.008,.008,.004,6),'silver',{p:[-.14,.06,.11],r:[-.45,0,.4],sub:'base'});
-  M('fork',gPort,new THREE.CylinderGeometry(.004,.004,.008,12),'silver',{p:[-.14,.064,.112],r:[-.45,0,.4],sub:'base'});
+  // On/Off switch (red LED) on the right shoulder and 12 V jack on the left shoulder, beside the port housing (as on the CPC Deluxe HD)
+  const shoulder=(sx)=>{const x=sx*.128,z=.118,rad=V3(x,0,z).normalize(),ax=rad.multiplyScalar(Math.sin(.85)).add(V3(0,Math.cos(.85),0)).normalize();
+    return {p:V3(x,.05,z),q:new THREE.Quaternion().setFromUnitVectors(V3(0,1,0),ax),ax};};
+  const put=(m,S,lift)=>{m.position.copy(S.p).addScaledVector(S.ax,lift);m.quaternion.copy(S.q);return m;};
+  const R=shoulder(1),Lf=shoulder(-1);
+  put(M('fork',gPort,new THREE.CylinderGeometry(.015,.016,.006,28),'black',{sub:'base'}),R,.002);                                   // switch bezel
+  const sw=put(M('fork',gPort,new THREE.CylinderGeometry(.0105,.0105,.006,24),'black',{sub:'base'}),R,.005);sw.material.color.set(0x5a0a08);sw.userData.led=true;sw.userData.powerSwitch=true;   // red-lit switch: tap it to turn the telescope on/off
+  {const ht=new THREE.Mesh(new THREE.SphereGeometry(.03,10,8),new THREE.MeshBasicMaterial({visible:false}));put(ht,R,.01);ht.userData.powerHit=true;gPort.add(ht);POWER_HIT.push(ht,sw);}   // larger invisible tap target
+  put(M('fork',gPort,new THREE.BoxGeometry(.03,.008,.03),'black',{sub:'base'}),Lf,.002);                                            // 12 V jack: square boss…
+  put(M('fork',gPort,new THREE.CylinderGeometry(.009,.009,.004,20),'gloss',{sub:'base'}),Lf,.007);                                  // …socket…
+  put(M('fork',gPort,new THREE.CylinderGeometry(.0028,.0028,.006,12),'silver',{sub:'base'}),Lf,.009).userData.jack=true;            // …and centre pin
 })();
 
-// 12 V input jack (F) beside the power switch – the power cable plugs in here
-M('fork',gPort,new THREE.CylinderGeometry(.0085,.0085,.006,20),'black',{p:[.158,.05,.082],r:[-.35,0,-.62],sub:'base'});
-M('fork',gPort,new THREE.TorusGeometry(.0072,.0013,8,20),'silver',{p:[.1605,.0515,.0835],r:[-.35+Math.PI/2,0,-.62],sub:'base'}).userData.jack=true;
 
 /* ---- portable power station on the ground (modelled on a ~300 Wh unit such as the Jackery Explorer 300: 23 x 14 x 17 cm) ---- */
 BASE.psBody=new THREE.MeshStandardMaterial({color:0x18191c,roughness:.6,metalness:.1});
 BASE.psOrange=new THREE.MeshStandardMaterial({color:0xd8500f,roughness:.65,metalness:0});
 const psTex=canvasTex(512,300,()=>{},true);
+const POWER={on:true,boot:0};       // telescope power switch state
 const PS={wh:293,used:0,lastMs:null,out:0,pct:100};
 function drawPsPanel(){const c=psTex.image,x=c.getContext('2d'),W=c.width,H=c.height;
   x.fillStyle='#16171a';x.fillRect(0,0,W,H);x.strokeStyle='#2b2d33';x.lineWidth=6;x.strokeRect(3,3,W-6,H-6);
@@ -475,7 +481,7 @@ function updPowerCable(){                                        // cable from t
   const near=b.clone().addScaledVector(dir,.035).add(V3(0,-.02,0));
   psCable.geometry.dispose();psCable.geometry=new THREE.TubeGeometry(new THREE.CatmullRomCurve3([a,out,gnd,mid,hang,near,b]),120,.005,8);}
 function updPowerStation(dt,slewing,tracking){              // battery drains with the simulated clock; output shows a rough load
-  PS.out=(slewing?28:tracking?14:7)+(edu&&false?0:0);
+  PS.out=!POWER.on?0:(slewing?28:tracking?14:7);
   if(PS.lastMs!==null){const h=(simMs-PS.lastMs)/3.6e6;if(h>0&&h<12)PS.used+=PS.out*1.15*h;}PS.lastMs=simMs;   // 15% conversion loss
   PS.pct=clamp(100-PS.used/PS.wh*100,0,100);if(!updPowerStation.t||performance.now()-updPowerStation.t>1000){updPowerStation.t=performance.now();drawPsPanel();}}
 

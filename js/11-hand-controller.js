@@ -30,7 +30,12 @@ function infoLines(o){                                            // OBJECT INFO
   if(o.cat==='double')L.push('Double star');if(o.cat==='var')L.push('Variable star');if(o.sao)L.push('SAO '+o.sao);
   L.push('Offset '+offsetTxt(o));
   return L.filter(Boolean);}
+function setPower(v){if(POWER.on===v)return;POWER.on=v;
+  if(v){POWER.boot=performance.now();hcMsg('CPC Ready','NexStar+ starting',2.4);toast('Telescope ON – the red light is lit. (A real CPC needs re-aligning after power-off; the sim keeps the alignment.)',4500);driver.setTracking('sidereal');driver._relock();}
+  else{driver.stop();HD.az.length=0;HD.alt.length=0;unwind();driver.setTracking('off');toast('Telescope OFF – motors and hand controller have no power.',3500);}
+  $$('.pwrb').forEach(b=>{b.classList.toggle('on',v);b.textContent=v?'⏻ Power: ON':'⏻ Power: OFF';});}
 function hcDraw(){
+  if(!POWER.on){$('#l1').textContent='';$('#l2').textContent='';$('#l3').textContent='';HC.scr=false;$('#scr').style.opacity=0;return;}
   const st=driver.state();let a,b,scr=false;
   const c3=(HC.opt?'OPTION · ':'')+`${trkTxt(st.tracking)} · rate ${rate} · ${st.parked?'PARKED':st.slewing?'SLEWING':st.aligned?st.aligned+'-star aligned':'not aligned'}`;
   if(HC.msg&&performance.now()<HC.msgT){a=HC.msg[0];b=HC.msg[1];}
@@ -73,6 +78,7 @@ function safetyAsk(icon,title,body,ok,cancel){return new Promise(res=>{const el=
 function safetyMoveTip(){if(SAFE.moveTip||!edu.on)return;SAFE.moveTip=true;
   safetyAsk('🙈','Before the telescope moves','Make sure <b>nobody is looking through the eyepiece</b> and keep fingers away from the arms. A moving eyepiece can bump your eye!','Got it!');}
 function doGoto(o,after,ok){
+  if(!POWER.on){toast('The telescope is off. Turn on the red power switch first.',3000);return false;}
   if(o.type==='sun'&&!ok){safetyAsk('☀️','STOP – this is the Sun!','Never point a telescope at the Sun unless a <b>special solar filter covers the FRONT</b> of the telescope. Sunlight through a telescope can blind you in a split second. Only a grown-up should fit the filter.',
     'A grown-up fitted a solar filter','Cancel').then(y=>{if(y)doGoto(o,after,true);});return false;}
   if(!ok&&edu.on&&!SAFE.moveTip){SAFE.moveTip=true;safetyAsk('🙈','Before the telescope moves','Make sure <b>nobody is looking through the eyepiece</b> and keep fingers away from the arms. The telescope is about to swing around!','OK, all clear!','Wait').then(y=>{if(y)doGoto(o,after,true);});return false;}
@@ -126,6 +132,7 @@ function undo(){                                                  // BACK: erase
 }
 function setTrack(m){driver.setTracking(m);hcMsg('Tracking',trkTxt(m));updTrkRow();if(m==='solar')toast('Solar tracking: use a certified solar filter at all times.',3500);}
 function key(k){
+  if(!POWER.on){toast('The telescope is off. Press the red power switch (or ⏻ Power) first.',2500);return;}
   if(driver.s.parked&&k!=='park'&&k!=='home'){driver.unpark();hcMsg('Unparked','');}
   const wasOpt=HC.opt;if(k!=='option')HC.opt=false;                // OPTION is a one-shot modifier
   if(/^[0-9]$/.test(k)){
@@ -209,7 +216,7 @@ $$('#kidpad [data-kd]').forEach(b=>{const ax=b.dataset.kd.slice(0,-1),sg=b.datas
 $('#kidpad').addEventListener('click',e=>{const s=e.target.closest('[data-ks]');if(s){kid.rate=+s.dataset.ks;rate=kid.rate;$$('#kidpad [data-ks]').forEach(x=>x.classList.toggle('on',x===s));}
   if(e.target.closest('[data-kk=stop]')){driver.stop();toast('Stopped.');}});
 $('#bFullHC').onclick=()=>{const on=document.body.classList.toggle('fullhc');$('#bFullHC').textContent=on?'Hide the real hand controller':'Show the real hand controller';};
-function kidStatus(){const st=driver.state();if(st.slewing)return '🔭 Moving… please wait';
+function kidStatus(){if(!POWER.on)return '⏻ Power is OFF – tap ⏻ Power to turn it on';const st=driver.state();if(st.slewing)return '🔭 Moving… please wait';
   const T=st.truth,eq=horToEq(T.alt,T.az,jdNow());let best=null,bd=.6;for(const o of OBJ){if(o.alt<0)continue;const d=angSep({ra:o.cra,dec:o.cdec},eq);if(d<bd){bd=d;best=o;}}
   return best?`Pointing at: ${best.name}${bd>.15?' (nearby)':''}`:`Pointing at empty sky · up ${T.alt.toFixed(0)}°`;}
 
@@ -249,6 +256,8 @@ function hc3Key(px,py){                            // px,py are pixel positions 
 }
 cv.addEventListener('pointerdown',e=>{
   if(e.button>0)return;const r=cv.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(mouse,camera);
+  if(!hidden.has('fork')){const sw=ray.intersectObjects(POWER_HIT,false)[0];if(sw){const front=ray.intersectObjects(ALLM.filter(m=>isShown(m)&&!hidden.has(m.userData.part)),false)[0];
+    if(!front||front.distance>sw.distance-.03){e.stopImmediatePropagation();e.preventDefault();setPower(!POWER.on);return;}}}   // tap the red switch (or close to it)
   const pad=ray.intersectObjects(ALLM.filter(m=>m.userData.keypad&&isShown(m)),false)[0];if(!pad||!pad.uv)return;
   const front=ray.intersectObjects(ALLM.filter(m=>isShown(m)&&m.userData.part&&!hidden.has(m.userData.part)),false)[0];if(front&&front.object!==pad.object&&front.distance<pad.distance-.003)return;
   const k=hc3Key(pad.uv.x*256,(1-pad.uv.y)*780);if(!k)return;
@@ -257,13 +266,14 @@ cv.addEventListener('pointerdown',e=>{
 },true);
 const hc3Up=()=>{stopRepeat();if(HC3.held){dirUp(HC3.held[0],HC3.held[1],'h');HC3.held=null;}};addEventListener('pointerup',hc3Up);addEventListener('pointercancel',hc3Up);
 function hc3Lcd(){                                  // mirror the controller's LCD text onto the 3D handset
-  hcDraw();const a=$('#l1').textContent,b=$('#l2').textContent,k=a+'|'+b+'|'+(HC.scr?1:0)+(HC.opt?1:0);if(k===HC3.lcd)return;HC3.lcd=k;
-  const x=hcTex.image.getContext('2d');x.fillStyle='#2a0a06';x.fillRect(30,58,196,74);x.fillStyle='#ff5a3c';x.font='bold 14px monospace';x.textAlign='left';
+  hcDraw();const a=$('#l1').textContent,b=$('#l2').textContent,k=a+'|'+b+'|'+(HC.scr?1:0)+(HC.opt?1:0)+(POWER.on?1:0);if(k===HC3.lcd)return;HC3.lcd=k;
+  const x=hcTex.image.getContext('2d');x.fillStyle=POWER.on?'#2a0a06':'#0a0a0a';x.fillRect(30,58,196,74);x.fillStyle='#ff5a3c';x.font='bold 14px monospace';x.textAlign='left';
   x.fillText(a.slice(0,21),36,86);x.fillText(b.slice(0,21),36,114);if(HC.scr){x.font='bold 18px system-ui';x.textAlign='right';x.fillText('⇕',222,100);}if(HC.opt){x.font='9px system-ui';x.textAlign='left';x.fillText('OPTION',36,128);}hcTex.needsUpdate=true;
 }
 // camera follows the mount when it slews (not for slow sidereal tracking)
 const follow={on:true,prev:null};
 function feedMount(){
+  if(!POWER.on){driver.setManual(0,0,0);return;}
   // Double-button: hold one arrow and press the opposite one -> maximum slew rate in the first direction.
   let r=SLEW_RATES[rate],dbl=false;const v={};
   for(const ax of ['az','alt']){const h=HD[ax];let d=0;
@@ -275,3 +285,5 @@ function feedMount(){
   driver.setManual(v.az,v.alt,r);
 }
 
+
+document.addEventListener('click',e=>{if(e.target.closest('[data-pwr]'))setPower(!POWER.on);});

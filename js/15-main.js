@@ -20,7 +20,7 @@ function loop(now){
   requestAnimationFrame(loop);
   const dt=clamp((now-last)/1000,0,.05);last=now;frame++;const t=now/1000;   // dt never negative (the first frame's timestamp can precede start-up)
   simMs+=dt*1000*speed;
-  pollPad(dt);feedMount();driver.update(dt);computeSky();
+  pollPad(dt);feedMount();if(POWER.on)driver.update(dt);computeSky();   // no power: motors stop and tracking pauses
   // mount pose
   const tr=driver.truth();azG.rotation.y=-tr.az*D2R;altG.rotation.x=tr.alt*D2R;
   // explode (global slider, plus a single part pulled out on request)
@@ -51,7 +51,7 @@ function loop(now){
 }
 function uiTick(){
   const st=driver.state();
-  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br><span class="hx">Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br></span>${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
+  $('#hud').innerHTML=`<span class="chip">SIMULATED · no hardware</span><br>📍 ${loc.name} · ${localTimeTxt()}<br><span class="hx">Az ${st.az.toFixed(2)}°  Alt ${st.alt.toFixed(2)}°<br>RA ${fmtRA(st.ra)}  Dec ${fmtDec(st.dec)}<br></span>${POWER.on?'':'<b style="color:#ff6b5b">⏻ POWER OFF</b> · '}${trkTxt(st.tracking)} · ${st.parked?'parked':st.slewing?'slewing':st.moving?'moving':'idle'} · ${st.aligned?st.aligned+'-star aligned':'not aligned'}${speed!==1?' · time ×'+speed:''}`;
   if(curTab==='ctrl'){hcDraw();drawEyepiece($('#epMini'));if(edu.on){$('#kstat').textContent=kidStatus();const nw=performance.now();if(!(uiTick.kt>nw-2000)){uiTick.kt=nw;renderKidTiles();}}}
   else if(curTab==='sky'){updSelPos();drawSkyChart($('#skyc'));drawEyepiece($('#epBig'));
     const T=st.truth;$('#truth').innerHTML=`<b>Truth</b> (where the tube points): Az ${T.az.toFixed(2)}° Alt ${T.alt.toFixed(2)}°<br><b>Mount reports</b>: Az ${st.az.toFixed(2)}° Alt ${st.alt.toFixed(2)}°<br><b>Error</b>: ${Math.hypot(wrap180(T.az-st.az)*Math.cos(T.alt*D2R),T.alt-st.alt).toFixed(2)}° ${st.aligned?'(after alignment)':'(not aligned yet)'}`;
@@ -64,7 +64,7 @@ function uiTick(){
 // Start in Phoenix, AZ at 10 pm tonight (local time), tube on Polaris, Saturn selected, 13 mm eyepiece
 (function(){setLocation(0);const SAT=OBJ.find(o=>o.id==='saturn');selObj=SAT;HC.last=SAT;fillSelBox();setEp(3);
   setTimeout(()=>toast(`${loc.name} · ${localTimeTxt()}. The scope is on Polaris; Saturn is selected${SAT.alt>0?'':' (below the horizon right now)'}.`,5500),700);})();
-window.__c11={driver,OBJ,key,doGoto,setSpeed,cam,setArms,ALLM,bump:()=>{simMs+=30*60000;computeSky();}};   // small debug hook
+window.__c11={driver,OBJ,key,doGoto,setSpeed,cam,setArms,ALLM,camera,bump:()=>{simMs+=30*60000;computeSky();}};   // small debug hook
 fillSelBox();hcDraw();
 // CPC 11 drawing: the altitude axis is 366 mm behind the front of the OTA and 285 mm in front of the rear end, so slide the whole OTA forward on its pivot.
 {const otaG=new THREE.Group();[...altG.children].filter(c=>c!==gDrv).forEach(c=>otaG.add(c));altG.add(otaG);otaG.position.z=-.0835;}

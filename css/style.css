@@ -134,3 +134,4 @@ body.edu #p-info,body.edu #p-learn,body.edu #p-miss,body.edu #p-setup{font-size:
   #tabs{padding-top:0}#tabs .min{display:none!important}
   #hud .chip{display:none}#hud{font-size:10px;padding:3px 7px;line-height:1.4}
 }
+body.edu:not(.fullhc) #p-ctrl .hcpwr{display:none}

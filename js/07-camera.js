@@ -78,7 +78,7 @@ function selectPart(id,sub,openTab){
 function applyHighlight(t){
   const pulse=.45+.25*Math.sin(t*4);
   for(const m of ALLM){const mt=m.material,u=m.userData,on=sel.part&&u.part===sel.part&&(!sel.sub||u.sub===sel.sub);
-    mt.emissive.setHex(on?0x2a7fff:0x000000);mt.emissiveIntensity=on?pulse:0;
+    if(u.led&&!on){mt.emissive.setHex(POWER.on?0xff2a18:0x000000);mt.emissiveIntensity=POWER.on?1.1:0;mt.color.setHex(POWER.on?0x8a140c:0x2a0806);}else{mt.emissive.setHex(on?0x2a7fff:0x000000);mt.emissiveIntensity=on?pulse:0;}
     const ghost=sel.part&&sel.isolate&&u.part!==sel.part;
     mt.transparent=ghost?true:u.o0.t;mt.opacity=ghost?.08:u.o0.o;mt.depthWrite=ghost?false:u.o0.d;
     m.visible=!hidden.has(u.part);}
