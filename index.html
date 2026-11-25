@@ -678,8 +678,12 @@ function buildTripod(H,B){
   M('tripod',gTri,new THREE.CylinderGeometry(.03,.03,.03,16),'blackg',{p:[0,yT-.06,0],sub:'tray'});
 }
 const TRI={t:.55,H:0,B:0};
-function setTripod(t){TRI.t=t;TRI.H=.784+(1.18-.784)*t;TRI.B=.45+(.64-.45)*t;buildTripod(TRI.H,TRI.B);mountG.position.y=TRI.H-.985;}
-const triTxt=()=>`Head height ${Math.round(TRI.H*1000)} mm (${(TRI.H/.0254).toFixed(1)} in) · footprint Ø${Math.round(958+352*TRI.t)} mm`;
+// CPC Deluxe 1100 HD drawing (OTA level): altitude axis is 530 mm above the tripod head, top of tube 689 mm above it.
+// The model's axis was 575 mm above the head, so the mount is scaled by MS to match the drawing.
+const MS=.53/.575;
+function setTripod(t){TRI.t=t;TRI.H=.784+(1.18-.784)*t;TRI.B=.45+(.64-.45)*t;buildTripod(TRI.H,TRI.B);mountG.scale.setScalar(MS);mountG.position.y=TRI.H+.012-MS*.997;}
+const mountPivY=()=>mountG.position.y+MS*PIV_Y;
+const triTxt=()=>`Head ${Math.round(TRI.H*1000)} mm · footprint Ø${Math.round(958+352*TRI.t)} mm · altitude axis ${Math.round((TRI.H+.53)*1000)} mm · top of tube ${Math.round((TRI.H+.689)*1000)} mm (tube level)`;
 setTripod(.55);
 
 // port panel on the front of the fork base, where the handset cord plugs in (like the real CPC base)
@@ -918,7 +922,7 @@ tripod:{n:'Tripod',
  h:'The tray braces the legs. A level tripod makes alignment and tracking easier.',
  i:'The base bolts to the head; vibration depends on leg extension and the surface underneath.',
  subs:[['head','Head plate','Tripod head.'],['legs','Legs','Extend to adjust height.'],['locks','Leg locks','Clamp the leg extension.'],['tray','Accessory tray','Black tray with holes for eyepieces; it also braces the legs.'],['feet','Feet','Rubber feet.']],
- spec:[['Head height','784 mm legs retracted · 1180 mm extended (CPC Tripod drawing)'],['Footprint','Ø958 mm retracted · Ø1310 mm extended'],['Legs','2-inch stainless steel'],['Support','Leg-support bracket / accessory tray on a central rod with a tension knob']],
+ spec:[['Head height','784 mm legs retracted · 1180 mm extended (CPC Tripod drawing)'],['Footprint','Ø958 mm retracted · Ø1310 mm extended'],['Legs','2-inch stainless steel'],['Whole scope, tube level','Altitude axis 1314–1710 mm, top of tube 1473–1869 mm (CPC Deluxe 1100 HD drawing)'],['Support','Leg-support bracket / accessory tray on a central rod with a tension knob']],
  m:['Check leg locks.','Place on firm ground.'],t:[['Shaky image','Shorten legs, check locks, add vibration pads.']]},
 handset:{n:'NexStar-style hand controller',
  d:'A hand-held keypad with a text display, connected by a cable. Click it to open the virtual version.',
@@ -978,12 +982,12 @@ function toOrbit(posV,tgt){const d=posV.clone().sub(tgt),dist=d.length();return 
 function setMode(m){
   if(m===cam.mode)return;
   if(m==='walk'){const p=camera.position,d=V3(cam.tx-p.x,0,cam.tz-p.z);cam.px=p.x;cam.pz=p.z;if(Math.hypot(cam.px,cam.pz)<1)cam.pz=3;cam.py=1.7;cam.wyaw=Math.atan2(-d.x,-d.z);cam.wpitch=-.05;}
-  else{const t=V3(0,PIV_Y+mountG.position.y,0);Object.assign(cam,toOrbit(camera.position,t));}
+  else{const t=V3(0,mountPivY(),0);Object.assign(cam,toOrbit(camera.position,t));}
   cam.mode=m;document.body.classList.toggle('walk',m==='walk');$('#bOrbit').classList.toggle('on',m==='orbit');$('#bWalk').classList.toggle('on',m==='walk');cam.tw=null;
 }
 function viewFrom(kind){
   setMode('orbit');scene.updateMatrixWorld(true);
-  const piv=V3(0,PIV_Y+mountG.position.y+exp.cur*.55,0),dir=V3(0,0,-1).transformDirection(altG.matrixWorld),ax=V3(1,0,0).transformDirection(altG.matrixWorld),up=V3(0,1,0).transformDirection(altG.matrixWorld);
+  const piv=V3(0,mountPivY()+exp.cur*.55,0),dir=V3(0,0,-1).transformDirection(altG.matrixWorld),ax=V3(1,0,0).transformDirection(altG.matrixWorld),up=V3(0,1,0).transformDirection(altG.matrixWorld);
   let off;
   if(kind==='front')off=dir.clone().multiplyScalar(2.6).add(V3(0,.3,0));
   else if(kind==='rear')off=dir.clone().multiplyScalar(-2.6).add(V3(0,.3,0));
