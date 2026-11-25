@@ -584,23 +584,25 @@ fm(cylZ(.017,.017,.022,32),'rubber',[FX,FY,.284],'eyepiece');
     fm(new THREE.CylinderGeometry(.0035,.0035,.016,10),'silver',[FX+Math.cos(a)*.047,FY+Math.sin(a)*.047,z],'bracket',[0,0,a-Math.PI/2]);
     fm(ribbed(big?.0075:.0055,.01,10,.14),'silver',[FX+Math.cos(a)*(big?.058:.054),FY+Math.sin(a)*(big?.058:.054),z],'bracket',[0,0,a-Math.PI/2]);});
 });
-const gStar=G('starsense',altG,V3(0,0.4,-0.25));   // optional plate-solving camera: clamp on the dovetail, lens barrel with orange ring, oval electronics housing behind
+const gStar=G('starsense',altG,V3(0.12,0.4,0));   // optional plate-solving camera on a finder-style quick-release shoe, top right of the rear cell (mirrors the 9x50 finder on the left)
 (function(){
-  const sm=(geo,mat,p,sub,r)=>M('starsense',gStar,geo,mat,{p,sub,r});
-  sm(new THREE.BoxGeometry(.07,.012,.1),'black',[0,.1725,-.14],'clamp');
-  [-1,1].forEach(sd=>sm(new THREE.BoxGeometry(.008,.03,.1),'black',[sd*.0335,.158,-.14],'clamp'));         // jaws around the dovetail
-  sm(cylZ(.005,.005,.012,12).rotateY(Math.PI/2),'silver',[.041,.158,-.14],'clamp');                          // clamp screw
-  sm(cylZ(.0075,.0075,.004,16).rotateY(Math.PI/2),'silver',[.049,.158,-.14],'clamp');
-  sm(new THREE.BoxGeometry(.05,.05,.025),'blackg',[0,.19,-.12],'clamp');
-  sm(cylZ(.0345,.0345,.025,48),'blackg',[0,.2125,-.12],'camera');                                           // collar around the barrel
-  sm(cylZ(.03,.03,.105,48),'black',[0,.2125,-.1475],'camera');                                              // camera barrel
-  sm(cylZ(.0315,.0315,.004,48),'orange',[0,.2125,-.108],'camera');                                          // orange accent ring
-  sm(new THREE.TorusGeometry(.0302,.0016,8,48),'silver',[0,.2125,-.2],'camera');
-  sm(new THREE.RingGeometry(.022,.0285,40),'black',[0,.2125,-.2004],'camera',[0,Math.PI,0]);
-  sm(new THREE.CircleGeometry(.022,40),'glass',[0,.2125,-.2006],'lens',[0,Math.PI,0]);
+  const SX=.095,SY=.205,sm=(geo,mat,p,sub,r)=>M('starsense',gStar,geo,mat,{p,sub,r});
+  // quick-release shoe screwed to the rear cell, with the camera's dovetail foot and a locking screw
+  sm(new THREE.BoxGeometry(.05,.05,.1),'black',[SX,.135,.1],'clamp');
+  sm(new THREE.BoxGeometry(.04,.01,.1),'blackg',[SX,.164,.1],'clamp');
+  sm(cylZ(.004,.004,.014,12).rotateY(Math.PI/2),'silver',[SX+.031,.14,.1],'clamp');
+  sm(ribbed(.007,.008,10,.14).rotateZ(Math.PI/2),'silver',[SX+.041,.14,.1],'clamp');
+  sm(new THREE.BoxGeometry(.044,.03,.06),'blackg',[SX,.183,.1],'clamp');                                     // riser to the camera
+  // camera: lens barrel pointing forward along the tube, orange accent ring, oval electronics housing at the back
+  sm(cylZ(.03,.03,.105,48),'black',[SX,SY,.075],'camera');
+  sm(cylZ(.0345,.0345,.025,48),'blackg',[SX,SY,.1],'camera');
+  sm(cylZ(.0315,.0315,.004,48),'orange',[SX,SY,.114],'camera');
+  sm(new THREE.TorusGeometry(.0302,.0016,8,48),'silver',[SX,SY,.0225],'camera');
+  sm(new THREE.RingGeometry(.022,.0285,40),'black',[SX,SY,.0221],'camera',[0,Math.PI,0]);
+  sm(new THREE.CircleGeometry(.022,40),'glass',[SX,SY,.0219],'lens',[0,Math.PI,0]);
   const sh=new THREE.Shape();sh.absellipse(0,0,.0375,.0525,0,Math.PI*2,false);
-  sm(new THREE.ExtrudeGeometry(sh,{depth:.012,bevelEnabled:true,bevelSize:.002,bevelThickness:.002,bevelSegments:2,curveSegments:32}),'blackg',[0,.2275,-.092],'housing');   // oval housing behind the lens
-  sm(cylZ(.004,.004,.003,10),'black',[.017,.2,-.0795],'housing');
+  sm(new THREE.ExtrudeGeometry(sh,{depth:.012,bevelEnabled:true,bevelSize:.002,bevelThickness:.002,bevelSegments:2,curveSegments:32}),'blackg',[SX,SY+.015,.118],'housing');
+  sm(cylZ(.004,.004,.003,10),'black',[SX+.017,SY-.012,.133],'housing');                                       // cable socket
 })();
 const gTel=G('telrad',altG,V3(0,0.32,0));      // Telrad reflex sight: long battery body, tall rear tower with a pitched roof and tilted glass, knobs on the back
 (function(){
@@ -999,7 +1001,7 @@ starsense:{n:'StarSense-style AutoAlign camera (optional)',
  p:'Aligns the mount automatically, without you picking stars or knowing the sky.',
  h:'The camera takes pictures of the sky in a few places. Software matches the star pattern in each picture to a catalogue (plate solving), which gives the true pointing. The mount then corrects its encoder offsets, much like a two-star alignment but done for you.',
  i:'Fit it with the StarSense button in the toolbar. Then press Align on the hand controller and choose StarSense AutoAlign. Here this is simulated: the scope slews to three fields, then the alignment error is cleared to within a few arc-minutes.',
- subs:[['clamp','Clamp','Grips the dovetail rail.'],['camera','Camera barrel','Holds the lens; the orange ring is an accent.'],['lens','Lens','Wide-field lens facing forward along the tube.'],['housing','Electronics housing','Oval case with the sensor electronics and connector.']],
+ subs:[['clamp','Quick-release shoe','Finder-style shoe on the top right of the rear cell, opposite the 9x50 finder; the camera slides in and locks with a thumbscrew.'],['camera','Camera barrel','Holds the lens; the orange ring is an accent.'],['lens','Lens','Wide-field lens facing forward along the tube.'],['housing','Electronics housing','Oval case with the sensor electronics and connector.']],
  spec:[['Needs','Clear sky, level mount, approximate time and location'],['Result here','Alignment good to a few arc-minutes (simulated)']],
  m:['Keep the lens clean and dry; use a lens cap when stored.','Set date, time and location correctly before aligning.'],
  t:[['Alignment fails','Clouds, dew on the lens or a badly levelled mount can stop the solve.'],['Pointing is off after aligning','Check the time, date and location entered in the hand controller.']]},
