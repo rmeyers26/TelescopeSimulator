@@ -73,7 +73,7 @@ canvas.cv{width:100%;display:block;background:#02040a;border:1px solid var(--ln)
   <button class="b on" id="bOrbit">Orbit</button><button class="b" id="bWalk">Walk</button><span class="sep"></span>
   <button class="b" data-v="front">Front</button><button class="b" data-v="rear">Rear</button><button class="b" data-v="left">Left</button><button class="b" data-v="right">Right</button><button class="b" data-v="top">Top</button><span class="sep"></span>
   <button class="b on" id="bA2">2 arms</button><button class="b" id="bA1">1 arm</button><span class="sep"></span>
-  <button class="b" id="bStar">StarSense</button><button class="b on" id="bDew">Dew shield</button><button class="b" id="bCut">Cutaway</button><button class="b" id="bOpt">Optics</button><button class="b" id="bCine">Cinematic</button><button class="b on" id="bFol">Follow</button><button class="b" id="bLab">Labels</button><span class="sep"></span>
+  <button class="b" id="bStar">StarSense</button><button class="b on" id="bDew">Dew shield</button><button class="b" id="bCut">Cutaway</button><button class="b" id="bOpt">Optics</button><button class="b" id="bCine">Cinematic</button><button class="b on" id="bFol">Follow</button><button class="b" id="bLab">Labels</button><button class="b on" id="bDip">Dipper guide</button><span class="sep"></span>
   <label>Explode <input type="range" id="exp" min="0" max="1" step="0.01" value="0"></label>
   <button class="b" id="bReset">Reset view</button>
 </div>
@@ -239,6 +239,8 @@ STAR_CON.split(';').forEach(r=>{const [n,c]=r.split(':'),o=OBJ.find(x=>x.id===n)
 [['Epsilon Lyrae',18.739,39.67,4.7,'double','Lyr'],['Cor Caroli',12.934,38.318,2.9,'double','CVn'],['Porrima',12.694,-1.449,2.7,'double','Vir'],['61 Cygni',21.115,38.749,5.2,'double','Cyg'],['Eta Cassiopeiae',0.819,57.815,3.4,'double','Cas'],['Gamma Delphini',20.777,16.125,4.3,'double','Del'],
  ['Mira',2.322,-2.977,3.4,'var','Cet'],['Delta Cephei',22.486,58.415,3.5,'var','Cep'],['Chi Cygni',19.843,32.914,5.2,'var','Cyg'],['R Leonis',9.765,11.431,5.8,'var','Leo'],['Eta Aquilae',19.874,1.006,3.9,'var','Aql'],['Beta Lyrae',18.834,33.363,3.5,'var','Lyr']]
  .forEach(([n,ra,dec,mag,cat,con])=>OBJ.push({id:n,name:n,type:'star',ra:ra*15,dec,mag,cat,con}));
+[['Pherkad',15.345,71.834,3.0],['Yildun',17.537,86.586,4.35],['Epsilon UMi',16.766,82.037,4.2],['Zeta UMi',15.734,77.794,4.3],['Eta UMi',16.292,75.755,4.95]]
+ .forEach(([n,ra,dec,mag])=>OBJ.push({id:n,name:n,type:'star',ra:ra*15,dec,mag,con:'UMi'}));
 const SAO_NUM={Vega:67174,Polaris:308,Sirius:151881,Arcturus:100944,Capella:40186,Rigel:131907,Betelgeuse:113271,Altair:125122,Deneb:49941,Antares:184415,Aldebaran:94027,Spica:157923,Regulus:98967,Procyon:115756,Fomalhaut:191524,Pollux:79666,Castor:60198,Mizar:28737,Albireo:87301};
 for(const n in SAO_NUM){const o=OBJ.find(x=>x.id===n);if(o)o.sao=SAO_NUM[n];}
 /* HC-only objects: Pluto (fixed approximate position), constellation centres, asterisms. They are not drawn in the sky views. */
@@ -874,7 +876,34 @@ const bodySprites=OBJ.filter(o=>BODY_COL[o.id]).map(o=>{const s=new THREE.Sprite
   s.scale.setScalar(o.id==='sun'?14:o.id==='moon'?6:o.id==='venus'||o.id==='jupiter'?3.2:2.2);scene.add(s);return {o,s};});
 const DOME=90,bgNight=new THREE.Color(0x050810),bgDay=new THREE.Color(0x6a9ad8),bgCol=new THREE.Color();
 function altAzVec(alt,az,r){const a=alt*D2R,A=az*D2R;return V3(Math.sin(A)*Math.cos(a)*r,Math.sin(a)*r,-Math.cos(A)*Math.cos(a)*r);}
+/* ---- Big Dipper -> North Star guide: stick figures for both dippers, a dashed pointer line and labels ---- */
+const DIP={big:[['Alkaid','Mizar'],['Mizar','Alioth'],['Alioth','Megrez'],['Megrez','Dubhe'],['Dubhe','Merak'],['Merak','Phecda'],['Phecda','Megrez']],
+  little:[['Polaris','Yildun'],['Yildun','Epsilon UMi'],['Epsilon UMi','Zeta UMi'],['Zeta UMi','Kochab'],['Kochab','Pherkad'],['Pherkad','Eta UMi'],['Eta UMi','Zeta UMi']]};
+const starById=id=>OBJ.find(o=>o.id===id);
+const guide={on:true,g:new THREE.Group()};scene.add(guide.g);
+guide.fig=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x5fa0ff,transparent:true,opacity:.95,depthWrite:false,fog:false}));
+guide.fig.geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array((DIP.big.length+DIP.little.length)*6),3));guide.g.add(guide.fig);
+guide.ptr=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineDashedMaterial({color:0xff9a4a,dashSize:1.6,gapSize:1.1,transparent:true,opacity:.95,depthWrite:false,fog:false}));
+guide.ptr.geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));guide.g.add(guide.ptr);
+function guideLabel(text,col){const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='bold 40px system-ui';const w=Math.min(500,x.measureText(text).width+36);
+  x.fillStyle='rgba(10,14,24,.75)';x.beginPath();x.moveTo(18,8);x.lineTo(w-18,8);x.arc(w-18,48,40,-Math.PI/2,Math.PI/2);x.lineTo(18,88);x.arc(18,48,40,Math.PI/2,Math.PI*1.5);x.fill();
+  x.fillStyle=col;x.textBaseline='middle';x.fillText(text,18,50);const t=new THREE.CanvasTexture(c);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthWrite:false,fog:false,transparent:true}));sp.scale.set(20,20*96/512,1);sp.center.set(18/512,.5);guide.g.add(sp);return sp;}
+guide.dots=[...new Set([...DIP.big,...DIP.little].flat())].map(id=>{const o=starById(id),sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffffff,depthWrite:false,fog:false,transparent:true}));
+  const k=Math.max(.5,1.6-.25*o.mag)*(id==='Polaris'?1.5:1);sp.scale.set(k,k,1);guide.g.add(sp);return {o,sp};});   // brighter dots so the pattern is easy to spot
+guide.lab={pol:guideLabel('★ Polaris – the North Star','#ffd36a'),big:guideLabel('Big Dipper','#9cc4ff'),ptr:guideLabel('Pointer stars → follow ×5','#ffb27a'),little:guideLabel('Little Dipper','#9cc4ff')};
+function updGuide(){
+  guide.g.visible=guide.on;if(!guide.on)return;
+  const V=id=>{const o=starById(id);return altAzVec(o.alt,o.az,DOME-1);};let i=0;const a=guide.fig.geometry.attributes.position.array;
+  [...DIP.big,...DIP.little].forEach(([p,q])=>{a.set([...V(p).toArray(),...V(q).toArray()],i);i+=6;});guide.fig.geometry.attributes.position.needsUpdate=true;guide.fig.geometry.computeBoundingSphere();
+  const m=starById('Merak'),d=starById('Dubhe'),pl=starById('Polaris'),pa=guide.ptr.geometry.attributes.position.array;
+  pa.set([...V('Dubhe').toArray(),...V('Polaris').toArray()]);guide.ptr.geometry.attributes.position.needsUpdate=true;guide.ptr.computeLineDistances();guide.ptr.geometry.computeBoundingSphere();
+  guide.dots.forEach(d=>d.sp.position.copy(altAzVec(d.o.alt,d.o.az,DOME-1.2)));
+  guide.lab.pol.position.copy(V('Polaris')).add(V3(1.2,0,0));guide.lab.big.position.copy(V('Megrez'));guide.lab.little.position.copy(V('Zeta UMi'));
+  guide.lab.ptr.position.copy(V('Dubhe').lerp(V('Polaris'),.45));
+}
 function updateDome(){
+  updGuide();
   stars.forEach((o,i)=>{const v=altAzVec(o.alt,o.az,DOME);starGeo.attributes.position.array.set([v.x,v.y,v.z],i*3);});
   starGeo.attributes.position.needsUpdate=true;
   bodySprites.forEach(b=>{const v=altAzVec(b.o.alt,b.o.az,DOME-4);b.s.position.copy(v);});
@@ -1104,7 +1133,7 @@ function toOrbit(posV,tgt){const d=posV.clone().sub(tgt),dist=d.length();return 
 function setMode(m){
   if(m===cam.mode)return;
   if(m==='walk'){const p=camera.position,d=V3(cam.tx-p.x,0,cam.tz-p.z);cam.px=p.x;cam.pz=p.z;if(Math.hypot(cam.px,cam.pz)<1)cam.pz=3;cam.py=1.7;cam.wyaw=Math.atan2(-d.x,-d.z);cam.wpitch=-.05;}
-  else{const t=V3(0,mountPivY(),0);Object.assign(cam,toOrbit(camera.position,t));}
+  else{const t=V3(0,mountPivY(),0);Object.assign(cam,toOrbit(camera.position,t));camera.fov=cine.on?32:45;camera.updateProjectionMatrix();}
   cam.mode=m;document.body.classList.toggle('walk',m==='walk');$('#bOrbit').classList.toggle('on',m==='orbit');$('#bWalk').classList.toggle('on',m==='walk');cam.tw=null;
 }
 function viewFrom(kind){
@@ -1295,6 +1324,7 @@ function updLabels(){
     if(labState.v.z>1){e.style.display='none';return;}
     e.style.display='block';e.style.left=(r.left+(labState.v.x+1)/2*r.width)+'px';e.style.top=(r.top+(1-labState.v.y)/2*r.height)+'px';});
 }
+$('#bDip').onclick=()=>{guide.on=!guide.on;$('#bDip').classList.toggle('on',guide.on);};
 $('#bLab').onclick=()=>{labState.on=!labState.on;$('#bLab').classList.toggle('on',labState.on);};
 $('#bOpt').onclick=()=>{optics.on=!optics.on;$('#bOpt').classList.toggle('on',optics.on);};
 $('#exp').oninput=e=>{exp.target=+e.target.value;if(exp.target>.3&&cam.mode==='orbit'&&cam.dist<5.5&&!cam.tw)tweenTo({tx:cam.tx,ty:cam.ty+.2,tz:cam.tz,yaw:cam.yaw,pitch:cam.pitch,dist:6});};
@@ -1586,6 +1616,14 @@ function drawSkyChart(c){
     if(o.type==='star'){const r=Math.max(1,3.4-.7*o.mag);x.fillStyle='#fff';x.beginPath();x.arc(px,py,r,0,7);x.fill();if(o.mag<1.9){x.fillStyle='#8f9bb8';x.font='12px system-ui';x.textAlign='left';x.fillText(o.name,px+6,py-4);}}
     else if(o.type==='dso'){x.strokeStyle='#4da3ff';x.lineWidth=1.2;x.strokeRect(px-4,py-4,8,8);if(o.mag<5.5){x.fillStyle='#4da3ff';x.font='12px system-ui';x.textAlign='left';x.fillText(o.short,px+7,py+4);}}
     else{const col={sun:'#ffd34d',moon:'#e8e8e0'}[o.type]||'#ff9a6a';x.fillStyle=col;x.beginPath();x.arc(px,py,o.type==='planet'?4.5:8,0,7);x.fill();x.fillStyle=col;x.font='13px system-ui';x.textAlign='left';x.fillText(o.name,px+10,py+4);}}
+  if(guide.on){                                                   // Big Dipper -> Polaris guide on the chart
+    const L=(p,q,col,w,dash)=>{const A=starById(p),B=starById(q);if(A.alt<-5&&B.alt<-5)return;const [x1,y1]=P(A.alt,A.az),[x2,y2]=P(B.alt,B.az);x.strokeStyle=col;x.lineWidth=w;x.setLineDash(dash||[]);x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();x.setLineDash([]);};
+    DIP.big.forEach(([p,q])=>L(p,q,'rgba(127,178,255,.8)',1.6));DIP.little.forEach(([p,q])=>L(p,q,'rgba(127,178,255,.55)',1.2));
+    L('Dubhe','Polaris','#ff9a4a',2,[7,5]);
+    const pl=starById('Polaris');if(pl.alt>0){const [px,py]=P(pl.alt,pl.az);x.strokeStyle='#ffd36a';x.lineWidth=2;x.beginPath();x.arc(px,py,9,0,7);x.stroke();x.fillStyle='#ffd36a';x.font='bold 13px system-ui';x.textAlign='left';x.fillText('Polaris – North Star',px+12,py+4);}
+    const mz=starById('Megrez');if(mz.alt>0){const [px,py]=P(mz.alt,mz.az);x.fillStyle='#9cc4ff';x.font='bold 12px system-ui';x.textAlign='center';x.fillText('Big Dipper',px,py+18);}
+    const dm=starById('Dubhe'),mr=starById('Merak');if(dm.alt>0){const [ax,ay]=P(mr.alt,mr.az),[bx,by]=P(dm.alt,dm.az);x.fillStyle='#ffb27a';x.font='11px system-ui';x.textAlign='left';x.fillText('pointer stars',(ax+bx)/2+8,(ay+by)/2+4);}
+  }
   const st=driver.state(),T=st.truth,ep=EPS[epI];
   if(T.alt>-5){const [px,py]=P(Math.max(T.alt,0),T.az),fr=Math.max(5,ep.fov/90*R);x.strokeStyle='#ff8a3d';x.lineWidth=2;x.beginPath();x.arc(px,py,fr,0,7);x.moveTo(px-fr-6,py);x.lineTo(px+fr+6,py);x.moveTo(px,py-fr-6);x.lineTo(px,py+fr+6);x.stroke();}
   if(Math.hypot(wrap180(st.az-T.az),st.alt-T.alt)>.3&&st.alt>0){const [px,py]=P(st.alt,st.az);x.strokeStyle='#7dffb0';x.setLineDash([4,4]);x.beginPath();x.arc(px,py,8,0,7);x.stroke();x.setLineDash([]);}
@@ -1742,7 +1780,13 @@ const LESSONS=[
  {s:'secondary',text:'Collimation means aligning the optical axis. On an SCT only the secondary is adjusted, using its three screws. Allow the scope to cool, centre a bright star at about 200–300×, and defocus slightly.'},
  {text:'If the defocused star looks lopsided, adjust a screw about 1/8 turn at a time, re-centre the star, and repeat until the rings are concentric. Always re-check at the end.'},
  {s:'focuser',text:'The focus knob moves the primary mirror. Finish each focus move in the same direction to reduce backlash and image shift.'},
- {s:'dew',text:'Dew is a main nuisance: use a dew shield (use the eye icon in Parts) and a heater strap in humid conditions. Cap the optics when finished.'}]}
+ {s:'dew',text:'Dew is a main nuisance: use a dew shield (use the eye icon in Parts) and a heater strap in humid conditions. Cap the optics when finished.'}]},
+{t:'Find the North Star (Big Dipper trick)',s:[
+ {look:'north',dip:true,text:'You are now standing behind the telescope, facing north. The blue lines join the stars of the Big Dipper, a group of 7 bright stars shaped like a ladle or saucepan. Drag to look around if you cannot see it.'},
+ {look:'north',dip:true,text:'Find the two stars at the end of the Dipper’s bowl, Merak and Dubhe. They are called the pointer stars. The orange dashed line starts at Dubhe.'},
+ {look:'north',dip:true,text:'Follow the pointers out of the bowl about 5 times the gap between them. You land on a fairly bright star sitting on its own: Polaris, the North Star. It is the end of the Little Dipper’s handle.'},
+ {tab:'sky',dip:true,text:'The Sky tab shows the same trick on a map of the whole sky (north at the top). Watch with the clock sped up: every star circles around Polaris, but Polaris hardly moves, because Earth’s axis points almost straight at it.'},
+ {go:'Polaris',ep:1,tab:'ctrl',text:'Now the telescope goes to Polaris. Look at the eyepiece view: through the C11 it is just a bright point, because stars are so far away. Its height above the horizon equals your latitude, which is why sailors used it to find their way.'}]}
 ];
 const L={lesson:null,step:0};
 function renderLearn(){                           // lesson list lives in the Learn tab; the running step floats over the 3D view
@@ -1760,6 +1804,10 @@ function doStep(st){
   if(st.s){hidden.delete(st.s);selectPart(st.s,null,false);}
   if(st.ep!==undefined)setEp(st.ep);
   if(st.f)flash(st.f);
+  if(st.dip){guide.on=true;$('#bDip').classList.add('on');}
+  if(st.look==='north'){setMode('walk');const pl=starById('Polaris'),mz=starById('Megrez'),az=wrap180(wrap180(pl.az)+wrap180(wrap180(mz.az)-wrap180(pl.az))/2);   // aim between the Big Dipper and Polaris
+    cam.px=0;cam.pz=2.6;cam.py=1.6;cam.wyaw=-az*D2R;cam.wpitch=clamp(((pl.alt+Math.max(mz.alt,2))/2)*D2R,.05,1.2);camera.fov=70;camera.updateProjectionMatrix();}
+  if(st.go){const o=starById(st.go);if(o)doGoto(o);}
   if(st.tab&&st.tab!==curTab)tab(st.tab);
 }
 function learnClick(e){
