@@ -680,8 +680,8 @@ function buildTripod(H,B){
 const TRI={t:.55,H:0,B:0};
 // CPC Deluxe 1100 HD drawing (OTA level): altitude axis is 530 mm above the tripod head, top of tube 689 mm above it.
 // The model's axis was 575 mm above the head, so the mount is scaled by MS to match the drawing.
-const MS=.53/.575;
-function setTripod(t){TRI.t=t;TRI.H=.784+(1.18-.784)*t;TRI.B=.45+(.64-.45)*t;buildTripod(TRI.H,TRI.B);mountG.scale.setScalar(MS);mountG.position.y=TRI.H+.012-MS*.997;}
+const MS=.93;      // CPC 11 mount + OTA drawing: axis is 532 mm above the base bottom (model was ~580 mm); a uniform scale keeps the tube round when it pitches, so widths come out ~6% narrow
+function setTripod(t){TRI.t=t;TRI.H=.784+(1.18-.784)*t;TRI.B=.45+(.64-.45)*t;buildTripod(TRI.H,TRI.B);mountG.scale.setScalar(MS);mountG.position.y=TRI.H+.53-MS*PIV_Y;}      // base bottom rests on the head; axis = head + 530 mm
 const mountPivY=()=>mountG.position.y+MS*PIV_Y;
 const triTxt=()=>`Head ${Math.round(TRI.H*1000)} mm · footprint Ø${Math.round(958+352*TRI.t)} mm · altitude axis ${Math.round((TRI.H+.53)*1000)} mm · top of tube ${Math.round((TRI.H+.689)*1000)} mm (tube level)`;
 setTripod(.55);
@@ -778,7 +778,7 @@ tube:{n:'Optical tube assembly (OTA)',
  h:'The optics fold the light path twice, so an f/10, 2800 mm system fits in a tube roughly half a metre long. The tube is also a thermal mass: until it matches the outside air, warm air currents inside blur the image.',
  i:'The corrector cell sits on the front, the rear cell closes the back, the dovetail and finder ride on top, and the fork arm holds the tube at its side pivot.',
  subs:[['shell','Tube shell','Aluminium body with a painted finish.'],['decal','Label decal','Model and aperture marking (generic on this model).']],
- spec:[['Aperture','279.4 mm (11 in)'],['Focal length','2800 mm'],['Focal ratio','f/10'],['Tube diameter','≈ 30 cm (model)'],['Length','≈ 55–60 cm'],['Resolution (Dawes)','≈ 0.42″'],['Mass (OTA)','≈ 12–13 kg, varies by version']],
+ spec:[['Aperture','279.4 mm (11 in)'],['Focal length','2800 mm'],['Focal ratio','f/10'],['Tube diameter','≈ 31 cm (312 mm in the drawing; Ø345 mm at the front ring)'],['Overall length','651 mm including rear-cell hardware (drawing)'],['Resolution (Dawes)','≈ 0.42″'],['Mass (OTA)','≈ 12–13 kg, varies by version']],
  m:['Keep covers on when stored.','Wipe the outside only. Never open the tube.','Allow 30–60 min to cool to outside temperature before serious viewing.'],
  t:[['Stars look boiled at high power','Tube currents or poor seeing. Let the scope cool longer or use a cooling fan.'],['Front glass fogs','Dew. Fit a dew shield or dew heater strap.']]},
 corrector:{n:'Schmidt corrector plate',
@@ -906,7 +906,7 @@ fork:{n:'Fork arms and drive housing',
  h:'A motor and gear train in an arm (and the drive housing in one-arm mode) pitch the tube about its balance point. A one-arm design needs a very stiff arm and pivot because the tube hangs from one side.',
  i:'Rotates in azimuth with the base; the tube hangs between the arms. Moving the fork in azimuth and tube in altitude points the scope anywhere above the horizon.',
  subs:[['base','Fork base','Disc joining the arm to the azimuth drive.'],['arm','Fork arm','Curved arm that carries the tube (right side, with handle).'],['arm2','Second arm','Left arm, shown in two-arm mode.'],['handle','Carry handle','Lift point for moving the mount.'],['pivot','Pivot adapter','Steel hub where the tube attaches to an arm.'],['altdrive','Altitude drive housing','One-arm mode: gear housing on the free side of the tube.'],['clutch','Clutch knobs','Release the drive for manual movement.']],
- spec:[['Altitude travel (sim)','0–90°'],['Mount type','Computerised alt-azimuth fork (1 or 2 arms shown)']],
+ spec:[['Altitude travel (sim)','0–90°'],['Mount type','Computerised alt-azimuth fork (1 or 2 arms shown)'],['Fork width','585 mm at the arms, 607 mm including the handle (CPC Deluxe 11 HD drawing)'],['Axis height','532 mm above the bottom of the base'],['Height, OTA level','690 mm base to top of tube'],['Height, OTA vertical','898 mm base to front of tube'],['Pivot position','366 mm behind the front of the OTA, 285 mm ahead of the rear end'],['Clearance','124 mm between the rear of the vertical OTA and the base']],
  m:['Release or engage clutches only as the manual describes.','Check pivot bolts for play.'],t:[['Slipping on slews','Clutch not tight; rebalance the tube.']]},
 base:{n:'Azimuth drive base',
  d:'A round housing between tripod head and fork containing the azimuth motor, gears and electronics.',
@@ -1736,6 +1736,8 @@ function uiTick(){
 computeSky();if(toDark())setTimeout(()=>toast('Sim clock moved to the next dark sky. Use “Real time” in the Sky tab to return.',4500),600);
 window.__c11={driver,OBJ,key,doGoto,setSpeed,cam,setArms,ALLM};   // small debug hook
 fillSelBox();hcDraw();
+// CPC 11 drawing: the altitude axis is 366 mm behind the front of the OTA and 285 mm in front of the rear end, so slide the whole OTA forward on its pivot.
+{const otaG=new THREE.Group();[...altG.children].filter(c=>c!==gDrv).forEach(c=>otaG.add(c));altG.add(otaG);otaG.position.z=-.0835;}
 tweenTo({tx:0,ty:1.45,tz:0,yaw:2.4,pitch:.22,dist:3.5});cam.tw=null;
 requestAnimationFrame(loop);
 })();
