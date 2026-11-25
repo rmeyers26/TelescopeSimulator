@@ -8,7 +8,12 @@
 let selObj=OBJ.find(o=>o.id==='Vega');
 const EPS=[{n:'Finder 9×50',fl:0,mag:9,fov:5,finder:true},...[[40,52],[25,52],[13,60],[9,82],[6,82]].map(([fl,af])=>({n:fl+' mm',fl,mag:2800/fl,fov:af/(2800/fl),af})),{n:'Planet cam',fl:1,mag:2800,fov:.03}];   // last entry: high-power planetary camera view
 let epI=2;
-function buildEpRows(){const h=EPS.map((e,i)=>`<button class="b sm${i===epI?' on':''}" data-ep="${i}">${e.n}</button>`).join('')+`<span class="sm mu" id="epinfo"></span>`;$('#epRow').innerHTML=h;$('#epRowMini').innerHTML=h;}
+// Eyepiece picker: every eyepiece is a little window that previews what you would see with it right now,
+// so you can compare before switching. Thumbnails are redrawn about once a second (see epThumbs).
+function buildEpRows(){const h='<div class="eptiles">'+EPS.map((e,i)=>`<button class="ept${i===epI?' on':''}" data-ep="${i}" title="${e.n}"><canvas width="96" height="96"></canvas><b>${e.finder?'Finder':e.fl===1?'Cam':e.n}</b><span>${Math.round(e.mag)}×</span></button>`).join('')+'</div>'+`<span class="sm mu" id="epinfo"></span>`;
+  $('#epRow').innerHTML=h;$('#epRowMini').innerHTML=h;setTimeout(()=>epThumbs(true),0);}
+function epThumbs(all){$$('.eptiles').forEach(t=>{if(!all&&!t.offsetParent)return;t.querySelectorAll('canvas').forEach((c,i)=>drawEyepiece(c,EPS[i],true));});}
+setInterval(()=>epThumbs(false),1000);
 function setEp(i){epI=i;buildEpRows();epInfo();}
 function epInfo(){const e=EPS[epI],f=(MOON.diam||.52)/e.fov,ms=f<1?` · Moon fills ${Math.round(f*100)}% of the view`:` · only ${Math.round(100/f)}% of the Moon fits`,t=(e.finder?`${e.mag}× · field ${e.fov}° (simulated finder)`:`${Math.round(e.mag)}× · field ${e.fov.toFixed(2)}° · exit pupil ${(e.fl/10).toFixed(1)} mm`)+ms;$$('#epinfo').forEach(x=>x.textContent=t);}
 ['#epRow','#epRowMini'].forEach(s=>$(s).addEventListener('click',e=>{const b=e.target.closest('[data-ep]');if(b)setEp(+b.dataset.ep);}));
@@ -165,10 +170,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('.skyrow [data-se
   if(b.dataset.see)SKY.see=+b.dataset.see;if(b.dataset.lp)SKY.lp=+b.dataset.lp;if(b.dataset.real!==undefined)SKY.real=b.dataset.real==='1';
   try{localStorage.setItem('c11sky',JSON.stringify(SKY));}catch(_){}renderSkyRows();});
 const seeTmp=document.createElement('canvas');renderSkyRows();
-function drawEyepiece(c,epo){
+function drawEyepiece(c,epo,bare){                 // bare = small thumbnail: skip the text captions
   const x=c.getContext('2d'),W=c.width,H=c.height,R=Math.min(W,H)/2-4,cx=W/2,cy=H/2,ep=epo||EPS[epI],fov=ep.fov,ppd=R/(fov/2),st=driver.state(),T=st.truth,jd=jdNow();
   x.fillStyle='#000';x.fillRect(0,0,W,H);x.beginPath();x.arc(cx,cy,R,0,7);x.clip();
-  if(CAP.on&&!ep.eye&&!ep.finder){x.strokeStyle='#222';x.lineWidth=4;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();x.fillStyle='rgba(255,255,255,.55)';x.font=`${Math.max(12,W/24)}px system-ui`;x.textAlign='center';x.fillText('Lens cap is on – nothing to see!',cx,cy-6);x.font=`${Math.max(10,W/34)}px system-ui`;x.fillText('Take it off (Lens cap button or Setup step)',cx,cy+16);return;}
+  if(CAP.on&&!ep.eye&&!ep.finder){x.strokeStyle='#222';x.lineWidth=4;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();if(!bare){x.fillStyle='rgba(255,255,255,.55)';x.font=`${Math.max(12,W/24)}px system-ui`;x.textAlign='center';x.fillText('Lens cap is on – nothing to see!',cx,cy-6);x.font=`${Math.max(10,W/34)}px system-ui`;x.fillText('Take it off (Lens cap button or Setup step)',cx,cy+16);}return;}
   x.save();x.beginPath();x.arc(cx,cy,R,0,7);x.clip();
   const lp=lpLoss(),glow=lp/3;                   // 0 dark site .. 1 city
   const day=clamp((SUN.alt+6)/12,0,1),bgN=`rgb(${4+30*glow|0},${6+24*glow|0},${12+20*glow|0})`;x.fillStyle=day>0?`rgba(${40+90*day|0},${60+110*day|0},${90+140*day|0},${.25+.7*day})`:bgN;x.fillRect(0,0,W,H);
@@ -184,13 +189,13 @@ function drawEyepiece(c,epo){
         if(Math.hypot(px-cx,py-cy)>R+4)continue;x.fillStyle=`rgba(255,255,255,${Math.min(1,.35+.1*(15-m))})`;x.beginPath();x.arc(px,py,r*.6,0,7);x.fill();}}}
   x.globalCompositeOperation='lighter';
   for(const o of OBJ){
-    if(o.alt<-1)continue;const [px,py]=proj(o.az,o.alt);if(Math.hypot(px-cx,py-cy)>R+120)continue;
+    if(o.alt<-1)continue;const [px,py]=proj(o.az,o.alt);if(!isFinite(px+py))continue;if(Math.hypot(px-cx,py-cy)>R+120)continue;
     if(o.type==='star'){const r=sd(o.mag)*1.3;if(!r)continue;const g=x.createRadialGradient(px,py,0,px,py,r*2.6);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.beginPath();x.arc(px,py,r*2.6,0,7);x.fill();}
     else if(o.type==='dso'&&!ep.finder){x.globalAlpha=clamp(1-lp*.24,.2,1);drawDSO(x,o,px,py,ppd,R);x.globalAlpha=1;}
   }
   x.globalCompositeOperation='source-over';
   for(const o of OBJ){
-    if(o.alt<-1||ep.finder&&o.type==='dso')continue;const [px,py]=proj(o.az,o.alt);if(Math.hypot(px-cx,py-cy)>R+300)continue;
+    if(o.alt<-1||ep.finder&&o.type==='dso')continue;const [px,py]=proj(o.az,o.alt);if(!isFinite(px+py))continue;if(Math.hypot(px-cx,py-cy)>R+300)continue;
     if(o.type==='planet'){const r=Math.max(1.6,o.diam*ppd/2);
       if(o.id==='saturn'){drawSaturn(x,o,px,py,r,proj,jd,ppd);continue;}
       const g=x.createRadialGradient(px-r*.3,py-r*.3,0,px,py,r);const col={mercury:'180,170,160',venus:'250,240,215',mars:'230,120,80',jupiter:'235,210,170',saturn:'230,210,160'}[o.id];g.addColorStop(0,`rgba(${col},1)`);g.addColorStop(1,`rgba(${col},.55)`);x.fillStyle=g;x.beginPath();x.arc(px,py,r,0,7);x.fill();
@@ -206,10 +211,11 @@ function drawEyepiece(c,epo){
     offs.forEach(([ox,oy],i)=>{x.globalAlpha=1/(i+1);x.drawImage(seeTmp,ox+jx,oy+jy);});x.globalAlpha=1;}
   x.restore();
   x.strokeStyle='#222';x.lineWidth=4;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();
+  if(!bare){
   x.fillStyle='rgba(255,255,255,.6)';x.font=`${Math.max(11,W/28)}px system-ui`;x.textAlign='left';x.fillText(`${ep.n} · ${Math.round(ep.mag)}× · ${ep.fov.toFixed(2)}°`,10,H-10);
   {const f=MOON.diam/ep.fov;x.textAlign='right';x.fillStyle='rgba(255,236,190,.75)';x.fillText(f<1?`🌙 Moon fits ${(1/f).toFixed(1)}× across`:`🌙 Moon is ${f.toFixed(1)}× wider than view`,W-10,H-10);}
   if(day>.3){x.textAlign='right';x.fillText('daylight sky',W-10,H-10);}
-  if(SKY.real&&!ep.eye){x.textAlign='left';x.fillStyle='rgba(255,255,255,.55)';x.fillText(ep.finder?'↻ upside-down (finder)':'🪞 mirrored (diagonal)',10,22);}
+  if(SKY.real&&!ep.eye){x.textAlign='left';x.fillStyle='rgba(255,255,255,.55)';x.fillText(ep.finder?'↻ upside-down (finder)':'🪞 mirrored (diagonal)',10,22);}}
 }
 function drawDSO(x,o,px,py,ppd,Rv){
   const r=Math.max(2,o.size/60*ppd/2),b=clamp(1.15-(o.mag-3)*.09,.12,.9);x.save();x.translate(px,py);x.rotate(-(o.rot||0)*D2R);x.scale(1,o.ar||1);

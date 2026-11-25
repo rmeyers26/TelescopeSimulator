@@ -123,7 +123,7 @@ function enter(){
     if(driver.state().slewing){hcMsg('Wait','Still slewing');return;}
     const o=HC.al.cur;driver.addAlignPoint(o);(HC.al.used=HC.al.used||[]).push(o);const need=HC.al.need||2;
     if(HC.al.n<need){HC.al.first=o;hcMsg(`Object ${HC.al.n} accepted`,`Now pick star ${HC.al.n+1}`,1.6);pickAlignStar(HC.al.n+1);}
-    else{unwind();driver.setTracking('sidereal');hcMsg('Align success',HC.al.planet?'Solar System Align':need+'-star alignment');toast('Alignment complete – tracking is on. GoTo should now land objects in the field.');}
+    else{unwind();driver.setTracking('sidereal');ALIGN_DONE_AT=performance.now();hcMsg('Align success',HC.al.planet?'Solar System Align':need+'-star alignment');toast('Alignment complete – tracking is on. GoTo should now land objects in the field.');}
   }
 }
 function undo(){                                                  // BACK: erase a digit, else go up one level; at the top it stops the motors

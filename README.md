@@ -32,6 +32,7 @@ js/13-learn.js        guided lessons (Follow the light, Find the North Star, …
 js/14-link.js         Link tab (future real-hardware connection)
 js/15-main.js         start-up and the animation loop
 js/16-align-wizard.js  Easy alignment wizard: 1-planet (Solar System) and 3-star alignment + tracking demo
+js/17-ux.js            Quick tour, My First Night story, sky compass, swipe tabs, press-and-hold part labels
 ```
 
 ### Why plain scripts instead of ES modules?
