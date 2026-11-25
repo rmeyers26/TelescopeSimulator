@@ -495,13 +495,24 @@ function buildHC(sx,zc){
   M('handset',g,new THREE.BoxGeometry(.03,.2,.07),'rubber',{p:[sx*.297,yc,zc],sub:'body'});               // handset body
   M('handset',g,new THREE.PlaneGeometry(.064,.195).rotateY(sx*Math.PI/2),'hcb',{p:[sx*.3125,yc,zc],sub:'body'}).userData.keypad=true;   // keypad face
   // coiled cord: path from handset bottom, around the arm's front edge, to the panel; a helix is wound around that path
-  const P=[V3(sx*.3,yc-.12,zc),V3(sx*.31,.12,zc+.02),V3(sx*.3,.085,.12),V3(sx*.29,.075,.21),V3(sx*.2,.082,.235),V3(sx*.12,.08,.222),V3(sx*.072,.074,.19)];
-  const path=new THREE.CatmullRomCurve3(P),N=1800,pts=[];let nrm=V3(1,0,0);
+  // The cord ends in a plug seated in the HAND CONTROL port on the front plate (port position computed from the plate layout)
+  const fa=Math.atan2(.0465,.052),fn=V3(0,Math.cos(fa),Math.sin(fa)),fup=V3(0,Math.sin(fa),-Math.cos(fa));       // plate normal and up-slope direction
+  const port=V3(0,.0533,.174).addScaledVector(fn,.0115).add(V3((86/512-.5)*.162,0,0)).addScaledVector(fup,(.5-(124/220))*.07);
+  const Q=sx<0?V3(-.112,.078,.222):V3(-.02,.09,.245);                                                                  // where the coils end, at the drum's front edge
+  const P=sx<0?[V3(-.3,yc-.12,zc),V3(-.31,.12,zc+.02),V3(-.3,.085,.12),V3(-.28,.077,.205),V3(-.19,.08,.235),Q]
+              :[V3(.3,yc-.12,zc),V3(.31,.12,zc+.02),V3(.3,.085,.12),V3(.29,.075,.21),V3(.2,.082,.24),V3(.08,.088,.25),Q];
+  const path=new THREE.CatmullRomCurve3(P),N=1500,pts=[];let nrm=V3(1,0,0);
   for(let i=0;i<=N;i++){const t=i/N,c=path.getPoint(t),T=path.getTangent(t);
-    nrm=nrm.clone().sub(T.clone().multiplyScalar(nrm.dot(T))).normalize();const bn=T.clone().cross(nrm),a=t*Math.PI*2*50;
-    pts.push(c.clone().addScaledVector(nrm,Math.cos(a)*.009).addScaledVector(bn,Math.sin(a)*.009));}
+    nrm=nrm.clone().sub(T.clone().multiplyScalar(nrm.dot(T))).normalize();const bn=T.clone().cross(nrm),a=t*Math.PI*2*44,rr=.009*Math.min(1,(1-t)*8);   // coils taper to a straight lead
+    pts.push(c.clone().addScaledVector(nrm,Math.cos(a)*rr).addScaledVector(bn,Math.sin(a)*rr));}
   M('handset',g,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),N,.0032,6),'rubber',{sub:'cable',noShadow:true});
-  M('handset',g,new THREE.CylinderGeometry(.009,.009,.035,12).rotateZ(Math.PI/2),'rubber',{p:[sx*.15,.084,.232],sub:'cable'});   // ferrite bead
+  // straight lead from the coils into the port, with a ferrite bead, a strain relief and the plug body
+  const lead=new THREE.CatmullRomCurve3([Q,Q.clone().lerp(port,.5).add(V3(0,-.004,.025)),port.clone().addScaledVector(fn,.035),port.clone().addScaledVector(fn,.02)]);
+  M('handset',g,new THREE.TubeGeometry(lead,40,.0032,6),'rubber',{sub:'cable',noShadow:true});
+  {const fb=M('handset',g,new THREE.CylinderGeometry(.0075,.0075,.026,12),'rubber',{sub:'cable'});fb.position.copy(lead.getPoint(.3));fb.quaternion.setFromUnitVectors(V3(0,1,0),lead.getTangent(.3));}   // ferrite bead
+  const qn=new THREE.Quaternion().setFromUnitVectors(V3(0,1,0),fn);
+  {const sr=M('handset',g,new THREE.CylinderGeometry(.0035,.005,.014,10),'rubber',{sub:'cable'});sr.position.copy(port).addScaledVector(fn,.024);sr.quaternion.copy(qn);}
+  {const pl=M('handset',g,new THREE.BoxGeometry(.014,.016,.009),'grip',{sub:'cable'});pl.position.copy(port).addScaledVector(fn,.009);pl.quaternion.copy(qn);}   // RJ-style plug seated in the port
   return g;
 }
 const gHCL=buildHC(-1,0),gHCR=buildHC(1,.02);gHCR.visible=false;
