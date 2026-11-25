@@ -401,18 +401,18 @@ const groundTex=canvasTex(512,512,(x,w,h)=>{x.fillStyle='#2a251d';x.fillRect(0,0
 groundTex.wrapS=groundTex.wrapT=THREE.RepeatWrapping;groundTex.repeat.set(40,40);
 const labelTex=canvasTex(128,512,(x,w,h)=>{x.clearRect(0,0,w,h);x.translate(w/2,h/2);x.rotate(-Math.PI/2);x.fillStyle='#10131a';x.font='bold 34px system-ui';x.textAlign='center';x.fillText('C11',-130,-6);x.font='15px system-ui';x.fillText('SCHMIDT-CASSEGRAIN  279 mm  f/10',40,-12);x.fillRect(-190,6,400,2);x.fillText('SIMULATED MODEL – NOT AN OFFICIAL RENDERING',20,26);},true);
 
-const panelTex=canvasTex(360,200,(x,w,h)=>{                      // silver port panel on the fork base
-  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#c9ccd2');g.addColorStop(1,'#a4a7ae');x.fillStyle=g;x.fillRect(0,0,w,h);
-  x.strokeStyle='#7d8088';x.lineWidth=4;x.strokeRect(2,2,w-4,h-4);
-  x.fillStyle='#2b2e34';x.font='bold 15px system-ui';x.textAlign='center';x.fillText('COMPUTERIZED FORK MOUNT',w/2,30);
-  x.fillRect(40,44,280,2);
-  // layout from the CPC Deluxe HD manual, Figure 3: A hand control, B auxiliary x2, C PC interface, D auto guider, E on/off, F 12 V input
-  const port=(px,py,L,name,kind)=>{x.fillStyle='#2b2e34';x.font='bold 13px system-ui';x.textAlign='center';x.fillText(L,px,py-8);x.font='9px system-ui';x.fillText(name,px,py+40);
-    x.fillStyle='#08090b';if(kind==='round'){x.beginPath();x.arc(px,py+14,11,0,7);x.fill();x.fillStyle='#3a3d44';x.beginPath();x.arc(px,py+14,4,0,7);x.fill();}
-    else if(kind==='sw'){x.fillRect(px-14,py+2,28,24);x.fillStyle='#c9ccd2';x.fillRect(px-10,py+5,20,9);x.fillStyle='#e2631b';x.fillRect(px-10,py+14,20,9);}
-    else{x.fillRect(px-17,py+2,34,24);x.fillStyle='#3a3d44';x.fillRect(px-12,py+7,24,5);}};
-  port(60,76,'A','HAND CONTROL');port(140,76,'B','AUX');port(220,76,'B','AUX');port(300,76,'C','PC INTERFACE');
-  port(60,140,'D','AUTO GUIDER');port(140,140,'E','ON / OFF','sw');port(220,140,'F','12V INPUT','round');
+const panelTex=canvasTex(480,180,(x,w,h)=>{                      // silver port panel on the front of the drive base (CPC Deluxe HD layout)
+  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#d4d6db');g.addColorStop(1,'#aeb1b8');x.fillStyle=g;x.fillRect(0,0,w,h);
+  x.strokeStyle='#15161a';x.lineWidth=6;x.strokeRect(3,3,w-6,h-6);
+  // series name: "CPC DELUXE" with the red HD box, "SERIES" underneath
+  x.fillStyle='#24262b';x.textAlign='left';x.font='bold 30px system-ui';x.fillText('CPC DELUXE',150,52);
+  const tw=x.measureText('CPC DELUXE').width;x.fillStyle='#c4161c';x.fillRect(158+tw,24,44,34);x.fillStyle='#fff';x.font='bold 26px system-ui';x.fillText('HD',163+tw,51);
+  x.fillStyle='#24262b';x.font='bold 13px system-ui';x.textAlign='center';x.fillText('S E R I E S',182+tw,74);
+  // ports (A hand control, B aux x2, C PC, D auto guider); letters match the manual's Figure 3
+  [[67,'HAND CTRL','A'],[125,'AUX','B'],[173,'AUX','B'],[336,'PC','C'],[398,'AUTO GUIDE','D']].forEach(([px,t,L])=>{
+    x.fillStyle='#24262b';x.font='bold 10px system-ui';x.textAlign='center';x.fillText(t,px,112);
+    x.fillStyle='#0a0b0d';x.fillRect(px-17,118,34,26);x.fillStyle='#33363d';x.fillRect(px-11,122,22,6);
+    x.fillStyle='#55585f';x.font='bold 11px system-ui';x.fillText(L,px,162);});
 },true);
 const badgeTex=canvasTex(256,256,(x,w,h)=>{x.fillStyle='#1b1c20';x.fillRect(0,0,w,h);x.fillStyle='#3b3d44';x.beginPath();x.arc(128,128,118,0,7);x.fill();x.fillStyle='#16171b';x.beginPath();x.arc(128,128,104,0,7);x.fill();
   x.strokeStyle='#ff8a3d';x.lineWidth=22;x.lineCap='round';x.beginPath();x.arc(98,128,52,-2.2,2.2);x.stroke();x.strokeStyle='#d8dae0';x.lineWidth=14;x.beginPath();x.arc(150,128,36,-2.4,2.4);x.stroke();},true);
@@ -610,17 +610,24 @@ M('dovetail',gDove,new THREE.BoxGeometry(.055,.015,.36),'silver',{p:[0,.158,-.03
 // fork (rotates with azimuth). Two arms (CPC style) or one arm + drive housing; switch with the toolbar buttons
 const rotZ=g=>{g.rotateZ(Math.PI/2);return g;};
 const gFB=G('fork',azG,V3(0,0.1,0));
-M('fork',gFB,lathe([[.0,.047],[.05,.047],[.078,.052],[.085,.069],[.092,.069],[.16,.066],[.2,.055],[.214,.035],[.216,.012],[.21,0]],72),'blackg',{p:[0,0,0],sub:'base'});   // domed drum with a centre well
-M('fork',gFB,ribbed(.043,.022,3,.3),'blackg',{p:[0,.058,0],sub:'base'});                      // three-lobed azimuth cap
-(function(){const g=new THREE.CircleGeometry(.05,40);g.rotateX(-Math.PI/2);g.scale(1,1,.4);M('fork',gFB,g,'badge',{p:[0,.0685,-.135],sub:'base',noShadow:true});})();    // logo badge
-for(let k=0;k<8;k++){const a=(k+.5)*Math.PI/4;M('fork',gFB,cylZ(.004,.004,.003,10).rotateX(Math.PI/2),'silver',{p:[Math.sin(a)*.185,.0585,Math.cos(a)*.185],sub:'base'});}   // top screws
+M('fork',gFB,lathe([[.0,.03],[.055,.03],[.07,.05],[.078,.066],[.092,.07],[.14,.067],[.166,.058],[.178,.04],[.181,.014],[.176,0]],72),'blackg',{p:[0,0,0],sub:'base'});   // domed drum with a deep centre well
+M('fork',gFB,new THREE.TorusGeometry(.082,.006,10,64),'gloss',{p:[0,.069,0],r:[Math.PI/2,0,0],sub:'base'});             // glossy ring round the well
+M('fork',gFB,ribbed(.045,.03,3,.25),'blackg',{p:[0,.045,0],sub:'base'});                         // three-lobed azimuth cap in the well
+M('fork',gFB,new THREE.BoxGeometry(.075,.014,.018),'gloss',{p:[0,.066,0],sub:'base'});                // T-handle across the cap
+M('fork',gFB,new THREE.CylinderGeometry(.012,.012,.012,16),'gloss',{p:[0,.07,0],sub:'base'});
+(function(){const g=new THREE.CircleGeometry(.05,40);g.rotateX(-Math.PI/2);g.scale(1.2,1,.38);M('fork',gFB,g,'badge',{p:[0,.0695,-.122],sub:'base',noShadow:true});})();    // logo badge
+for(let k=0;k<8;k++){const a=(k+.5)*Math.PI/4;M('fork',gFB,cylZ(.004,.004,.003,10).rotateX(Math.PI/2),'silver',{p:[Math.sin(a)*.152,.0665,Math.cos(a)*.152],sub:'base'});}   // top screws
 const ARM_GEO=(function(){const sh=new THREE.Shape();                          // arm outline in (z,y); extruded across x
   sh.moveTo(-.17,.06);sh.lineTo(.17,.06);sh.lineTo(.17,.14);sh.quadraticCurveTo(.12,.16,.115,.26);sh.lineTo(.115,.5);sh.absarc(0,.5,.115,0,Math.PI,false);
   sh.lineTo(-.115,.26);sh.quadraticCurveTo(-.12,.16,-.17,.14);sh.lineTo(-.17,.06);
-  const g=new THREE.ExtrudeGeometry(sh,{depth:.06,bevelEnabled:true,bevelSize:.008,bevelThickness:.008,bevelSegments:3,curveSegments:24});g.translate(0,0,-.03);g.rotateY(-Math.PI/2);return g;})();
+  const g=new THREE.ExtrudeGeometry(sh,{depth:.056,bevelEnabled:true,bevelSize:.014,bevelThickness:.014,bevelSegments:5,curveSegments:28});g.translate(0,0,-.028);g.rotateY(-Math.PI/2);return g;})();
+const FOOT_GEO=(function(){const sh=new THREE.Shape();             // fillet in (x,y) where an arm grows out of the drum; extruded along z
+  sh.moveTo(.15,.066);sh.quadraticCurveTo(.2,.075,.205,.2);sh.lineTo(.215,.2);sh.lineTo(.215,.03);sh.quadraticCurveTo(.2,.004,.17,.004);sh.lineTo(.15,.004);sh.closePath();
+  const g=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:true,bevelSize:.022,bevelThickness:.03,bevelSegments:6,curveSegments:20});g.translate(0,0,-.1);return g;})();
 function buildArm(sx){
   const g=G('fork',azG,V3(sx*0.35,0.12,0)),sub=sx>0?'arm':'arm2';
   M('fork',g,ARM_GEO,'blackg',{p:[sx*.2325,0,0],sub});                          // curved arm with rounded edges
+  {const f=M('fork',g,FOOT_GEO,'blackg',{p:[0,0,0],sub});if(sx<0)f.scale.x=-1;}     // flared foot blending the arm into the drum
   M('fork',g,rotZ(new THREE.CylinderGeometry(.078,.078,.012,40)),'rubber',{p:[sx*.2765,.5,0],sub});     // clutch wheel with three spokes
   [0,1,2].forEach(k=>M('fork',g,new THREE.BoxGeometry(.016,.15,.02),'blackg',{p:[sx*.2845,.5,0],r:[k*Math.PI/3,0,0],sub}));
   M('fork',g,rotZ(new THREE.CylinderGeometry(.075,.075,.045,36)),'steel',{p:[sx*.1725,.5,0],sub:'pivot'});
@@ -637,9 +644,9 @@ let armCount=2;
 function setArms(n){armCount=n;gArmL.visible=n===2;gDrv.visible=n===1;gHCL.visible=n===2;gHCR.visible=n===1;$('#bA1').classList.toggle('on',n===1);$('#bA2').classList.toggle('on',n===2);if(sel.part==='fork')showInfo();}
 // base + tripod (static)
 const gBase=G('base',mountG,V3(0,-0.22,0));
-M('base',gBase,lathe([[.17,0],[.215,.01],[.232,.03],[.232,.06],[.222,.078],[.212,.08],[.17,.08]],72),'blackg',{p:[0,.98,0],sub:'drive'});   // flared drive base
-M('base',gBase,new THREE.TorusGeometry(.2125,.003,8,72),'grip',{p:[0,1.0615,0],r:[Math.PI/2,0,0],sub:'ring'});     // seam under the rotating drum
-for(let k=0;k<3;k++){const a=k*2.094+1.05;M('base',gBase,cylZ(.006,.006,.004,10).rotateX(Math.PI/2),'silver',{p:[Math.sin(a)*.222,1.0,Math.cos(a)*.222],sub:'drive'});}
+M('base',gBase,lathe([[.12,0],[.165,.006],[.184,.022],[.19,.044],[.188,.062],[.182,.074],[.174,.08],[.12,.08]],72),'blackg',{p:[0,.98,0],sub:'drive'});   // flared drive base (dia about 345 mm in the drawing)
+M('base',gBase,new THREE.TorusGeometry(.176,.003,8,72),'grip',{p:[0,1.0615,0],r:[Math.PI/2,0,0],sub:'ring'});     // seam under the rotating drum
+for(let k=0;k<3;k++){const a=k*2.094+1.05;M('base',gBase,new THREE.CylinderGeometry(.007,.007,.005,6).rotateZ(Math.PI/2).rotateY(a+Math.PI/2),'silver',{p:[Math.sin(a)*.19,1.025,Math.cos(a)*.19],sub:'drive'});}
 const gTri=G('tripod',root,V3(0,-0.5,0));
 // rounded triangle outline (Minkowski sum of a triangle and a circle); corners point at the legs. Shape y maps to world -z after rotateX(-90deg)
 const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
@@ -688,12 +695,17 @@ setTripod(.55);
 
 // port panel on the front of the fork base, where the handset cord plugs in (like the real CPC base)
 const gPort=G('base',azG,V3(0,0,.3));
-(function(){const sh=new THREE.Shape();sh.moveTo(.08,.058);sh.lineTo(.21,.058);sh.lineTo(.21,.072);sh.lineTo(.11,.11);sh.lineTo(.08,.11);sh.closePath();   // (z,y) profile of the raised port housing
-  const g=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:true,bevelSize:.003,bevelThickness:.003,bevelSegments:2});g.translate(0,0,-.1);g.rotateY(-Math.PI/2);
+(function(){const sh=new THREE.Shape();                 // (z,y) profile: raised plateau on the drum that slopes down over the front edge
+  sh.moveTo(.06,.064);sh.lineTo(.14,.074);sh.quadraticCurveTo(.15,.0755,.16,.072);sh.lineTo(.192,.058);sh.quadraticCurveTo(.2,.054,.199,.04);sh.lineTo(.193,.008);sh.lineTo(.06,.008);sh.closePath();
+  const g=new THREE.ExtrudeGeometry(sh,{depth:.23,bevelEnabled:true,bevelSize:.006,bevelThickness:.006,bevelSegments:3,curveSegments:12});g.translate(0,0,-.115);g.rotateY(-Math.PI/2);
   M('base',gPort,g,'blackg',{p:[0,0,0],sub:'drive'});
-  const rx=-1.18,cz=.16,cy=.091,nz=.38,ny=.92;                                                   // panel centre on the slope and its outward normal
-  M('base',gPort,new THREE.PlaneGeometry(.18,.1),'panel',{p:[0,cy+ny*.0035,cz+nz*.0035],r:[rx,0,0],sub:'drive',noShadow:true});
-  [-.06,-.02,.02,.06].forEach(x=>M('base',gPort,new THREE.BoxGeometry(.016,.006,.012),'black',{p:[x,cy-.0095+ny*.005,cz+.023+nz*.005],r:[rx,0,0],sub:'drive'}));   // port sockets
+  const rx=-Math.PI/2+.36,cz=.17,cy=.0672,nz=.352,ny=.936,sz=.936,sy=-.352;                 // panel centre, outward normal (n) and down-slope direction (s)
+  M('base',gPort,new THREE.PlaneGeometry(.2,.075),'panel',{p:[0,cy+ny*.0068,cz+nz*.0068],r:[rx,0,0],sub:'drive',noShadow:true});
+  [-.072,-.048,-.028,.04,.066].forEach(x=>M('base',gPort,new THREE.BoxGeometry(.014,.004,.011),'black',{p:[x,cy+sy*.015+ny*.0078,cz+sz*.015+nz*.0078],r:[rx,0,0],sub:'drive'}));   // sockets A B B C D
+  // on/off switch (E) and 12 V input jack (F) on the right shoulder of the drum
+  M('base',gPort,new THREE.CylinderGeometry(.014,.014,.006,24),'black',{p:[.142,.058,.098],r:[-.5,0,-.35],sub:'drive'});
+  M('base',gPort,new THREE.CylinderGeometry(.009,.009,.008,20),'orange',{p:[.142,.06,.098],r:[-.5,0,-.35],sub:'drive'});
+  M('base',gPort,new THREE.CylinderGeometry(.007,.007,.006,16),'silver',{p:[.162,.05,.06],r:[-.3,0,-.6],sub:'drive'});
 })();
 // hand controller: sits in a cradle bolted to the outer face of an arm, with a coiled cord down to the port panel.
 // buildHC(sx) makes the left-arm version (sx=-1, two-arm mode) or the right-arm version (sx=+1, one-arm mode)
@@ -705,13 +717,13 @@ function buildHC(sx,zc){
   M('handset',g,new THREE.BoxGeometry(.03,.2,.07),'rubber',{p:[sx*.297,yc,zc],sub:'body'});               // handset body
   M('handset',g,new THREE.PlaneGeometry(.064,.195).rotateY(sx*Math.PI/2),'hcb',{p:[sx*.3125,yc,zc],sub:'body'}).userData.keypad=true;   // keypad face
   // coiled cord: path from handset bottom, around the arm's front edge, to the panel; a helix is wound around that path
-  const P=[V3(sx*.3,yc-.12,zc),V3(sx*.31,.12,zc+.02),V3(sx*.3,.085,.12),V3(sx*.29,.075,.2),V3(sx*.2,.08,.225),V3(sx*.11,.09,.215),V3(sx*.06,.093,.19)];
+  const P=[V3(sx*.3,yc-.12,zc),V3(sx*.31,.12,zc+.02),V3(sx*.3,.085,.12),V3(sx*.29,.075,.21),V3(sx*.2,.082,.235),V3(sx*.12,.08,.222),V3(sx*.072,.074,.19)];
   const path=new THREE.CatmullRomCurve3(P),N=1800,pts=[];let nrm=V3(1,0,0);
   for(let i=0;i<=N;i++){const t=i/N,c=path.getPoint(t),T=path.getTangent(t);
     nrm=nrm.clone().sub(T.clone().multiplyScalar(nrm.dot(T))).normalize();const bn=T.clone().cross(nrm),a=t*Math.PI*2*50;
     pts.push(c.clone().addScaledVector(nrm,Math.cos(a)*.009).addScaledVector(bn,Math.sin(a)*.009));}
   M('handset',g,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),N,.0032,6),'rubber',{sub:'cable',noShadow:true});
-  M('handset',g,new THREE.CylinderGeometry(.009,.009,.035,12).rotateZ(Math.PI/2),'rubber',{p:[sx*.13,.088,.212],sub:'cable'});   // ferrite bead
+  M('handset',g,new THREE.CylinderGeometry(.009,.009,.035,12).rotateZ(Math.PI/2),'rubber',{p:[sx*.15,.084,.232],sub:'cable'});   // ferrite bead
   return g;
 }
 const gHCL=buildHC(-1,0),gHCR=buildHC(1,.02);gHCR.visible=false;
@@ -1150,7 +1162,7 @@ const SETUP=[
  {t:'Mount the finderscope',b:'First slide the quick-release mounting bracket off the finder bracket. Fit it over the two holes at the top left of the rear cell (looking from behind the tube) and fasten the two screws. Put the O-ring on the finder, push the eyepiece end through the front ring (no adjustment screws) and then the rear ring, pressing the spring-loaded pivot screw down if needed. Seat the O-ring in the front ring and hand-tighten the two adjustment screws.',w:'If you remove the bracket, never thread the screws all the way back into the rear cell: they can reach and damage the primary mirror.',part:'finder',reveal:['finder'],view:'rear'},
  {t:'Align the finderscope (daytime)',b:'Pick a distant object more than a mile away so there is no parallax. Centre it in the main telescope, lock both clutches, then turn the top and right adjustment screws until the finder cross-hairs sit on the object. The finder image is upside-down and reversed, so each screw can move the view in an unexpected direction at first.',part:'finder',sub:'bracket'},
  {t:'Attach the hand control',b:'The hand control ships in a separate box. Plug its coiled cable (phone-style connector) into the hand control port (A) on the drive base until it clicks. Slide the hand control holder into its slot on the fork arm so the controller can rest there.',part:'handset',reveal:['handset'],view:'left'},
- {t:'Power the telescope',b:'Plug the 12 V car-battery adapter (or optional power supply) into the 12 V input jack (F) on the drive base, then switch the On/Off switch (E) on. Other ports on the panel: B auxiliary ports, C PC interface, D auto-guider.',part:'base',view:'left'},
+ {t:'Power the telescope',b:'Plug the 12 V car-battery adapter (or optional power supply) into the 12 V input jack (F) on the drive base, then switch the On/Off switch (E) on. The panel on the front of the base carries A hand control, B auxiliary (×2), C PC and D auto-guider ports; the round switch and the jack are on the right shoulder.',part:'base',view:'left'},
  {t:'Align from the hand control',b:'With the scope powered and level, use ALIGN on the controller (or StarSense AutoAlign if fitted) and follow the prompts. Tracking starts after alignment. Never slew while someone is looking through the eyepiece.',part:'handset',tab:'ctrl'}
 ];
 const SU={on:false,i:0};
@@ -1171,7 +1183,7 @@ function renderSetup(){
   <ol>${SETUP.map((x,i)=>`<li data-su="go${i}" class="${i===SU.i?'on':i<SU.i?'dn':''}">${x.t}</li>`).join('')}</ol>
   <div class="row"><button class="b" data-su="all">Finish – show all parts</button><button class="b" data-su="lab">Toggle labels</button></div>
   <h3>Labels key (manual Figure 3)</h3><div class="kk">1 Control panel · 2 Mirror lock knobs · 3 Star diagonal · 4 Hand control · 5 Eyepiece · 6 Finderscope · 7 Finder quick-release bracket · 8 Optical tube · 9 Schmidt corrector lens · 10 Altitude locking knob · 11 Carrying handle · 12 Azimuth locking knob · 13 Tripod · 14 Accessory tray / centre support bracket · 15 Focus knob</div>
-  <div class="kk" style="columns:1;margin-top:6px">Panel ports: A hand control · B auxiliary (×2) · C PC interface · D auto-guider · E on/off switch · F 12 V input jack</div>`;
+  <div class="kk" style="columns:1;margin-top:6px">Panel ports: A hand control · B auxiliary (×2) · C PC interface · D auto-guider. On the right shoulder: E on/off switch · F 12 V input jack</div>`;
 }
 $('#p-setup').addEventListener('input',e=>{if(e.target.id==='triS'){setTripod(e.target.value/100);$('#triT').textContent=triTxt();}});
 $('#p-setup').addEventListener('click',e=>{const b=e.target.closest('[data-su]');if(!b)return;const k=b.dataset.su;
