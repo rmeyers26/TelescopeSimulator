@@ -401,18 +401,17 @@ const groundTex=canvasTex(512,512,(x,w,h)=>{x.fillStyle='#2a251d';x.fillRect(0,0
 groundTex.wrapS=groundTex.wrapT=THREE.RepeatWrapping;groundTex.repeat.set(40,40);
 const labelTex=canvasTex(128,512,(x,w,h)=>{x.clearRect(0,0,w,h);x.translate(w/2,h/2);x.rotate(-Math.PI/2);x.fillStyle='#10131a';x.font='bold 34px system-ui';x.textAlign='center';x.fillText('C11',-130,-6);x.font='15px system-ui';x.fillText('SCHMIDT-CASSEGRAIN  279 mm  f/10',40,-12);x.fillRect(-190,6,400,2);x.fillText('SIMULATED MODEL – NOT AN OFFICIAL RENDERING',20,26);},true);
 
-const panelTex=canvasTex(480,180,(x,w,h)=>{                      // silver port panel on the front of the drive base (CPC Deluxe HD layout)
-  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#d4d6db');g.addColorStop(1,'#aeb1b8');x.fillStyle=g;x.fillRect(0,0,w,h);
-  x.strokeStyle='#15161a';x.lineWidth=6;x.strokeRect(3,3,w-6,h-6);
-  // series name: "CPC DELUXE" with the red HD box, "SERIES" underneath
-  x.fillStyle='#24262b';x.textAlign='left';x.font='bold 30px system-ui';x.fillText('CPC DELUXE',150,52);
-  const tw=x.measureText('CPC DELUXE').width;x.fillStyle='#c4161c';x.fillRect(158+tw,24,44,34);x.fillStyle='#fff';x.font='bold 26px system-ui';x.fillText('HD',163+tw,51);
-  x.fillStyle='#24262b';x.font='bold 13px system-ui';x.textAlign='center';x.fillText('S E R I E S',182+tw,74);
-  // ports (A hand control, B aux x2, C PC, D auto guider); letters match the manual's Figure 3
-  [[67,'HAND CTRL','A'],[125,'AUX','B'],[173,'AUX','B'],[336,'PC','C'],[398,'AUTO GUIDE','D']].forEach(([px,t,L])=>{
-    x.fillStyle='#24262b';x.font='bold 10px system-ui';x.textAlign='center';x.fillText(t,px,112);
-    x.fillStyle='#0a0b0d';x.fillRect(px-17,118,34,26);x.fillStyle='#33363d';x.fillRect(px-11,122,22,6);
-    x.fillStyle='#55585f';x.font='bold 11px system-ui';x.fillText(L,px,162);});
+const panelTex=canvasTex(512,220,(x,w,h)=>{                      // arched silver port plate on the front of the drive base (CPC Deluxe HD layout); outside the arch is transparent
+  x.clearRect(0,0,w,h);
+  const arch=()=>{x.beginPath();x.moveTo(8,h-8);x.lineTo(8,120);x.bezierCurveTo(8,40,150,14,256,14);x.bezierCurveTo(362,14,504,40,504,120);x.lineTo(504,h-8);x.closePath();};
+  arch();const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#d9dbe0');g.addColorStop(1,'#b3b6bd');x.fillStyle=g;x.fill();x.strokeStyle='#6f727a';x.lineWidth=3;x.stroke();
+  [[40,112],[472,112],[136,46],[376,46],[40,196],[472,196],[196,200],[316,200]].forEach(([sx,sy])=>{x.fillStyle='#8c9097';x.beginPath();x.arc(sx,sy,6,0,7);x.fill();x.fillStyle='#e6e8ec';x.beginPath();x.arc(sx-1.5,sy-1.5,2.5,0,7);x.fill();});
+  x.fillStyle='#2b2d33';x.textAlign='center';x.font='600 36px system-ui';x.fillText('CPC DELUXE',230,82);
+  x.fillStyle='#fff';x.fillRect(338,52,58,38);x.strokeStyle='#c4161c';x.lineWidth=4;x.strokeRect(340,54,54,34);x.fillStyle='#c4161c';x.font='bold 30px system-ui';x.fillText('HD',367,82);
+  x.fillStyle='#2b2d33';x.font='600 17px system-ui';x.fillText('SERIES',350,108);x.fillRect(160,94,150,2);
+  const port=(px,py,t)=>{x.fillStyle='#2b2d33';x.font='bold 11px system-ui';t.split('\n').forEach((l,i,A)=>x.fillText(l,px,py-10-(A.length-1-i)*12));
+    x.fillStyle='#08090b';x.fillRect(px-20,py,40,32);x.fillStyle='#2e3137';x.fillRect(px-13,py+5,26,8);};
+  port(86,108,'HAND\nCONTROL');port(156,150,'AUX 1');port(222,150,'AUX 2');port(356,150,'P C');port(426,108,'AUTO\nGUIDER');
 },true);
 const badgeTex=canvasTex(256,256,(x,w,h)=>{x.fillStyle='#1b1c20';x.fillRect(0,0,w,h);x.fillStyle='#3b3d44';x.beginPath();x.arc(128,128,118,0,7);x.fill();x.fillStyle='#16171b';x.beginPath();x.arc(128,128,104,0,7);x.fill();
   x.strokeStyle='#ff8a3d';x.lineWidth=22;x.lineCap='round';x.beginPath();x.arc(98,128,52,-2.2,2.2);x.stroke();x.strokeStyle='#d8dae0';x.lineWidth=14;x.beginPath();x.arc(150,128,36,-2.4,2.4);x.stroke();},true);
@@ -447,7 +446,7 @@ const BASE={
   hcb:new THREE.MeshStandardMaterial({map:hcTex,roughness:.6,metalness:.1}),
   grip:new THREE.MeshStandardMaterial({color:0x060607,roughness:.6,metalness:0,envMapIntensity:.2,side:THREE.DoubleSide}),
   gloss:new THREE.MeshStandardMaterial({color:0x08090b,metalness:.35,roughness:.1,envMapIntensity:1.4,side:THREE.DoubleSide}),
-  panel:new THREE.MeshStandardMaterial({map:panelTex,roughness:.35,metalness:.5}),
+  panel:new THREE.MeshStandardMaterial({map:panelTex,roughness:.35,metalness:.5,alphaTest:.5,side:THREE.DoubleSide}),
   badge:new THREE.MeshStandardMaterial({map:badgeTex,roughness:.45,metalness:.2}),
   bubble:new THREE.MeshStandardMaterial({color:0xc4e04a,roughness:.15,metalness:0,emissive:0x2a3a05})
 };
@@ -652,7 +651,17 @@ M('fork',gFB,new THREE.TorusGeometry(.082,.006,10,64),'gloss',{p:[0,.069,0],r:[M
 M('fork',gFB,ribbed(.045,.03,3,.25),'blackg',{p:[0,.045,0],sub:'base'});                         // three-lobed azimuth cap in the well
 M('fork',gFB,new THREE.BoxGeometry(.075,.014,.018),'gloss',{p:[0,.066,0],sub:'base'});                // T-handle across the cap
 M('fork',gFB,new THREE.CylinderGeometry(.012,.012,.012,16),'gloss',{p:[0,.07,0],sub:'base'});
-(function(){const g=new THREE.CircleGeometry(.05,40);g.rotateX(-Math.PI/2);g.scale(1.2,1,.38);M('fork',gFB,g,'badge',{p:[0,.0695,-.122],sub:'base',noShadow:true});})();    // logo badge
+(function(){                                             // silver Celestron pill at the back of the drum
+  const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');
+  const pill=(w,h,col)=>{x.fillStyle=col;x.beginPath();x.moveTo(256-w/2+h/2,64-h/2);x.lineTo(256+w/2-h/2,64-h/2);x.arc(256+w/2-h/2,64,h/2,-Math.PI/2,Math.PI/2);x.lineTo(256-w/2+h/2,64+h/2);x.arc(256-w/2+h/2,64,h/2,Math.PI/2,Math.PI*1.5);x.fill();};
+  pill(500,116,'#6c6f75');pill(484,100,'#d3d5da');x.fillStyle='#d2441a';x.beginPath();x.arc(80,64,30,0,7);x.fill();x.fillStyle='#d3d5da';x.beginPath();x.arc(90,60,20,0,7);x.fill();
+  x.fillStyle='#2a2c31';x.font='italic 900 62px system-ui';x.textAlign='left';x.textBaseline='middle';x.fillText('CELESTRON',122,67,350);
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=8;
+  const g=new THREE.PlaneGeometry(.09,.0225);g.rotateX(-Math.PI/2);g.rotateY(Math.PI);
+  const m=M('fork',gFB,g,'badge',{p:[0,.0705,-.122],sub:'base',noShadow:true});m.material.map=t;m.material.transparent=true;m.material.alphaTest=.3;m.material.needsUpdate=true;
+  [-1,1].forEach(sd=>[-.35,.35].forEach(da=>{const a=Math.PI/2*sd+da,r=.125;   // moulding seams running out toward the arms
+    const sm=M('fork',gFB,new THREE.BoxGeometry(.06,.002,.0025),'grip',{p:[Math.sin(a)*r,.0695,Math.cos(a)*r],sub:'base',noShadow:true});sm.rotation.y=a-Math.PI/2;}));
+})();
 for(let k=0;k<8;k++){const a=(k+.5)*Math.PI/4;M('fork',gFB,cylZ(.004,.004,.003,10).rotateX(Math.PI/2),'silver',{p:[Math.sin(a)*.152,.0665,Math.cos(a)*.152],sub:'base'});}   // top screws
 const ARM_GEO=(function(){const sh=new THREE.Shape();                          // arm outline in (z,y); extruded across x
   sh.moveTo(-.17,.06);sh.lineTo(.17,.06);sh.lineTo(.17,.14);sh.quadraticCurveTo(.12,.16,.115,.26);sh.lineTo(.115,.5);sh.absarc(0,.5,.115,0,Math.PI,false);
@@ -703,8 +712,9 @@ function setArms(n){armCount=n;gArmL.visible=n===2;gDrv.visible=n===1;gHCL.visib
 // base + tripod (static)
 // The flared drive base is moulded with the azimuth housing and both arms: one piece that turns on the tripod head.
 const gBase=G('fork',azG,FORK_EXP);gBase.position.y=-1.06;EXPL[EXPL.length-1].base.y=-1.06;
-M('fork',gBase,lathe([[.12,0],[.165,.006],[.184,.022],[.19,.044],[.188,.062],[.182,.074],[.174,.08],[.12,.08]],72),'blackg',{p:[0,.98,0],sub:'base'});   // flared drive base (dia about 345 mm in the drawing)
-for(let k=0;k<3;k++){const a=k*2.094+1.05;M('fork',gBase,new THREE.CylinderGeometry(.007,.007,.005,6).rotateZ(Math.PI/2).rotateY(a+Math.PI/2),'silver',{p:[Math.sin(a)*.19,1.025,Math.cos(a)*.19],sub:'base'});}
+M('fork',gBase,lathe([[.12,0],[.16,.004],[.178,.014],[.186,.03],[.187,.05],[.185,.068],[.18,.078],[.176,.08],[.12,.08]],72),'blackg',{p:[0,.98,0],sub:'base'});
+[1.005,1.04].forEach(y=>M('fork',gBase,new THREE.TorusGeometry(y<1.01?.18:.1865,.0018,6,72),'grip',{p:[0,y,0],r:[Math.PI/2,0,0],sub:'base'}));   // moulded grooves round the band   // flared drive base (dia about 345 mm in the drawing)
+for(let k=0;k<3;k++){const a=k*2.094+1.05;M('fork',gBase,new THREE.CylinderGeometry(.009,.009,.007,6),'silver',{p:[Math.sin(a)*.13,.974,Math.cos(a)*.13],sub:'base'});}   // mounting bolts seen under the base
 const gTri=G('tripod',root,V3(0,-0.5,0));
 // rounded triangle outline (Minkowski sum of a triangle and a circle); corners point at the legs. Shape y maps to world -z after rotateX(-90deg)
 const roundTri=(Rv,rc)=>{const sh=new THREE.Shape(),pts=[];
@@ -753,17 +763,17 @@ setTripod(.55);
 
 // port panel on the front of the fork base, where the handset cord plugs in (like the real CPC base)
 const gPort=G('fork',azG,FORK_EXP);
-(function(){const sh=new THREE.Shape();                 // (z,y) profile: raised plateau on the drum that slopes down over the front edge
-  sh.moveTo(.06,.064);sh.lineTo(.14,.074);sh.quadraticCurveTo(.15,.0755,.16,.072);sh.lineTo(.192,.058);sh.quadraticCurveTo(.2,.054,.199,.04);sh.lineTo(.193,.008);sh.lineTo(.06,.008);sh.closePath();
-  const g=new THREE.ExtrudeGeometry(sh,{depth:.23,bevelEnabled:true,bevelSize:.006,bevelThickness:.006,bevelSegments:3,curveSegments:12});g.translate(0,0,-.115);g.rotateY(-Math.PI/2);
+(function(){const sh=new THREE.Shape();                 // (z,y) profile: low hump on the drum that drops to a 45-degree front facet carrying the plate
+  sh.moveTo(.05,.066);sh.quadraticCurveTo(.1,.078,.14,.078);sh.lineTo(.148,.0765);sh.lineTo(.2,.03);sh.quadraticCurveTo(.206,.022,.203,.012);sh.lineTo(.196,0);sh.lineTo(.05,0);sh.closePath();
+  const g=new THREE.ExtrudeGeometry(sh,{depth:.2,bevelEnabled:true,bevelSize:.01,bevelThickness:.012,bevelSegments:5,curveSegments:14});g.translate(0,0,-.1);g.rotateY(-Math.PI/2);
   M('fork',gPort,g,'blackg',{p:[0,0,0],sub:'base'});
-  const rx=-Math.PI/2+.36,cz=.17,cy=.0672,nz=.352,ny=.936,sz=.936,sy=-.352;                 // panel centre, outward normal (n) and down-slope direction (s)
-  M('fork',gPort,new THREE.PlaneGeometry(.2,.075),'panel',{p:[0,cy+ny*.0068,cz+nz*.0068],r:[rx,0,0],sub:'base',noShadow:true});
-  [-.072,-.048,-.028,.04,.066].forEach(x=>M('fork',gPort,new THREE.BoxGeometry(.014,.004,.011),'black',{p:[x,cy+sy*.015+ny*.0078,cz+sz*.015+nz*.0078],r:[rx,0,0],sub:'base'}));   // sockets A B B C D
-  // on/off switch (E) and 12 V input jack (F) on the right shoulder of the drum
-  M('fork',gPort,new THREE.CylinderGeometry(.014,.014,.006,24),'black',{p:[.142,.058,.098],r:[-.5,0,-.35],sub:'base'});
-  M('fork',gPort,new THREE.CylinderGeometry(.009,.009,.008,20),'orange',{p:[.142,.06,.098],r:[-.5,0,-.35],sub:'base'});
-  M('fork',gPort,new THREE.CylinderGeometry(.007,.007,.006,16),'silver',{p:[.162,.05,.06],r:[-.3,0,-.6],sub:'base'});
+  const ang=Math.atan2(.0465,.052),rx=-(Math.PI/2-ang),nz=Math.sin(ang),ny=Math.cos(ang),cz=.174,cy=.0533,o=.0115;   // facet centre and outward normal
+  M('fork',gPort,new THREE.PlaneGeometry(.17,.073),'panel',{p:[0,cy+ny*o,cz+nz*o],r:[rx,0,0],sub:'base',noShadow:true});
+  // red-lit power switch on the right shoulder, silver 12 V post on the left shoulder
+  M('fork',gPort,new THREE.CylinderGeometry(.014,.015,.008,28),'black',{p:[.135,.062,.115],r:[-.45,0,-.4],sub:'base'});
+  const sw=M('fork',gPort,new THREE.CylinderGeometry(.009,.009,.006,24),'black',{p:[.136,.065,.117],r:[-.45,0,-.4],sub:'base'});sw.material.color.set(0x5a0a08);sw.material.emissive=new THREE.Color(0xc4161c);sw.material.emissiveIntensity=.6;
+  M('fork',gPort,new THREE.CylinderGeometry(.008,.008,.004,6),'silver',{p:[-.14,.06,.11],r:[-.45,0,.4],sub:'base'});
+  M('fork',gPort,new THREE.CylinderGeometry(.004,.004,.008,12),'silver',{p:[-.14,.064,.112],r:[-.45,0,.4],sub:'base'});
 })();
 // hand controller: sits in a cradle bolted to the outer face of an arm, with a coiled cord down to the port panel.
 // buildHC(sx) makes the left-arm version (sx=-1, two-arm mode) or the right-arm version (sx=+1, one-arm mode)
