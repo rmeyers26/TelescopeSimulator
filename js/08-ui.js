@@ -85,3 +85,20 @@ function setSheet(px,snap){const S=sheetSizes(),H=innerHeight;px=clamp(px,S.peek
   g.addEventListener('pointerup',end);g.addEventListener('pointercancel',end);})();
 // on a phone, tapping a tab while the sheet is hidden opens it again
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b&&matchMedia('(max-width:780px)').matches&&$('#dock').classList.contains('min'))setSheet(sheetSizes().mid,true);});
+
+/* ---- haptic (vibration) feedback on phones ----
+   Android/Chrome: Vibration API. iPhone Safari has no vibration API, but toggling a hidden <input type="checkbox" switch>
+   gives a light system "tick" on iOS 18+, so we use that as a fallback (it simply does nothing on older iPhones). */
+const HAP={on:true,last:0};try{HAP.on=localStorage.getItem('c11hap')!=='0';}catch(_){}
+const HAP_PAT={tap:8,key:12,hold:18,power:[25,60,25],arrive:[20,40,20],success:[30,50,30,50,70],warn:[90,50,90]};
+function haptic(kind){
+  if(!HAP.on)return;const now=performance.now();if(kind==='tap'&&now-HAP.last<60)return;HAP.last=now;
+  const p=HAP_PAT[kind]||HAP_PAT.tap;
+  if(navigator.vibrate){try{navigator.vibrate(p);}catch(_){}return;}
+  const sw=document.querySelector('#hapSw');if(!sw)return;const n=Array.isArray(p)?Math.ceil(p.length/2):1;   // iOS: one tick per pulse
+  for(let i=0;i<n;i++)setTimeout(()=>sw.click(),i*90);}
+function setHap(v){HAP.on=v;try{localStorage.setItem('c11hap',v?'1':'0');}catch(_){}$('#bHap').classList.toggle('on',v);if(v)haptic('key');}
+$('#bHap').classList.toggle('on',HAP.on);$('#bHap').onclick=()=>setHap(!HAP.on);
+// a light tick for every button press (touch screens only); specific actions add stronger patterns
+document.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;const b=e.target.closest('button,.pl,[data-kt],[data-w],[data-scope],[data-ms],[data-ep]');if(!b)return;
+  haptic(b.closest('.hc,.kgrid')?'key':'tap');},{passive:true});

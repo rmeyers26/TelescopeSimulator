@@ -30,7 +30,7 @@ function infoLines(o){                                            // OBJECT INFO
   if(o.cat==='double')L.push('Double star');if(o.cat==='var')L.push('Variable star');if(o.sao)L.push('SAO '+o.sao);
   L.push('Offset '+offsetTxt(o));
   return L.filter(Boolean);}
-function setPower(v){if(POWER.on===v)return;POWER.on=v;
+function setPower(v){if(POWER.on===v)return;POWER.on=v;haptic('power');
   if(v){POWER.boot=performance.now();hcMsg('CPC Ready','NexStar+ starting',2.4);toast('Telescope ON – the red light is lit. (A real CPC needs re-aligning after power-off; the sim keeps the alignment.)',4500);driver.setTracking('sidereal');driver._relock();}
   else{driver.stop();HD.az.length=0;HD.alt.length=0;unwind();driver.setTracking('off');toast('Telescope OFF – motors and hand controller have no power.',3500);}
   $$('.pwrb').forEach(b=>{b.classList.toggle('on',v);b.textContent=v?'⏻ Power: ON':'⏻ Power: OFF';});}
@@ -72,7 +72,7 @@ function solarList(){const l=[MOON,...OBJ.filter(o=>o.type==='planet'&&o.alt>0),
 
 /* ---- safety moments: friendly pop-ups before the Sun, before the first move, and for the bright Moon ---- */
 const SAFE={moveTip:false,moon:false};
-function safetyAsk(icon,title,body,ok,cancel){return new Promise(res=>{const el=$('#safety');
+function safetyAsk(icon,title,body,ok,cancel){haptic('warn');return new Promise(res=>{const el=$('#safety');
   el.innerHTML=`<div><div class="big">${icon}</div><h2>${title}</h2><p>${body}</p><div class="row" style="justify-content:center">${cancel?`<button class="b" id="sfNo">${cancel}</button>`:''}<button class="b on" id="sfOk">${ok}</button></div></div>`;
   el.style.display='flex';$('#sfOk').onclick=()=>{el.style.display='none';res(true);};if(cancel)$('#sfNo').onclick=()=>{el.style.display='none';res(false);};});}
 function safetyMoveTip(){if(SAFE.moveTip||!edu.on)return;SAFE.moveTip=true;

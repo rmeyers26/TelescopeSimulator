@@ -42,7 +42,7 @@ function loop(now){
   {const az=driver.state().truth.az;if(follow.on&&follow.prev!=null&&cam.mode==='orbit'&&!cam.tw){const d=wrap180(az-follow.prev);if(Math.abs(d)>.02&&Math.abs(d)<30)cam.yaw+=d*D2R;}follow.prev=az;}
   if(frame%12===0){hc3Lcd();$('#bStar').classList.toggle('on',!hidden.has('starsense'));}
   if(!dewS.e)dewS.e=EXPL.find(e=>e.part==='dew');dewS.t+=(dewS.to-dewS.t)*Math.min(1,dt*3.2);if(Math.abs(dewS.to-dewS.t)<.0005)dewS.t=dewS.to;dewS.e.base.z=-.9*dewS.t;
-  stepPhoton(dt);if(frame%3===0)updPowerCable();{const st=driver.state();updPowerStation(dt,st.slewing||st.moving,st.tracking!=='off');}grainShift(t);
+  stepPhoton(dt);if(frame%3===0)updPowerCable();{const st=driver.state();updPowerStation(dt,st.slewing||st.moving,st.tracking!=='off');if(loop.sl&&!st.slewing)haptic('arrive');loop.sl=st.slewing;}   // buzz when a GoTo arrivesgrainShift(t);
   applyCamera();if(labState.on||frame%30===0)updLabels();
   renderer.render(scene,camera);
   if(frame===12&&!homeState.thumb){try{homeState.thumb=renderer.domElement.toDataURL('image/jpeg',.82);const im=document.querySelector('#home .scard .im');if(im){im.style.backgroundImage=`url(${homeState.thumb})`;im.textContent='';}}catch(_){}}
