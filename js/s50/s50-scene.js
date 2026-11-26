@@ -42,6 +42,9 @@ function initScene(canvas){
   const rim=new THREE.DirectionalLight(0x7a96ff,0.9);rim.position.set(-3,SCOPE_H+1,-2.5);scene.add(rim);
 
   /* ---- ground + compass letters ---- */
+  const grassTex=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d'),r=mulberry32(11);g.fillStyle='#2b3a22';g.fillRect(0,0,256,256);
+    for(let i=0;i<5200;i++){const x=r()*256,y=r()*256,l=3+r()*7;g.strokeStyle=`rgba(${30+r()*40|0},${60+r()*60|0},${20+r()*30|0},${.35+r()*.4})`;g.lineWidth=.8+r();g.beginPath();g.moveTo(x,y);g.lineTo(x+(r()-.5)*3,y-l);g.stroke();}
+    const t=tex(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(12,12);return t;})();       // a procedural patch of grass
   const ground=new THREE.Mesh(new THREE.CircleGeometry(9,64),new THREE.MeshStandardMaterial({color:sRGB(0x1b211d),roughness:1,envMapIntensity:.2}));
   ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
   function label(txt,col){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle=col;g.font='bold 96px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,64,70);
@@ -75,6 +78,7 @@ function initScene(canvas){
   const lensGlass2=new THREE.MeshPhysicalMaterial({color:sRGB(0x2b1140),roughness:.03,metalness:.3,clearcoat:1,clearcoatRoughness:0,envMapIntensity:2.4});                     // second coating: purple
   const carbon=new THREE.MeshStandardMaterial({color:sRGB(0x1a1b1e),roughness:.5,metalness:.35,envMapIntensity:.8});
   const legMetal=new THREE.MeshStandardMaterial({color:sRGB(0x2c2f35),roughness:.32,metalness:.85,envMapIntensity:1.1});
+  const silver=new THREE.MeshStandardMaterial({color:sRGB(0xb9bdc5),roughness:.22,metalness:.95,envMapIntensity:1.4});          // the bright aluminium ring round the lens window
 
   /* ---- helpers: rounded boxes (the real body has no sharp corners) ---- */
   function rrShape(w,h,r){                                           // a rounded rectangle; long straight edges are cut into short pieces,
@@ -94,15 +98,17 @@ function initScene(canvas){
     const t=tex(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
   const tmat=new THREE.MeshStandardMaterial({color:sRGB(0x2a2e35),roughness:.5,metalness:.7,envMapIntensity:.8});
   const woodMat=new THREE.MeshStandardMaterial({map:woodTex(),roughness:.5,metalness:0,envMapIntensity:.45});
-  const top=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.03,64),[woodMat,woodMat,tmat]);top.position.y=TABLE_TOP-.015;scene.add(top);
-  const col=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,TABLE_TOP-.04,24),tmat);col.position.y=(TABLE_TOP-.04)/2;scene.add(col);
-  const tbase=new THREE.Mesh(new THREE.CylinderGeometry(.26,.28,.03,40),tmat);tbase.position.y=.015;scene.add(tbase);
+  const tableG=new THREE.Group();scene.add(tableG);                                   // the little table (hidden when the telescope stands on the grass)
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.03,64),[woodMat,woodMat,tmat]);top.position.y=TABLE_TOP-.015;tableG.add(top);
+  const col=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,TABLE_TOP-.04,24),tmat);col.position.y=(TABLE_TOP-.04)/2;tableG.add(col);
+  const tbase=new THREE.Mesh(new THREE.CylinderGeometry(.26,.28,.03,40),tmat);tbase.position.y=.015;tableG.add(tbase);
   function leg(a,b,r,mat){const d=new THREE.Vector3().subVectors(b,a),m=new THREE.Mesh(new THREE.CylinderGeometry(r*.9,r,d.length(),20),mat);
     m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return m;}
   // soft "contact shadow" blobs: a dark fuzzy dot under each foot, so it looks pressed onto the wood
   const blobTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(0,0,0,.65)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
-  function blob(x,z,r){const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,TABLE_TOP+.0015,z);m.userData.noShadow=true;scene.add(m);}
-  const tripod=new THREE.Group();scene.add(tripod);
+  function blob(x,z,r){const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,TABLE_TOP+.0015,z);m.userData.noShadow=true;rig.add(m);}
+  const rig=new THREE.Group();scene.add(rig);                                          // rig = tripod + telescope: moved down onto the grass, or up onto the table
+  const tripod=new THREE.Group();rig.add(tripod);
   for(let i=0;i<3;i++){
     const ang=i*2.0944+Math.PI/2,top3=new THREE.Vector3(0,SCOPE_H-.02,0),foot=new THREE.Vector3(Math.cos(ang)*.33,TABLE_TOP+.008,Math.sin(ang)*.33),mid=top3.clone().lerp(foot,.55);
     tripod.add(leg(top3,mid,.017,carbon));tripod.add(leg(mid,foot,.012,legMetal));         // upper (carbon) and lower (telescopic) leg sections
@@ -120,7 +126,7 @@ function initScene(canvas){
      The whole L-shaped BODY (flat foot + thin battery column at the rear) turns on the tripod (azimuth). The big optical HEAD is a rounded
      slab, round at its rear end, that pivots (altitude) in front of the column; its lens window is on the flat top end.
      Zero position: the head stands upright, lens up. */
-  const tiltG=new THREE.Group();tiltG.position.y=SCOPE_H;scene.add(tiltG);                  // tiltG: whole unit, wobbles until it has levelled itself
+  const tiltG=new THREE.Group();tiltG.position.y=SCOPE_H;rig.add(tiltG);                  // tiltG: whole unit, wobbles until it has levelled itself
   const eqG=new THREE.Group();tiltG.add(eqG);                                               // eqG: tips the whole unit onto the EQ wedge's angle
   const wedge=new THREE.Group();eqG.add(wedge);wedge.visible=false;                         // the EQ wedge: a plate under the telescope on an adjustable strut
   {const plate=new THREE.Mesh(new THREE.BoxGeometry(.16,.012,.19),legMetal);plate.position.y=-.006;wedge.add(plate);
@@ -128,14 +134,15 @@ function initScene(canvas){
   const joint=new THREE.Mesh(new THREE.CylinderGeometry(.031,.031,.008,36),dark);joint.position.y=.001;eqG.add(joint);       // the turning joint at the tripod thread (Ø49 mm)
   const azG=new THREE.Group();eqG.add(azG);                                                 // azG: everything that turns left/right
   const foot=rrBox(.13,.05,.1425,.02,.007,white);foot.position.y=.029;azG.add(foot);       // the flat foot
-  // logos in soft grey: "☆ Seestar" on the left of the foot, "S50 Pro" (red S) on the right
-  function logo(draw,w,x,rotY){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.textBaseline='middle';draw(g);
-    const lg=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:tex(c),transparent:true,depthWrite:false,opacity:.9}));lg.rotation.y=rotY;lg.position.set(x,.029,-.012);lg.userData.noShadow=true;azG.add(lg);}
-  logo(g=>{g.fillStyle='#7d838c';g.font='300 70px system-ui,sans-serif';g.fillText('☆',92,64);g.fillText('Seestar',150,66);},.075,-.0656,-Math.PI/2);
-  logo(g=>{g.font='300 66px system-ui,sans-serif';g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);},.075,.0656,Math.PI/2);
+  // logos in soft grey: "☆ Seestar" on the left side of the foot, "S50 Pro" (red S) on the FRONT of the foot's step (as on the real unit)
+  function logo(draw,w,x,z,rotY){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.textBaseline='middle';draw(g);
+    const lg=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:tex(c),transparent:true,depthWrite:false,opacity:.9}));lg.rotation.y=rotY;lg.position.set(x,.029,z);lg.userData.noShadow=true;azG.add(lg);}
+  logo(g=>{g.fillStyle='#7d838c';g.font='300 70px system-ui,sans-serif';g.fillText('☆',92,64);g.fillText('Seestar',150,66);},.075,-.0656,-.012,-Math.PI/2);
+  logo(g=>{g.font='300 66px system-ui,sans-serif';g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);},.056,.022,-.0717,Math.PI);
   // the battery column at the rear, 68 mm deep, with a big rounded top
   const column=rrBox(.13,.207,.068,.05,.008,white);column.position.set(0,.1575,.0372);azG.add(column);
-  const panel=rrBox(.098,.17,.004,.045,.001,blackGlass);panel.position.set(0,.156,.0725);azG.add(panel);   // black glass face (looks backwards, +Z)
+  const panel=rrBox(.098,.17,.004,.045,.001,blackGlass);panel.position.set(0,.156,.0700);azG.add(panel);   // black glass face, set slightly into the white frame (looks backwards, +Z)
+  for(const sx of[-1,1]){const seam=new THREE.Mesh(new THREE.BoxGeometry(.0009,.17,.0009),new THREE.MeshStandardMaterial({color:sRGB(0x6b7078),roughness:.8}));seam.position.set(sx*.0652,.15,.05);azG.add(seam);}   // the thin vertical gap between the rear shell and the body
   const bezel=new THREE.Mesh(new THREE.TorusGeometry(.0138,.0022,10,40),new THREE.MeshStandardMaterial({color:0x4a4d55,roughness:.3,metalness:.8}));bezel.position.set(0,.096,.0745);azG.add(bezel);
   const btnMat=new THREE.MeshBasicMaterial({color:0xf2f2f2});                                               // the power button: a white disc…
   const btn=new THREE.Mesh(new THREE.CylinderGeometry(.0098,.0098,.004,28).rotateX(Math.PI/2),btnMat);btn.position.set(0,.096,.0745);azG.add(btn);
@@ -148,8 +155,8 @@ function initScene(canvas){
   // USB-C charging cable (visible while a charger is plugged in)
   const cable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-.066,.089,.04),new THREE.Vector3(-.1,.07,.06),new THREE.Vector3(-.15,-.05,.1),new THREE.Vector3(-.2,-.2,.16),new THREE.Vector3(-.3,-.226,.2)]),24,.0032,8),new THREE.MeshStandardMaterial({color:0xf2f2f2,roughness:.6}));
   azG.add(cable);cable.visible=false;
-  // a pedestal that carries the head's pivot
-  const pedestal=rrBox(.092,.062,.05,.018,.005,white);pedestal.position.set(0,.085,-.0215);azG.add(pedestal);
+  // a thin neck that carries the head's pivot; in front of it, above the foot's step, is an open pocket (as on the real unit)
+  const pedestal=rrBox(.104,.066,.034,.02,.006,white);pedestal.position.set(0,.087,-.0138);azG.add(pedestal);
   // altG = the optical HEAD: a rounded slab ≈ 150 mm long, 75 mm thick, 120 mm wide, round at the rear, lens on the flat top end.
   // Its pivot (the centre of the round rear end) is 136 mm above the foot, 37 mm in front of the column. alt 0° = lens forward, 90° = lens up.
   const altG=new THREE.Group();altG.position.set(0,.136,-.0343);azG.add(altG);
@@ -159,25 +166,28 @@ function initScene(canvas){
     sh.moveTo(x0+rr,y0);ln(x1-rf,y0);sh.absarc(x1-rf,y0+rf,rf,-Math.PI/2,0);ln(x1,y1-rf);sh.absarc(x1-rf,y1-rf,rf,0,Math.PI/2);ln(x0+rr,y1);sh.absarc(x0+rr,0,rr,Math.PI/2,1.5*Math.PI);return sh;}
   {const L=.15,T=.075,W=.12,bev=.006,depth=W-2*bev,g=new THREE.ExtrudeGeometry(headShape(L-2*bev,T-2*bev,.014-bev,T/2-bev),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
    g.translate(0,0,-depth/2);g.rotateY(Math.PI/2);const head=new THREE.Mesh(g,white);head.position.z=-(L/2-T/2);altG.add(head);}   // shape x → −z (toward the lens), extrusion → x (the width)
-  const zL=-.1129;                                                                               // z of the lens end face
-  const win=rrBox(.094,.054,.004,.025,.001,blackGlass);win.position.set(0,0,zL-.0014);altG.add(win);                                              // dark window on the end face
-  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.038,.04,.006,48).rotateX(Math.PI/2),dark);collar.position.set(0,.006,zL-.0012);altG.add(collar);
-  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.0375,.003,14,56),dark);bezelL.position.set(0,.006,zL-.0045);altG.add(bezelL);
-  const lens=new THREE.Mesh(new THREE.SphereGeometry(.0355,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.28),lensGlass);lens.position.set(0,.006,zL-.0035);altG.add(lens);          // domed coated glass (green…)
-  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.021,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass2);lens2.position.set(0,.006,zL-.0046);altG.add(lens2);        // …and purple
-  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0115,.0019,10,32),dark);bezel2.position.set(.005,-.0215,zL-.0042);altG.add(bezel2);                                                      // the small wide-angle camera
-  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0105,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.35),lensGlass);cam2.position.set(.005,-.0215,zL-.0036);altG.add(cam2);
+  const zL=-.1129;                                                                               // z of the head's lens end face
+  const nose=rrBox(.108,.067,.014,.026,.005,white);nose.position.set(0,0,zL-.006);altG.add(nose);   // a slightly smaller "nose" that carries the lens window
+  const zW=zL-.0125;                                                                             // z of the nose's front face
+  const frame=rrBox(.094,.062,.004,.028,.001,silver);frame.position.set(0,0,zW-.0004);altG.add(frame);          // silver ring round the window
+  const win=rrBox(.086,.054,.004,.024,.001,blackGlass);win.position.set(0,0,zW-.0018);altG.add(win);            // dark window
+  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.038,.04,.006,48).rotateX(Math.PI/2),dark);collar.position.set(0,.006,zW-.0035);altG.add(collar);
+  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.0375,.003,14,56),silver);bezelL.position.set(0,.006,zW-.0066);altG.add(bezelL);
+  const lens=new THREE.Mesh(new THREE.SphereGeometry(.0355,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.28),lensGlass);lens.position.set(0,.006,zW-.0056);altG.add(lens);          // domed coated glass (green…)
+  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.021,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass2);lens2.position.set(0,.006,zW-.0067);altG.add(lens2);        // …and purple
+  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0115,.0019,10,32),silver);bezel2.position.set(.005,-.0215,zW-.0064);altG.add(bezel2);                                                    // the small wide-angle camera
+  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0105,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.35),lensGlass);cam2.position.set(.005,-.0215,zW-.0058);altG.add(cam2);
   const dewMat=new THREE.MeshBasicMaterial({color:0xdde8f0,transparent:true,opacity:0,depthWrite:false});     // fog on the lens (dew)
-  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.05,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,.002,zL-.0135);altG.add(dewDisc);
+  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.05,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,.002,zW-.0105);altG.add(dewDisc);
   const solar=new THREE.Group();altG.add(solar);solar.visible=false;                                          // magnetic solar filter, stuck on the front of the head
-  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(0,.004,zL-.0095);solar.add(cap);
-   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.05,.002,8,40),legMetal);rimR.position.set(0,.004,zL-.0125);solar.add(rimR);}
+  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(0,.004,zW-.0075);solar.add(cap);
+   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.05,.002,8,40),legMetal);rimR.position.set(0,.004,zW-.0105);solar.add(rimR);}
 
   function shadowify(root){root.traverse(m=>{if(m.isMesh&&!m.material.isMeshBasicMaterial&&!m.userData.noShadow){m.castShadow=true;m.receiveShadow=true;}});}
   shadowify(tiltG);shadowify(tripod);top.castShadow=true;top.receiveShadow=true;col.castShadow=true;
 
   /* ---- aim line: shows where the telescope points ---- */
-  const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-.125),new THREE.Vector3(0,0,-30)]),new THREE.LineBasicMaterial({color:0x4da3ff,transparent:true,opacity:.7}));
+  const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-.14),new THREE.Vector3(0,0,-30)]),new THREE.LineBasicMaterial({color:0x4da3ff,transparent:true,opacity:.7}));
   beam.visible=false;altG.add(beam);
 
   /* ---- orbit camera (drag to rotate, wheel / pinch to zoom) ---- */
@@ -231,7 +241,7 @@ function initScene(canvas){
   function updateEye(){
     if(viewMode==='eye'){
       altG.updateWorldMatrix(true,false);                                                   // camera sits at the lens, looking where the lens looks
-      altG.getWorldQuaternion(q);tmp.set(0,0,-.13).applyMatrix4(altG.matrixWorld);
+      altG.getWorldQuaternion(q);tmp.set(0,0,-.145).applyMatrix4(altG.matrixWorld);
       camera.position.copy(tmp);camera.quaternion.copy(q);
       camera.rotateY(SC.eye.yaw);camera.rotateX(SC.eye.pitch);
       camera.fov=34;
@@ -254,6 +264,12 @@ function initScene(canvas){
       if(m.isMeshPhysicalMaterial){if(m.userData.cc===undefined)m.userData.cc=m.clearcoat;m.clearcoat=q==='fast'?0:m.userData.cc;}   // and no clear-coat layer
       m.needsUpdate=true;});});
     renderer.shadowMap.needsUpdate=true;SC.resize();
+  };
+  /* Where does the telescope stand? On the grass (like the product photos) or on a little table. */
+  SC.setSurface=function(k){
+    SC.surface=k;const dy=k==='table'?0:-TABLE_TOP;rig.position.y=dy;tableG.visible=k==='table';
+    ground.material.map=k==='grass'?grassTex:null;ground.material.color.copy(k==='grass'?new THREE.Color(.55,.6,.55):sRGB(0x1b211d));ground.material.needsUpdate=true;
+    orbit.ty=SCOPE_H+.12+dy;key.target.position.y=SCOPE_H+.1+dy;key.position.y=SCOPE_H+1.6+dy;rim.position.y=SCOPE_H+1+dy;renderer.shadowMap.needsUpdate=true;
   };
   SC.updateSky=updateSky;SC.showBeam=false;
   addEventListener('resize',SC.resize);SC.resize();updateSky();

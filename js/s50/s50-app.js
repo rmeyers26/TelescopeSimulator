@@ -87,6 +87,7 @@ $('#p-device').innerHTML=`
  <h3>Mount mode</h3><div id="mmBox"></div>
  <h3>Accessories &amp; care</h3>
  <label class="sw"><input type="checkbox" id="dew" data-in="dew"> Dew heater on <span class="mu sm">(uses a little more battery)</span></label>
+ <div class="grid2" style="margin:6px 0"><label>Placed on<select id="surf" class="b" data-in="surf"><option value="grass">Grass (outdoors)</option><option value="table">A little table</option></select></label></div>
  <div class="row"><button class="b" data-act="solarOn">Attach magnetic solar filter</button><button class="b" data-act="solarOff">Remove solar filter</button><span id="solarTxt" class="mu sm"></span></div>
  <div class="row"><button class="b" data-act="bump" title="Walking around the tripod shakes the picture">Bump the tripod</button><button class="b" data-act="shutApp">Shut down from the app</button></div>
  <div id="dmgBox"></div>
@@ -219,6 +220,7 @@ const ACT={
 };
 const INP={
   chg(v){mount.charger=v;},
+  surf(v){SC.setSurface(v);try{localStorage.setItem('s50surf',v);}catch(_){}},
   dew(v,el){mount.dewHeater=el.checked;},
   swipe(v,el){if(+v>=98){ACT.shutApp();setTimeout(()=>{el.value=0;},300);}},
   loc(v){const t=localHour(simMs),d=$('#date').value;setLocation(+v);setClock(d,t);},
