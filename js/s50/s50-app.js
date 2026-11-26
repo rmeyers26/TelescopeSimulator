@@ -75,7 +75,7 @@ $('#skip').onclick=()=>{mount.skipBoot();toast('Start-up skipped – the telesco
 $('#ext').onchange=e=>{mount.ext=e.target.checked;};
 $('#dew').onchange=e=>{mount.dewHeater=e.target.checked;};
 $('#armO').onclick=()=>{if(mount.ready)mount.coverTarget=1;else toast('Power on first.');};
-$('#armC').onclick=()=>{if(mount.ready){mount.coverTarget=0;toast('Arm closed – the camera cannot see the sky.');}else mount.coverTarget=0;};
+$('#armC').onclick=()=>{if(mount.ready){mount.coverTarget=0;toast('Cover closed – the camera cannot see the sky.');}else mount.coverTarget=0;};
 $('#park').onclick=()=>{if(!mount.ready)return toast('Power on first.');stack.stop();stack.clear();pendingStack=false;mount.park();};
 $('#stop').onclick=()=>{mount.stop();pendingStack=false;stack.stop();};
 $$('[data-jog]').forEach(b=>{
@@ -217,8 +217,8 @@ $('#p-learn').innerHTML=`
   <tr><td>Field of view</td><td>${S50.fovW.toFixed(2)}° × ${S50.fovH.toFixed(2)}° (the full Moon is ½°, so the Moon fits easily)</td></tr>
   <tr><td>Mount</td><td>Built-in motorized alt-az GoTo; self-levelling; plate-solving</td></tr>
   <tr><td>Filters</td><td>IR-cut and dual-band (Hα/OIII) light-pollution filter, on a filter wheel</td></tr>
-  <tr><td>Extras</td><td>Auto-focus, dew heater, motorized arm cover, built-in battery (about 6 h), Wi-Fi to your phone</td></tr>
- </table><p class="mu sm">Approximate published values. This simulator is a teaching model, not a measurement of a real unit.</p>
+  <tr><td>Extras</td><td>Auto-focus, dew heater, motorized front cover, built-in battery (about 6 h), Wi-Fi to your phone</td></tr>
+ </table><p class="mu sm">Optics and sensor values are those of the original Seestar S50 (approximate) and may differ on the S50 Pro – I could not read the S50 Pro product page when building this. The 3D shape follows photos of the S50 Pro. This simulator is a teaching model, not a measurement of a real unit.</p>
  <h3>Ideas to understand</h3>
  <details open><summary>How does it know where to point? (plate solving)</summary><div>The S50 has no compass and doesn't need you to align on stars. It takes a photo, measures the pattern of stars in it, and matches that pattern against a star map. That tells it exactly where it is looking – <b>plate solving</b>. After every GoTo it takes one more photo to centre the target precisely (the "Centring" step you see in the Live view message). Compare with the C11, where <i>you</i> must centre stars by hand.</div></details>
  <details><summary>Why stack many short photos?</summary><div>Each 10 s photo is too noisy to show faint things. Averaging N photos cuts random noise by √N, while the real signal stays the same. That is why the picture slowly "clears" – see the chart in the Stack tab. Stacking also lets a small, light mount do deep-sky work: no photo needs to be long.</div></details>
@@ -227,7 +227,7 @@ $('#p-learn').innerHTML=`
  <details><summary>Why does it lose the target near the zenith?</summary><div>Straight overhead, an alt-az mount would need to spin the azimuth axis infinitely fast to follow the sky. The motors have a speed limit, so the S50 falls behind – a real weakness of alt-az mounts. Try targets that pass high overhead on a fast time setting.</div></details>
  <details><summary>Dew, Moon and clouds</summary><div>Dew fogs the lens on damp nights (the heater prevents it). A bright Moon adds glow to the sky, especially when it is close to your target. Clouds and low altitude (more atmosphere) both dim the light.</div></details>
  <details><summary>⚠ Safety: never point at the Sun</summary><div>Without a proper solar filter, sunlight focused by the lens can destroy the sensor in seconds – and is dangerous to eyes if anyone looks through it. The Sun is deliberately <b>not</b> in the target list. The simulator warns you if you steer near it.</div></details>
- <details><summary>Common beginner mistakes</summary><div><ul><li>Forgetting the arm cover is closed (no stars, no plate solve).</li><li>Choosing a target below the horizon or very low (thick atmosphere).</li><li>Expecting nebulae to look like colourful photos after one minute – they need tens of minutes.</li><li>Using the dual-band filter on a galaxy.</li><li>Starting the stack, then bumping the telescope: a move discards the stack.</li></ul></div></details>
+ <details><summary>Common beginner mistakes</summary><div><ul><li>Forgetting the front cover is closed (no stars, no plate solve).</li><li>Choosing a target below the horizon or very low (thick atmosphere).</li><li>Expecting nebulae to look like colourful photos after one minute – they need tens of minutes.</li><li>Using the dual-band filter on a galaxy.</li><li>Starting the stack, then bumping the telescope: a move discards the stack.</li></ul></div></details>
  <details><summary>Ideas to extend this simulator</summary><div>Mosaic mode, auto-focus and focus blur, satellite trails, real star catalogs (Gaia), saving FITS files, a solar-filter mode, or controlling a real telescope through a bridge.</div></details>
  <p class="sm"><a href="index.html" style="color:var(--ac)">← Back to the C11 simulator and telescope chooser</a></p>`;
 $('#p-learn').addEventListener('click',e=>{const b=e.target.closest('[data-scn]');if(!b)return;runScenario(SCENARIOS.find(s=>s.id===b.dataset.scn));});
@@ -255,7 +255,7 @@ function drawLive(){
   let msg='';
   if(mount.power==='off')msg='Telescope is off';
   else if(mount.power==='booting')msg='Starting up…';
-  else if(!mount.coverOpen)msg='Arm cover closed – open it to see the sky';
+  else if(!mount.coverOpen)msg='Front cover closed – open it to see the sky';
   else if(mount.mode==='slew'||mount.mode==='manual')msg=mount.mode==='manual'?'Moving…':'Slewing…';
   else if(mount.mode==='center')msg='Plate-solving…';
   else if(!mount.target)msg='Idle – pick a target in the Plan tab';
@@ -299,10 +299,10 @@ function updStatus(){
   const e=horToEq(m.alt,m.az,jdNow());
   $('#hud').innerHTML=`${m.power==='off'?'⏻ OFF':mode}${m.target?' · '+m.target.name:''}<br>Az ${m.az.toFixed(1)}°  Alt ${m.alt.toFixed(1)}°<span class="hx"><br>RA ${fmtRA(e.ra)}  Dec ${fmtDec(e.dec)}</span>`;
   $('#clock').textContent=`${LOCS.find(l=>l.lat===obs.lat)?.n.split(' –')[0]||'Custom'} · ${clockText()}`;
-  // sun safety: close to the Sun with the arm open is dangerous for a real telescope
+  // sun safety: close to the Sun with the cover open is dangerous for a real telescope
   if(m.power==='ready'&&m.coverOpen&&SUN.alt>-2&&angDistHor(m.alt,m.az,SUN.alt,SUN.az)<5){
-    if(!updStatus.warned){updStatus.warned=true;toast('⚠ The telescope is pointing at the Sun! Without a solar filter this can destroy the sensor. Close the arm / park NOW.',9000);}
-    m.note='⚠ POINTING AT THE SUN – close the arm!';
+    if(!updStatus.warned){updStatus.warned=true;toast('⚠ The telescope is pointing at the Sun! Without a solar filter this can destroy the sensor. Close the cover / park NOW.',9000);}
+    m.note='⚠ POINTING AT THE SUN – close the cover!';
   }else updStatus.warned=false;
 }
 function updTelescopeTab(){

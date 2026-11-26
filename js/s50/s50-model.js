@@ -77,13 +77,13 @@ function parallacticAngle(az,alt){const e=horToEq(alt,az,jdNow());return paralla
 
 /* =====================================================================
    3. THE MOUNT  – a small state machine
-   Real Seestar start-up: power on → open arm → level itself with a gravity sensor →
+   Real Seestar start-up: power on → open cover → level itself with a gravity sensor →
    get time & place from the phone → take pictures and "plate-solve" them to learn where north is.
    After that GoTo just works – no manual alignment like the C11.
    ===================================================================== */
 const BOOT_STEPS=[
   {t:'Starting up',sec:2},
-  {t:'Opening the arm cover',sec:2.4},
+  {t:'Opening the front cover',sec:2.4},
   {t:'Levelling itself (gravity sensor)',sec:3},
   {t:'Getting time & location from your phone',sec:1.6},
   {t:'Plate-solving the sky to find north',sec:4}
@@ -97,7 +97,7 @@ class SeestarMount{
     this.step=-1; this.stepT=0;
     this.az=0; this.alt=0;     // where the tube really points (degrees)
     this.tilt={x:(Math.random()-.5)*7,z:(Math.random()-.5)*7};   // how un-level the table/tripod is until it self-levels
-    this.cover=0; this.coverTarget=0;               // arm cover: 0 closed … 1 open
+    this.cover=0; this.coverTarget=0;               // front cover: 0 closed … 1 open
     this.target=null;          // catalog object we are following
     this.mode='idle';          // 'idle' | 'slew' | 'center' | 'track' | 'lost' | 'manual'
     this.centerT=0; this.parking=false;
@@ -129,7 +129,7 @@ class SeestarMount{
 
   /* Advance the machine by dt real seconds.  simDt = simulated seconds (bigger when "Time ×" is turned up). */
   update(dt,simDt){
-    // arm cover motor
+    // front cover motor
     this.cover+=clamp(this.coverTarget-this.cover,-dt/1.8,dt/1.8);
     if(this.power==='off')return;
 
@@ -144,7 +144,7 @@ class SeestarMount{
       const st=BOOT_STEPS[this.step];this.stepT+=dt;
       if(this.step===1)this.coverTarget=1;
       if(this.step===2){const k=1-clamp(this.stepT/st.sec,0,1);this.tilt={x:this.tilt.x*(1-dt*1.5),z:this.tilt.z*(1-dt*1.5)};if(k<=0)this.tilt={x:0,z:0};}
-      if(this.step===4&&(SKY.cloud>0.75||this.cover<0.95)){this.note=this.cover<0.95?'Waiting for the arm to open…':'Too cloudy to plate-solve – waiting for a gap…';return;}   // needs stars!
+      if(this.step===4&&(SKY.cloud>0.75||this.cover<0.95)){this.note=this.cover<0.95?'Waiting for the cover to open…':'Too cloudy to plate-solve – waiting for a gap…';return;}   // needs stars!
       if(this.stepT>=st.sec){this.step++;this.stepT=0;if(this.step>=BOOT_STEPS.length){this.power='ready';this.mode='idle';this.note='Ready. Choose a target in the Plan tab.';this.tilt={x:0,z:0};}}
       return;
     }

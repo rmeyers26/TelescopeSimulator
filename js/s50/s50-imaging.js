@@ -192,9 +192,9 @@ class Stacker{
     this.acc+=simDt;
     const due=Math.floor(this.acc/this.exposure);if(due<1)return;
     const k=due;this.acc-=k*this.exposure;
-    // Is this a usable photo? Needs a tracked target, an open arm, and some light getting through.
+    // Is this a usable photo? Needs a tracked target, an open cover, and some light getting through.
     const tr=transparency(mount.alt,mount.dew);
-    if(mount.mode!=='track'||!mount.coverOpen||tr<0.12||mount.target!==this.target){this.dropped+=k;this.reason=mount.mode!=='track'?'not tracking':!mount.coverOpen?'arm closed':'too cloudy';return;}
+    if(mount.mode!=='track'||!mount.coverOpen||tr<0.12||mount.target!==this.target){this.dropped+=k;this.reason=mount.mode!=='track'?'not tracking':!mount.coverOpen?'cover closed':'too cloudy';return;}
     this.reason='';
     const lost=Math.round(k*0.03*Math.random());     // wind gusts / satellites spoil an occasional photo
     this.dropped+=lost;const keep=k-lost;if(keep<=0)return;
