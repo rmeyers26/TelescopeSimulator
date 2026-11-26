@@ -43,7 +43,7 @@ seestar.html          the Seestar S50 Pro simulator page (uses js/01 and js/02 f
 css/seestar.css       styling for the Seestar page
 js/s50/s50-model.js   specs (from the S50 Pro manual), sky/weather, power button + indicator-light language, mount state machine (boot, connection, initialization, GoTo, tracking, zero position, EQ mode, solar safety)
 js/s50/s50-imaging.js telephoto + wide-angle imaging: star fields, galaxies, nebulae, Milky Way, stacking with realistic noise, star trails, Sun / Moon / scenery renderers
-js/s50/s50-scene.js   Three.js 3D model of the S50 Pro on its carbon tripod: the whole L-shaped body turns, the slab-shaped head tilts (EQ wedge, solar filter, indicator lights), photo-realistic rendering, sky dome, orbit camera
+js/s50/s50-scene.js   Three.js 3D model of the S50 Pro on its carbon tripod: the whole L-shaped body turns, the slab-shaped head hangs from a pivot at its top and tilts (EQ wedge, solar filter, indicator lights), photo-realistic rendering, sky dome, orbit camera
 js/s50/s50-app.js     the phone app and device controls: tabs, connection wizard, modes, targets, EQ set-up, album (JPEG / FITS / video)
 js/s50/s50-live.js    live view and overlays, photo / video capture, scenarios, learn text, main loop and start-up
 ```
@@ -71,7 +71,7 @@ Simulation only: the RS-232/Link features are not connected to real hardware yet
 
 Built from the S50 Pro user manual (V1) and quick guide. It does what the manual describes:
 
-- **The physical device:** press-and-hold power button with the manual's timings (short press shows the battery, 2 s on/off, 6 s forced off, special first-use press), indicator-light patterns (red running / breathing, yellow steady or breathing, green in EQ mode, four battery lights), USB-C charging while running, auto-shutdown below 5 %, and a "zero position" where the head stands upright with the lens up.
+- **The physical device:** press-and-hold power button with the manual's timings (short press shows the battery, 2 s on/off, 6 s forced off, special first-use press), indicator-light patterns (red running / breathing, yellow steady or breathing, green in EQ mode, four battery lights), USB-C charging while running, auto-shutdown below 5 %, and a "zero position" where the head hangs straight down in front of the column with the lens facing forward.
 - **Phone connection:** scan, first-time reset-button pairing, online activation (internet, ZWO account, region), Wi-Fi hotspot (iOS automatic / Android manual with password), firmware update and reboot, NFC quick connect, and an imaging session that keeps going if the phone disconnects.
 - **Four modes:** Stargazing (Tonight's Best, GOTO, automatic initialization on the first GoTo, auto-stacking at 10 s, Stop saves to the album), Milky Way (63° wide camera, SkyAtlas framing, photo / wide-angle stacking / star trails, constellation lines), Solar System (the Sun with the full solar-filter procedure and safety stop, Moon, planets, 1×/2×/4× magnification) and Scenery (birds and landscapes, 15 m focus limit of the telephoto lens).
 - **EQ mode:** set-up checklist, wedge angle and north alignment, "calculate polar alignment error" (within 1°), green light, almost no field rotation, no zenith blind spot.
