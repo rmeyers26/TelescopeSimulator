@@ -187,20 +187,22 @@ function initScene(canvas){
       v.y+=(top+HB)/2;                                                                      // put the pivot at the origin (the top is at +HT/2)
       if(v.y>0&&v.z>0){const l=Math.hypot(v.z,v.y);if(l>top){v.z*=top/l;v.y*=top/l;}}      // rear-top: a circular arc about the pivot
       if(v.y<y0){const k=Math.sqrt(Math.max(0,1-Math.pow((y0-v.y)/R,2)));v.x*=Math.max(k,.1);}   // bottom: half-round seen from the front
+      {const zr=HT/2+.004,yz=HB+zr;if(v.y<yz){const k=Math.sqrt(Math.max(0,1-Math.pow((yz-v.y)/zr,2)));v.z*=Math.max(k,.4);}}   // bottom: also rounded seen from the side (a bulb, as on the real unit)
       p.setXYZ(i,v.x,v.y,v.z);}
     g.computeVertexNormals();creaseNormals(g,60);altG.add(new THREE.Mesh(g,white));}
   // a hair-line groove round the head near its bottom, like the rim of a separate base ring (seen in the side-view video)
-  {const ring=rrBox(.099,HT+.0008,.0012,.032,.0004,new THREE.MeshStandardMaterial({color:sRGB(0x6a6e76),roughness:.7}));ring.rotation.x=Math.PI/2;ring.position.y=HB+.026;altG.add(ring);}
+  {const ring=rrBox(.099,HT+.0008,.0012,.032,.0004,new THREE.MeshStandardMaterial({color:sRGB(0xaab0b8),roughness:.6}));ring.rotation.x=Math.PI/2;ring.position.y=HB+.026;altG.add(ring);}
   const nose=rrBox(.09,.112,.006,.045,.0025,white);nose.position.set(0,-.027,-HT/2-.0015);altG.add(nose);          // a raised boss round the window
   const zF=-HT/2-.0045;                                              // z of the boss's front face
-  const frame=rrBox(.072,.1,.002,.036,.0008,silver);frame.position.set(0,-.027,zF-.0028);altG.add(frame);         // silver ring
-  const win=rrBox(.066,.094,.002,.033,.0008,blackGlass);win.position.set(0,-.027,zF-.0036);altG.add(win);          // dark window (almost flush, as on the real unit)
-  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.0245,.0265,.004,48).rotateX(Math.PI/2),dark);collar.position.set(0,-.003,zF-.004);altG.add(collar);
-  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.0245,.0018,14,56),silver);bezelL.position.set(0,-.003,zF-.0046);altG.add(bezelL);
-  const lens=new THREE.Mesh(new THREE.SphereGeometry(.0235,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.13),lensGlass);lens.position.set(0,-.003,zF-.0042);altG.add(lens);        // a gently domed coated glass (green…)
-  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.0145,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.1),lensGlass2);lens2.position.set(0,-.003,zF-.0049);altG.add(lens2);        // …and purple
-  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0105,.0015,10,32),silver);bezel2.position.set(0,-.056,zF-.0042);altG.add(bezel2);                                                    // the small wide-angle camera, below the big lens
-  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0095,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass);cam2.position.set(0,-.056,zF-.004);altG.add(cam2);
+  const rimMat=new THREE.MeshPhysicalMaterial({color:sRGB(0xe4e8ee),roughness:.25,clearcoat:.8,clearcoatRoughness:.15});
+  const frame=rrBox(.084,.108,.002,.040,.0008,rimMat);frame.position.set(0,-.03,zF-.0028);altG.add(frame);         // silver ring
+  const win=rrBox(.076,.1,.002,.036,.0008,blackGlass);win.position.set(0,-.03,zF-.0036);altG.add(win);          // dark window (almost flush, as on the real unit)
+  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.0285,.0305,.004,48).rotateX(Math.PI/2),dark);collar.position.set(0,-.009,zF-.004);altG.add(collar);
+  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.0285,.0015,14,56),silver);bezelL.position.set(0,-.009,zF-.0046);altG.add(bezelL);
+  const lens=new THREE.Mesh(new THREE.SphereGeometry(.027,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.13),lensGlass);lens.position.set(0,-.009,zF-.0042);altG.add(lens);        // a gently domed coated glass (green…)
+  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.0165,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.1),lensGlass2);lens2.position.set(0,-.009,zF-.0049);altG.add(lens2);        // …and purple
+  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0105,.0015,10,32),silver);bezel2.position.set(0,-.064,zF-.0042);altG.add(bezel2);                                                    // the small wide-angle camera, below the big lens
+  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0095,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass);cam2.position.set(0,-.064,zF-.004);altG.add(cam2);
   const dewMat=new THREE.MeshBasicMaterial({color:0xdde8f0,transparent:true,opacity:0,depthWrite:false});     // fog on the lens (dew)
   const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.04,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,-.027,zF-.0085);altG.add(dewDisc);
   const solar=new THREE.Group();altG.add(solar);solar.visible=false;                                          // magnetic solar filter, stuck on the front of the head
@@ -215,7 +217,7 @@ function initScene(canvas){
   beam.visible=false;altG.add(beam);
 
   /* ---- orbit camera (drag to rotate, wheel / pinch to zoom) ---- */
-  const orbit={yaw:0.75,pitch:.2,dist:1.25,ty:SCOPE_H+.12};
+  const orbit={yaw:0.75,pitch:.2,dist:1.25,ty:SCOPE_H+.12};SC.orbit=orbit;   // (exposed so tests can aim the camera)
   const views={orbit:null,back:{yaw:0,pitch:.1,dist:1.1},front:{yaw:Math.PI,pitch:.1,dist:1.1},side:{yaw:-Math.PI/2,pitch:.06,dist:1.1},top:{yaw:Math.PI,pitch:1.45,dist:1.2}};
   let viewMode='orbit';
   function setView(v){viewMode=v;SC.follow=null;if(views[v]&&v!=='orbit'){Object.assign(orbit,views[v]);SC.follow=v;SC.followBase=views[v].yaw;}}   // Front / Back / Side / Top follow the telescope as it turns
