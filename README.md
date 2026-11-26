@@ -34,6 +34,7 @@ js/15-main.js         start-up and the animation loop
 js/16-align-wizard.js  Easy alignment wizard: 1-planet (Solar System) and 3-star alignment + tracking demo
 js/17-ux.js            Quick tour, My First Night story, sky compass, swipe tabs, press-and-hold part labels
 js/18-scope-popups.js  Tap the eyepiece/finder to look through it and swap eyepieces; tap the hand controller to pop it out
+js/19-focus.js        Focus knob: slides the primary mirror; out-of-focus stars become doughnuts; per-eyepiece focus
 ```
 
 ### Why plain scripts instead of ES modules?

@@ -107,6 +107,9 @@ const FN_STEPS=[
  {t:'Line up with the sky',k:()=>'The telescope has to learn where the sky is. The quick way: centre one bright planet and press Align.',act:[['🎯 1-planet align',()=>{fnHide();wzStart('planet');}],['⭐ 3 stars',()=>{fnHide();wzStart('stars');}]],check:()=>ALIGN_DONE_AT>FN.t0},
  {t:()=>'Go to '+fnTarget().name,k:()=>`Now the fun part. Tap the button and watch the telescope drive itself to ${fnTarget().name}.`,act:[[()=>'🪐 Go to '+fnTarget().name,()=>{if(WZ.on)wzStop();doGoto(fnTarget());}]],check:fnInView,view:true},
  {t:'Zoom in',k:()=>'Tap a smaller eyepiece number to zoom in (or tap the eyepiece on the telescope to swap it). The 13 mm makes it about 215× bigger – look for details!',act:[['13 mm',()=>setEp(3)],['9 mm',()=>setEp(4)]],check:()=>EPS[epI].mag>=200&&EPS[epI].fl>1&&fnInView(),view:true},
+ {t:'Focus it',k:()=>'Swapping eyepieces usually needs a little focusing. Turn the focus knob with ⟲ / ⟳ (or drag sideways on the view) until the planet is crisp – out of focus, stars look like little doughnuts!',
+  act:[['⟳ Turn a little',()=>focusStep(FOCUS_BEST[epI]>FOCUS.pos?.25:-.25)],['🎯 Focus for me',()=>focusAuto()]],check:()=>typeof focusSharp==='function'&&focusSharp(EPS[epI])&&fnInView(),view:true,
+  enter:()=>{if(typeof focusSharp==='function'&&focusSharp(EPS[epI]))setFocus(FOCUS.pos+1.2);}},
  {t:'Watch it track',k:()=>'The Earth spins, so the sky slowly moves. With <b>tracking</b> on, the motors follow the planet. Fast-forward one hour and see if it stays in view.',act:[['⏩ Fast-forward 1 hour',fnFF]],check:()=>FN.ff&&fnInView(),view:true},
  {t:'🏅 First night complete!',k:()=>'You set up a real computerised telescope and found a planet. That is exactly what astronomers do outside.',final:true}];
 function fnStart(resume){
@@ -122,6 +125,7 @@ const fnv=v=>typeof v==='function'?v():v;
 function fnRender(){
   const el=$('#fn');if(!FN.on){el.style.display='none';return;}
   if(WZ.on){el.style.display='none';return;}                   // the alignment wizard uses the same corner
+  const st0=FN_STEPS[FN.i];if(st0.enter&&FN.entered!==FN.i){FN.entered=FN.i;st0.enter();}   // a step can set the scene when you arrive
   const st=FN_STEPS[FN.i],ok=st.check?st.check():false;store('c11fnStep',FN.i);
   el.innerHTML=`<div class="row" style="margin-top:0"><b style="flex:1">🌙 My First Night</b><span class="mu sm">${FN.i+1}/${FN_STEPS.length}</span><button class="b sm" data-fn="close" title="Close">✕</button></div>
    <div class="tdots">${FN_STEPS.map((_,k)=>`<i class="${k===FN.i?'on':k<FN.i?'done':''}"></i>`).join('')}</div>
