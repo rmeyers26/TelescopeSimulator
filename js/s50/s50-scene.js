@@ -86,13 +86,13 @@ function initScene(canvas){
   const silver=new THREE.MeshStandardMaterial({color:sRGB(0xb9bdc5),roughness:.22,metalness:.95,envMapIntensity:1.4});          // the bright aluminium ring round the lens window
 
   /* ---- helpers: rounded boxes (the real body has no sharp corners) ---- */
-  function rrShape(w,h,r){                                           // a rounded rectangle; long straight edges are cut into short pieces,
+  function rrShape(w,h,r,rb=r){                                      // a rounded rectangle (rb = the bottom corners' radius, if different); long straight edges are cut into short pieces,
     const x=-w/2,y=-h/2,sh=new THREE.Shape();                          // because three.js' bevel pinches the middle of one long straight edge
     const ln=(x2,y2)=>{const c=sh.currentPoint,n=Math.max(2,Math.ceil(Math.hypot(x2-c.x,y2-c.y)/.006));for(let i=1;i<=n;i++)sh.lineTo(c.x+(x2-c.x)*i/n,c.y+(y2-c.y)*i/n);};
-    sh.moveTo(x+r,y);ln(x+w-r,y);sh.absarc(x+w-r,y+r,r,-Math.PI/2,0);ln(x+w,y+h-r);sh.absarc(x+w-r,y+h-r,r,0,Math.PI/2);
-    ln(x+r,y+h);sh.absarc(x+r,y+h-r,r,Math.PI/2,Math.PI);ln(x,y+r);sh.absarc(x+r,y+r,r,Math.PI,1.5*Math.PI);return sh;}
-  function rrBox(w,h,d,r,bev,mat){
-    const depth=Math.max(.0005,d-2*bev),g=new THREE.ExtrudeGeometry(rrShape(w-2*bev,h-2*bev,Math.max(.001,r-bev)),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
+    sh.moveTo(x+rb,y);ln(x+w-rb,y);sh.absarc(x+w-rb,y+rb,rb,-Math.PI/2,0);ln(x+w,y+h-r);sh.absarc(x+w-r,y+h-r,r,0,Math.PI/2);
+    ln(x+r,y+h);sh.absarc(x+r,y+h-r,r,Math.PI/2,Math.PI);ln(x,y+rb);sh.absarc(x+rb,y+rb,rb,Math.PI,1.5*Math.PI);return sh;}
+  function rrBox(w,h,d,r,bev,mat,rb=r){                              // w × h × d box with rounded edges, centred on its own origin
+    const depth=Math.max(.0005,d-2*bev),g=new THREE.ExtrudeGeometry(rrShape(w-2*bev,h-2*bev,Math.max(.001,r-bev),Math.max(.001,rb-bev)),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
     g.translate(0,0,-depth/2);return new THREE.Mesh(g,mat);}
 
   /* ---- little table + short carbon-fibre tripod (manual: 227 mm tall, 737 mm across at the widest leg angle) ---- */
@@ -146,9 +146,9 @@ function initScene(canvas){
   logo(g=>{g.fillStyle='#7d838c';g.font='300 70px system-ui,sans-serif';g.fillText('☆',92,64);g.fillText('Seestar',150,66);},.075,.0656,-.005,Math.PI/2);
   logo(g=>{g.font='300 66px system-ui,sans-serif';g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);},.056,.022,-.0717,Math.PI);
   // the battery column at the rear, 68 mm deep, with a big rounded top
-  const column=rrBox(.13,.207,.068,.05,.008,white);column.position.set(0,.1575,.0372);azG.add(column);
+  const column=rrBox(.1304,.253,.0692,.05,.008,white,.004);column.position.set(0,.1305,.03725);azG.add(column);      // runs from the base to the top, so column and foot form one smooth L
   const panel=rrBox(.108,.205,.004,.052,.001,blackGlass);panel.position.set(0,.1225,.0700);azG.add(panel);   // black glass face, set slightly into the white frame (looks backwards, +Z)
-  for(const sx of[-1,1]){const seam=new THREE.Mesh(new THREE.BoxGeometry(.0009,.175,.0009),new THREE.MeshStandardMaterial({color:sRGB(0x6b7078),roughness:.8}));seam.position.set(sx*.0652,.158,.04);azG.add(seam);}   // the thin vertical gap between the rear shell and the body
+  for(const sx of[-1,1]){const seam=new THREE.Mesh(new THREE.BoxGeometry(.0009,.185,.0009),new THREE.MeshStandardMaterial({color:sRGB(0x6b7078),roughness:.8}));seam.position.set(sx*.0652,.1125,.04);azG.add(seam);}   // the thin vertical gap between the rear shell and the body
   const bezel=new THREE.Mesh(new THREE.TorusGeometry(.0138,.0022,10,40),new THREE.MeshStandardMaterial({color:0x4a4d55,roughness:.3,metalness:.8}));bezel.position.set(0,.061,.0745);azG.add(bezel);
   const btnMat=new THREE.MeshBasicMaterial({color:0xf2f2f2});                                               // the power button: a white disc…
   const btn=new THREE.Mesh(new THREE.CylinderGeometry(.0098,.0098,.004,28).rotateX(Math.PI/2),btnMat);btn.position.set(0,.061,.0745);azG.add(btn);
@@ -157,37 +157,37 @@ function initScene(canvas){
   const ledGlow=glow('#ffffff',.034);ledGlow.material.blending=THREE.AdditiveBlending;ledGlow.material.opacity=0;ledGlow.position.set(0,.061,.0775);azG.add(ledGlow);   // soft halo round the ring
   const ledLight=new THREE.PointLight(0xffffff,0,.16);ledLight.position.set(0,.061,.1);azG.add(ledLight);                                                         // the ring lights the glass a little
   const dots=[0,1,2,3].map(i=>{const m=new THREE.MeshBasicMaterial({color:0x300000}),d=new THREE.Mesh(new THREE.SphereGeometry(.0018,8,8),m);d.position.set(0,.085+i*.0077,.0745);azG.add(d);return m;});   // 4 battery lights, in a column above the button
-  const port=new THREE.Mesh(new THREE.BoxGeometry(.002,.0075,.0165),new THREE.MeshStandardMaterial({color:0x08090b,roughness:.4}));port.position.set(-.0655,.06,.04);azG.add(port);   // USB-C port on the left side
+  const port=new THREE.Mesh(new THREE.BoxGeometry(.002,.011,.0046),new THREE.MeshStandardMaterial({color:0x08090b,roughness:.4}));port.position.set(-.0655,.064,.0525);azG.add(port);   // USB-C port on the left side
   // USB-C charging cable (visible while a charger is plugged in)
-  const cable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-.066,.06,.04),new THREE.Vector3(-.1,.07,.06),new THREE.Vector3(-.15,-.05,.1),new THREE.Vector3(-.2,-.2,.16),new THREE.Vector3(-.3,-.226,.2)]),24,.0032,8),new THREE.MeshStandardMaterial({color:0xf2f2f2,roughness:.6}));
+  const cable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-.066,.064,.0525),new THREE.Vector3(-.1,.07,.06),new THREE.Vector3(-.15,-.05,.1),new THREE.Vector3(-.2,-.2,.16),new THREE.Vector3(-.3,-.226,.2)]),24,.0032,8),new THREE.MeshStandardMaterial({color:0xf2f2f2,roughness:.6}));
   azG.add(cable);cable.visible=false;
   // THE HEAD: a slab 128 wide × 167 tall × 78 thick, hanging vertically in FRONT of the column and hinged at its TOP end (the pivot is the centre of
   // the rounded top). Its big flat front face (−Z) carries the lens window near the top; its rounded bottom end hovers ~22 mm above the foot's step
   // (an open pocket you can see through). alt 0° = hanging straight down, lens facing forward (the "zero position"); raising alt swings the bottom
   // end forward, so the window faces higher and higher; at 90° the slab points forward and the lens looks straight up. It never touches the column.
-  const altG=new THREE.Group();altG.position.set(0,.218,-.0345);azG.add(altG);
+  const altG=new THREE.Group();altG.position.set(0,.218,-.0353);azG.add(altG);
   function headShape(T,yb,rb){                                       // side profile in (x = −z, y): rounded top corners (the pivot is at the origin) and a rounded bottom
     const sh=new THREE.Shape(),ln=(x2,y2)=>{const c=sh.currentPoint,n=Math.max(2,Math.ceil(Math.hypot(x2-c.x,y2-c.y)/.006));for(let i=1;i<=n;i++)sh.lineTo(c.x+(x2-c.x)*i/n,c.y+(y2-c.y)*i/n);};
-    const r=T/2,rt=.026,yt=r;sh.moveTo(r,yb+rb);ln(r,yt-rt);sh.absarc(r-rt,yt-rt,rt,0,Math.PI/2,false);ln(-r+rt,yt);sh.absarc(-r+rt,yt-rt,rt,Math.PI/2,Math.PI,false);
+    const r=T/2,rf=.012,rr=r,yt=r;sh.moveTo(r,yb+rb);ln(r,yt-rf);sh.absarc(r-rf,yt-rf,rf,0,Math.PI/2,false);ln(-r+rr,yt);sh.absarc(-r+rr,yt-rr,rr,Math.PI/2,Math.PI,false);   // front-top corner tight, rear-top rounder
     ln(-r,yb+rb);sh.absarc(-r+rb,yb+rb,rb,Math.PI,1.5*Math.PI,false);ln(r-rb,yb);sh.absarc(r-rb,yb+rb,rb,1.5*Math.PI,2*Math.PI,false);return sh;}
-  const HT=.078,HW=.12,HB=-.128;                                     // thickness, width, y of the bottom (relative to the pivot)
-  {const bev=.006,depth=HW-2*bev,g=new THREE.ExtrudeGeometry(headShape(HT-2*bev,HB+bev,.03-bev),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
+  const HT=.072,HW=.12,HB=-.128;                                     // thickness, width, y of the bottom (relative to the pivot)
+  {const bev=.006,depth=HW-2*bev,g=new THREE.ExtrudeGeometry(headShape(HT-2*bev,HB+bev,.024-bev),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
    g.translate(0,0,-depth/2);g.rotateY(Math.PI/2);altG.add(new THREE.Mesh(g,white));}                                    // shape x → −z, extrusion → x (the width)
   const zF=-HT/2;                                                    // z of the head's big front face
-  const nose=rrBox(.1,.098,.006,.042,.003,white);nose.position.set(0,-.026,zF-.002);altG.add(nose);                 // a very slightly raised boss round the window
-  const frame=rrBox(.094,.092,.003,.04,.001,silver);frame.position.set(0,-.026,zF-.0048);altG.add(frame);             // silver ring
-  const win=rrBox(.088,.086,.003,.038,.001,blackGlass);win.position.set(0,-.026,zF-.006);altG.add(win);             // dark window
-  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.033,.035,.005,48).rotateX(Math.PI/2),dark);collar.position.set(0,.003,zF-.0072);altG.add(collar);
-  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.032,.0028,14,56),silver);bezelL.position.set(0,.003,zF-.0098);altG.add(bezelL);
-  const lens=new THREE.Mesh(new THREE.SphereGeometry(.031,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.28),lensGlass);lens.position.set(0,.003,zF-.0088);altG.add(lens);        // domed coated glass (green…)
-  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.019,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass2);lens2.position.set(0,.003,zF-.0098);altG.add(lens2);          // …and purple
-  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0112,.0019,10,32),silver);bezel2.position.set(.004,-.048,zF-.0092);altG.add(bezel2);                                                     // the small wide-angle camera, below the big lens
-  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0102,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.35),lensGlass);cam2.position.set(.004,-.048,zF-.0086);altG.add(cam2);
+  const nose=rrBox(.1,.098,.003,.042,.0015,white);nose.position.set(0,-.026,zF-.0012);altG.add(nose);               // a barely raised boss round the window
+  const frame=rrBox(.094,.092,.002,.04,.0008,silver);frame.position.set(0,-.026,zF-.0028);altG.add(frame);         // silver ring
+  const win=rrBox(.088,.086,.002,.038,.0008,blackGlass);win.position.set(0,-.026,zF-.0036);altG.add(win);          // dark window (almost flush, as on the real unit)
+  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.033,.035,.004,48).rotateX(Math.PI/2),dark);collar.position.set(0,.003,zF-.004);altG.add(collar);
+  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.032,.0022,14,56),silver);bezelL.position.set(0,.003,zF-.0046);altG.add(bezelL);
+  const lens=new THREE.Mesh(new THREE.SphereGeometry(.031,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.13),lensGlass);lens.position.set(0,.003,zF-.0042);altG.add(lens);        // a gently domed coated glass (green…)
+  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.019,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.1),lensGlass2);lens2.position.set(0,.003,zF-.0049);altG.add(lens2);        // …and purple
+  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0112,.0016,10,32),silver);bezel2.position.set(.004,-.048,zF-.0042);altG.add(bezel2);                                                    // the small wide-angle camera, below the big lens
+  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0102,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass);cam2.position.set(.004,-.048,zF-.004);altG.add(cam2);
   const dewMat=new THREE.MeshBasicMaterial({color:0xdde8f0,transparent:true,opacity:0,depthWrite:false});     // fog on the lens (dew)
-  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.046,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,-.026,zF-.0175);altG.add(dewDisc);
+  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.046,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,-.026,zF-.0085);altG.add(dewDisc);
   const solar=new THREE.Group();altG.add(solar);solar.visible=false;                                          // magnetic solar filter, stuck on the front of the head
-  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(0,-.026,zF-.0135);solar.add(cap);
-   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.052,.002,8,40),legMetal);rimR.position.set(0,-.026,zF-.0165);solar.add(rimR);}
+  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(0,-.026,zF-.0085);solar.add(cap);
+   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.052,.002,8,40),legMetal);rimR.position.set(0,-.026,zF-.0115);solar.add(rimR);}
 
   function shadowify(root){root.traverse(m=>{if(m.isMesh&&!m.material.isMeshBasicMaterial&&!m.userData.noShadow){m.castShadow=true;m.receiveShadow=true;}});}
   shadowify(tiltG);shadowify(tripod);top.castShadow=true;top.receiveShadow=true;col.castShadow=true;
@@ -198,7 +198,7 @@ function initScene(canvas){
 
   /* ---- orbit camera (drag to rotate, wheel / pinch to zoom) ---- */
   const orbit={yaw:0.75,pitch:.2,dist:1.25,ty:SCOPE_H+.12};
-  const views={orbit:null,back:{yaw:0,pitch:.1,dist:1.1},front:{yaw:Math.PI,pitch:.1,dist:1.1},side:{yaw:Math.PI/2,pitch:.08,dist:1.1},top:{yaw:Math.PI,pitch:1.45,dist:1.2}};
+  const views={orbit:null,back:{yaw:0,pitch:.1,dist:1.1},front:{yaw:Math.PI,pitch:.1,dist:1.1},side:{yaw:-Math.PI/2,pitch:.06,dist:1.1},top:{yaw:Math.PI,pitch:1.45,dist:1.2}};
   let viewMode='orbit';
   function setView(v){viewMode=v;SC.follow=null;if(views[v]&&v!=='orbit'){Object.assign(orbit,views[v]);SC.follow=v;SC.followBase=views[v].yaw;}}   // Front / Back / Side / Top follow the telescope as it turns
   const ptrs=new Map();let pinch=0;
