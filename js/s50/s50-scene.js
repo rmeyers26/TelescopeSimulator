@@ -15,19 +15,37 @@ const dirFromAltAz=(alt,az,r=1)=>new THREE.Vector3(Math.cos(alt*D2R)*Math.sin(az
 function initScene(canvas){
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
-  const scene=new THREE.Scene();scene.background=new THREE.Color(0x04060c);
+  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;   // photographic colour handling
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;                                                  // soft shadows
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x04060c).convertSRGBToLinear();
   const camera=new THREE.PerspectiveCamera(40,1,0.02,200);
+  const sRGB=h=>new THREE.Color(h).convertSRGBToLinear();                                    // hex colours are written in sRGB; the renderer wants linear
+  const tex=c=>{const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;};
 
-  /* ---- lights: a soft "night helper" light so the white telescope stays visible (real nights are darker!) ---- */
-  scene.add(new THREE.HemisphereLight(0xdde3ff,0x1a1d26,0.8));
-  const key=new THREE.DirectionalLight(0xdfe8ff,0.9);key.position.set(2,4,3);scene.add(key);
-  const rim=new THREE.DirectionalLight(0x5575c0,0.5);rim.position.set(-3,2,-2);scene.add(rim);
+  /* ---- reflections: a little "photo studio" (soft boxes + a dim dome) that shiny surfaces mirror ---- */
+  try{
+    const es=new THREE.Scene(),g=document.createElement('canvas');g.width=4;g.height=256;const c=g.getContext('2d'),gr=c.createLinearGradient(0,0,0,256);
+    gr.addColorStop(0,'#1b2438');gr.addColorStop(.45,'#3a465e');gr.addColorStop(.5,'#2a2e36');gr.addColorStop(1,'#0b0c0f');c.fillStyle=gr;c.fillRect(0,0,4,256);
+    es.add(new THREE.Mesh(new THREE.SphereGeometry(30,24,16),new THREE.MeshBasicMaterial({map:tex(g),side:THREE.BackSide})));
+    const box=(w,h,x,y,z,r,gg,b)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color().setRGB(r,gg,b),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);es.add(m);};
+    box(4,3,4,4,5,9,9,9);          // big warm key soft-box, front-right-above
+    box(1,4,-5,1.5,2,1.6,2,3.2);   // cool tall fill strip on the left
+    box(5,1,0,5,-4,3,3,3.6);       // rim strip behind and above
+    box(3,1.2,-3,0.5,-5,1,1,1.2);
+    const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(es,0.03).texture;pm.dispose();
+  }catch(e){console.warn('Environment map unavailable',e);}
+
+  /* ---- lights (a "night helper" studio light so the telescope stays visible; real nights are darker!) ---- */
+  scene.add(new THREE.HemisphereLight(0xdde3ff,0x1a1d26,0.25));
+  const key=new THREE.DirectionalLight(0xfff9f2,2.0);key.position.set(1.6,SCOPE_H+1.6,1.9);key.target.position.set(0,SCOPE_H+.1,0);scene.add(key,key.target);
+  key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.9,right:.9,top:.9,bottom:-.9,near:.3,far:6});key.shadow.camera.updateProjectionMatrix();key.shadow.bias=-0.0003;key.shadow.normalBias=.006;
+  const rim=new THREE.DirectionalLight(0x7a96ff,0.9);rim.position.set(-3,SCOPE_H+1,-2.5);scene.add(rim);
 
   /* ---- ground + compass letters ---- */
-  const ground=new THREE.Mesh(new THREE.CircleGeometry(9,64),new THREE.MeshStandardMaterial({color:0x151a17,roughness:1}));
-  ground.rotation.x=-Math.PI/2;scene.add(ground);
+  const ground=new THREE.Mesh(new THREE.CircleGeometry(9,64),new THREE.MeshStandardMaterial({color:sRGB(0x1b211d),roughness:1,envMapIntensity:.2}));
+  ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
   function label(txt,col){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle=col;g.font='bold 96px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,64,70);
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));s.scale.set(.7,.7,1);return s;}
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(c),transparent:true,depthWrite:false}));s.scale.set(.7,.7,1);return s;}
   [['N',0,'#ff7a6b'],['E',90,'#c9d4f0'],['S',180,'#c9d4f0'],['W',270,'#c9d4f0']].forEach(([t,az,col])=>{const s=label(t,col);s.position.copy(dirFromAltAz(0,az,6.5));s.position.y=.35;scene.add(s);});
 
   /* ---- the sky dome: real bright stars, the Moon, the Sun and planets (positions refreshed twice a second) ---- */
@@ -35,7 +53,7 @@ function initScene(canvas){
   const starGeo=new THREE.BufferGeometry();starGeo.setAttribute('position',new THREE.BufferAttribute(starPos,3));starGeo.setAttribute('color',new THREE.BufferAttribute(starCol,3));
   const stars=new THREE.Points(starGeo,new THREE.PointsMaterial({size:2.4,sizeAttenuation:false,vertexColors:true,depthWrite:false}));stars.frustumCulled=false;scene.add(stars);
   function glow(col,size){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,col);gr.addColorStop(.35,col);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));s.scale.set(size,size,1);return s;}
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(c),transparent:true,depthWrite:false}));s.scale.set(size,size,1);return s;}
   const moon=glow('#f4f1e4',3.2),sun=glow('#fff2b0',7),bodies={moon,sun};scene.add(moon);scene.add(sun);
   ['mercury','venus','mars','jupiter','saturn'].forEach(n=>{const s=glow({mercury:'#d8d0c8',venus:'#fff6d8',mars:'#ff9a70',jupiter:'#ffe6c0',saturn:'#f0dca0'}[n],1.1);bodies[n]=s;scene.add(s);});
   function updateSky(){
@@ -46,39 +64,57 @@ function initScene(canvas){
     starGeo.attributes.position.needsUpdate=true;starGeo.attributes.color.needsUpdate=true;
     for(const id in bodies){const o=OBJ.find(x=>x.id===id);if(!o)continue;bodies[id].visible=o.alt>-1;bodies[id].position.copy(dirFromAltAz(o.alt,o.az,SKY_R-1));}
     moon.material.opacity=.35+.65*(MOON.illum||0);
-    scene.background.setRGB(.016+.35*clamp((SUN.alt+8)/14,0,1)*.6,.024+.45*clamp((SUN.alt+8)/14,0,1)*.7,.05+.7*clamp((SUN.alt+8)/14,0,1));   // the sky brightens in the daytime
+    scene.background.setRGB(.016+.35*clamp((SUN.alt+8)/14,0,1)*.6,.024+.45*clamp((SUN.alt+8)/14,0,1)*.7,.05+.7*clamp((SUN.alt+8)/14,0,1)).convertSRGBToLinear();   // the sky brightens in the daytime
   }
 
   /* ---- materials ---- */
-  const white=new THREE.MeshStandardMaterial({color:0xf4f5f7,roughness:.32,metalness:.02});
-  const blackGlass=new THREE.MeshStandardMaterial({color:0x040405,roughness:.04,metalness:.7});
-  const dark=new THREE.MeshStandardMaterial({color:0x1b1d22,roughness:.55,metalness:.25});
-  const lensGlass=new THREE.MeshStandardMaterial({color:0x1d4a26,roughness:.06,metalness:.9,emissive:0x07140a});   // the coated front lens looks green
-  const carbon=new THREE.MeshStandardMaterial({color:0x111214,roughness:.7,metalness:.2});
-  const legMetal=new THREE.MeshStandardMaterial({color:0x26292e,roughness:.4,metalness:.7});
+  const white=new THREE.MeshPhysicalMaterial({color:sRGB(0xf0f1f3),roughness:.42,metalness:0,clearcoat:.45,clearcoatRoughness:.38,envMapIntensity:.9});   // satin white plastic
+  const blackGlass=new THREE.MeshPhysicalMaterial({color:sRGB(0x050506),roughness:.05,metalness:0,clearcoat:1,clearcoatRoughness:.03,reflectivity:.85,envMapIntensity:1.9});   // glossy black glass
+  const dark=new THREE.MeshStandardMaterial({color:sRGB(0x15171b),roughness:.5,metalness:.4,envMapIntensity:1});                                                      // matte black anodised metal
+  const lensGlass=new THREE.MeshPhysicalMaterial({color:sRGB(0x0b2a1a),roughness:.03,metalness:.25,clearcoat:1,clearcoatRoughness:0,envMapIntensity:2.4,emissive:sRGB(0x03100a)});   // coated lens: green
+  const lensGlass2=new THREE.MeshPhysicalMaterial({color:sRGB(0x2b1140),roughness:.03,metalness:.3,clearcoat:1,clearcoatRoughness:0,envMapIntensity:2.4});                     // second coating: purple
+  const carbon=new THREE.MeshStandardMaterial({color:sRGB(0x1a1b1e),roughness:.5,metalness:.35,envMapIntensity:.8});
+  const legMetal=new THREE.MeshStandardMaterial({color:sRGB(0x2c2f35),roughness:.32,metalness:.85,envMapIntensity:1.1});
 
   /* ---- helpers: rounded boxes (the real body has no sharp corners) ---- */
-  function rrShape(w,h,r){const x=-w/2,y=-h/2,sh=new THREE.Shape();
-    sh.moveTo(x+r,y);sh.lineTo(x+w-r,y);sh.absarc(x+w-r,y+r,r,-Math.PI/2,0);sh.lineTo(x+w,y+h-r);sh.absarc(x+w-r,y+h-r,r,0,Math.PI/2);
-    sh.lineTo(x+r,y+h);sh.absarc(x+r,y+h-r,r,Math.PI/2,Math.PI);sh.lineTo(x,y+r);sh.absarc(x+r,y+r,r,Math.PI,1.5*Math.PI);return sh;}
+  function rrShape(w,h,r){                                           // a rounded rectangle; long straight edges are cut into short pieces,
+    const x=-w/2,y=-h/2,sh=new THREE.Shape();                          // because three.js' bevel pinches the middle of one long straight edge
+    const ln=(x2,y2)=>{const c=sh.currentPoint,n=Math.max(2,Math.ceil(Math.hypot(x2-c.x,y2-c.y)/.006));for(let i=1;i<=n;i++)sh.lineTo(c.x+(x2-c.x)*i/n,c.y+(y2-c.y)*i/n);};
+    sh.moveTo(x+r,y);ln(x+w-r,y);sh.absarc(x+w-r,y+r,r,-Math.PI/2,0);ln(x+w,y+h-r);sh.absarc(x+w-r,y+h-r,r,0,Math.PI/2);
+    ln(x+r,y+h);sh.absarc(x+r,y+h-r,r,Math.PI/2,Math.PI);ln(x,y+r);sh.absarc(x+r,y+r,r,Math.PI,1.5*Math.PI);return sh;}
   function rrBox(w,h,d,r,bev,mat){
-    const depth=Math.max(.0005,d-2*bev),g=new THREE.ExtrudeGeometry(rrShape(w-2*bev,h-2*bev,Math.max(.001,r-bev)),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:3,curveSegments:14});
+    const depth=Math.max(.0005,d-2*bev),g=new THREE.ExtrudeGeometry(rrShape(w-2*bev,h-2*bev,Math.max(.001,r-bev)),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
     g.translate(0,0,-depth/2);return new THREE.Mesh(g,mat);}
 
   /* ---- little table + short carbon-fibre tripod (manual: 227 mm tall, 737 mm across at the widest leg angle) ---- */
-  const tmat=new THREE.MeshStandardMaterial({color:0x1c2026,roughness:.8});
-  const top=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.03,48),tmat);top.position.y=TABLE_TOP-.015;scene.add(top);
-  const col=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,TABLE_TOP-.04,16),tmat);col.position.y=(TABLE_TOP-.04)/2;scene.add(col);
-  const tbase=new THREE.Mesh(new THREE.CylinderGeometry(.26,.28,.03,32),tmat);tbase.position.y=.015;scene.add(tbase);
-  function leg(a,b,r,mat){const d=new THREE.Vector3().subVectors(b,a),m=new THREE.Mesh(new THREE.CylinderGeometry(r*.9,r,d.length(),14),mat);
+  function woodTex(){                                                               // a procedural oak-like table top
+    const c=document.createElement('canvas');c.width=c.height=512;const g=c.getContext('2d'),r=mulberry32(7);
+    g.fillStyle='#b68a5b';g.fillRect(0,0,512,512);
+    for(let i=0;i<300;i++){const y=r()*512;g.strokeStyle=`rgba(${70+r()*55|0},${40+r()*30|0},${18+r()*10|0},${.05+r()*.13})`;g.lineWidth=.5+r()*2.4;g.beginPath();g.moveTo(0,y);for(let x=0;x<=512;x+=32)g.lineTo(x,y+Math.sin(x*.02+i)*5);g.stroke();}
+    const t=tex(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+  const tmat=new THREE.MeshStandardMaterial({color:sRGB(0x2a2e35),roughness:.5,metalness:.7,envMapIntensity:.8});
+  const woodMat=new THREE.MeshStandardMaterial({map:woodTex(),roughness:.5,metalness:0,envMapIntensity:.45});
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.03,64),[woodMat,woodMat,tmat]);top.position.y=TABLE_TOP-.015;scene.add(top);
+  const col=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,TABLE_TOP-.04,24),tmat);col.position.y=(TABLE_TOP-.04)/2;scene.add(col);
+  const tbase=new THREE.Mesh(new THREE.CylinderGeometry(.26,.28,.03,40),tmat);tbase.position.y=.015;scene.add(tbase);
+  function leg(a,b,r,mat){const d=new THREE.Vector3().subVectors(b,a),m=new THREE.Mesh(new THREE.CylinderGeometry(r*.9,r,d.length(),20),mat);
     m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return m;}
+  // soft "contact shadow" blobs: a dark fuzzy dot under each foot, so it looks pressed onto the wood
+  const blobTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(0,0,0,.65)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
+  function blob(x,z,r){const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,TABLE_TOP+.0015,z);m.userData.noShadow=true;scene.add(m);}
   const tripod=new THREE.Group();scene.add(tripod);
   for(let i=0;i<3;i++){
-    const ang=i*2.0944+Math.PI/2,top3=new THREE.Vector3(0,SCOPE_H-.02,0),foot=new THREE.Vector3(Math.cos(ang)*.33,TABLE_TOP+.012,Math.sin(ang)*.33),mid=top3.clone().lerp(foot,.55);
-    tripod.add(leg(top3,mid,.017,carbon));tripod.add(leg(mid,foot,.012,legMetal));         // upper and lower (telescopic) leg sections
-    const f=new THREE.Mesh(new THREE.SphereGeometry(.017,12,10),carbon);f.position.copy(foot);f.scale.y=.8;tripod.add(f);
+    const ang=i*2.0944+Math.PI/2,top3=new THREE.Vector3(0,SCOPE_H-.02,0),foot=new THREE.Vector3(Math.cos(ang)*.33,TABLE_TOP+.008,Math.sin(ang)*.33),mid=top3.clone().lerp(foot,.55);
+    tripod.add(leg(top3,mid,.017,carbon));tripod.add(leg(mid,foot,.012,legMetal));         // upper (carbon) and lower (telescopic) leg sections
+    const pad=new THREE.Mesh(new THREE.CylinderGeometry(.021,.024,.009,24),carbon);pad.position.set(foot.x,TABLE_TOP+.0045,foot.z);tripod.add(pad);   // flat rubber foot
+    const clamp1=new THREE.Mesh(new THREE.CylinderGeometry(.0145,.0145,.02,20),legMetal);clamp1.position.copy(mid);clamp1.quaternion.copy(leg(top3,mid,.017,carbon).quaternion);tripod.add(clamp1);   // leg-lock collar
+    const hinge=new THREE.Mesh(new THREE.CylinderGeometry(.011,.011,.034,16).rotateZ(Math.PI/2),legMetal);hinge.position.set(Math.cos(ang)*.05,SCOPE_H-.02,Math.sin(ang)*.05);hinge.rotation.y=-ang+Math.PI/2;tripod.add(hinge);   // leg hinge
+    blob(foot.x,foot.z,.07);
   }
-  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,.035,28),legMetal);hub.position.y=SCOPE_H-.0175;tripod.add(hub);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.058,.068,.03,36),legMetal);hub.position.y=SCOPE_H-.021;tripod.add(hub);
+  const plate=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.012,36),carbon);plate.position.y=SCOPE_H-.006;tripod.add(plate);                  // the platform the S50 Pro screws onto
+  for(let i=0;i<3;i++){const a2=i*2.0944+Math.PI/2+1.047,bolt=new THREE.Mesh(new THREE.CylinderGeometry(.0052,.0052,.006,6),legMetal);bolt.position.set(Math.cos(a2)*.047,SCOPE_H-.0225+.016,Math.sin(a2)*.047);tripod.add(bolt);}   // hex bolts
+  blob(0,0,.2);
 
   /* ---- the telescope: 130 wide × 257 tall × 142.5 deep (mm), from the manufacturer's drawing ----
      Side view = an "L": a wide flat foot, a thin tall BATTERY COLUMN at the REAR (its black glass face and power button face the
@@ -89,10 +125,11 @@ function initScene(canvas){
   {const plate=new THREE.Mesh(new THREE.BoxGeometry(.16,.012,.19),legMetal);plate.position.y=-.006;wedge.add(plate);
    const post=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.12,12),legMetal);post.position.set(0,-.06,.08);wedge.add(post);}
   const foot=rrBox(.13,.05,.1425,.02,.007,white);foot.position.y=.025;eqG.add(foot);       // the flat foot (tripod thread Ø49 mm underneath)
-  // "S50 Pro" logo on the left side of the foot (a red S, like the real one)
-  {const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.font='300 62px system-ui,sans-serif';g.textBaseline='middle';
-    g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);
-    const lg=new THREE.Mesh(new THREE.PlaneGeometry(.07,.0175),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));lg.rotation.y=-Math.PI/2;lg.position.set(-.0657,.025,-.01);eqG.add(lg);}
+  // logos in soft grey: "☆ Seestar" on the left of the foot, "S50 Pro" (red S) on the right
+  function logo(draw,w,x,rotY){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.textBaseline='middle';draw(g);
+    const lg=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:tex(c),transparent:true,depthWrite:false,opacity:.9}));lg.rotation.y=rotY;lg.position.set(x,.025,-.012);lg.userData.noShadow=true;eqG.add(lg);}
+  logo(g=>{g.fillStyle='#7d838c';g.font='300 70px system-ui,sans-serif';g.fillText('☆',92,64);g.fillText('Seestar',150,66);},.075,-.0656,-Math.PI/2);
+  logo(g=>{g.font='300 66px system-ui,sans-serif';g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);},.075,.0656,Math.PI/2);
   // the battery column at the rear, 68 mm deep, with a big rounded top
   const column=rrBox(.13,.207,.068,.05,.008,white);column.position.set(0,.1535,.0372);eqG.add(column);
   const panel=rrBox(.098,.17,.004,.045,.001,blackGlass);panel.position.set(0,.152,.0725);eqG.add(panel);   // black glass face (looks backwards, +Z)
@@ -101,6 +138,8 @@ function initScene(canvas){
   const btn=new THREE.Mesh(new THREE.CylinderGeometry(.0098,.0098,.004,28).rotateX(Math.PI/2),btnMat);btn.position.set(0,.092,.0745);eqG.add(btn);
   const ringMat=new THREE.MeshBasicMaterial({color:0x000000});                                              // …inside a ring of light (the power indicator)
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.0122,.0017,8,40),ringMat);ring.position.set(0,.092,.0752);eqG.add(ring);
+  const ledGlow=glow('#ffffff',.034);ledGlow.material.blending=THREE.AdditiveBlending;ledGlow.material.opacity=0;ledGlow.position.set(0,.092,.0775);eqG.add(ledGlow);   // soft halo round the ring
+  const ledLight=new THREE.PointLight(0xffffff,0,.16);ledLight.position.set(0,.092,.1);eqG.add(ledLight);                                                         // the ring lights the glass a little
   const dots=[0,1,2,3].map(i=>{const m=new THREE.MeshBasicMaterial({color:0x300000}),d=new THREE.Mesh(new THREE.SphereGeometry(.0018,8,8),m);d.position.set(0,.121+i*.0125,.0745);eqG.add(d);return m;});   // 4 battery lights, in a column above the button
   const port=new THREE.Mesh(new THREE.BoxGeometry(.002,.0075,.0165),new THREE.MeshStandardMaterial({color:0x08090b,roughness:.4}));port.position.set(-.0655,.085,.04);eqG.add(port);   // USB-C port on the left side
   // USB-C charging cable (visible while a charger is plugged in)
@@ -114,13 +153,23 @@ function initScene(canvas){
   const headBody=new THREE.Mesh(new THREE.CylinderGeometry(.072,.072,.069,48).rotateX(Math.PI/2),white);altG.add(headBody);       // a puck ≈ 150 mm across, 75 mm thick
   for(const zz of[-.0345,.0345]){const rim=new THREE.Mesh(new THREE.TorusGeometry(.072,.0045,12,48),white);rim.position.z=zz;altG.add(rim);}
   const win=new THREE.Mesh(new THREE.CircleGeometry(.056,48).rotateY(Math.PI),blackGlass);win.position.z=-.0391;altG.add(win);                  // dark front window
-  const lens=new THREE.Mesh(new THREE.CircleGeometry(.034,40).rotateY(Math.PI),lensGlass);lens.position.set(-.006,.009,-.0397);altG.add(lens);    // telephoto lens (green coating)
-  const cam2=new THREE.Mesh(new THREE.CircleGeometry(.0105,24).rotateY(Math.PI),new THREE.MeshStandardMaterial({color:0x10131a,roughness:.1,metalness:.9}));cam2.position.set(.03,-.028,-.0399);altG.add(cam2);   // wide-angle lens
+  // telephoto lens: a matte-black collar and bezel, and domed coated glass (green outer coating, purple inner one)
+  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.039,.041,.008,48).rotateX(Math.PI/2),dark);collar.position.set(-.006,.009,-.0418);altG.add(collar);
+  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.0388,.003,14,56),dark);bezelL.position.set(-.006,.009,-.0458);altG.add(bezelL);
+  const lens=new THREE.Mesh(new THREE.SphereGeometry(.0365,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.28),lensGlass);lens.position.set(-.006,.009,-.0432);altG.add(lens);
+  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.022,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass2);lens2.position.set(-.006,.009,-.0442);altG.add(lens2);
+  // the small wide-angle camera, with its own bezel
+  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0118,.0019,10,32),dark);bezel2.position.set(.03,-.028,-.0407);altG.add(bezel2);
+  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0108,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.35),lensGlass);cam2.position.set(.03,-.028,-.0392);altG.add(cam2);
+  const seam=new THREE.Mesh(new THREE.TorusGeometry(.0723,.0006,6,72),new THREE.MeshBasicMaterial({color:sRGB(0x7c8088)}));altG.add(seam);   // the thin parting line round the head
   const dewMat=new THREE.MeshBasicMaterial({color:0xdde8f0,transparent:true,opacity:0,depthWrite:false});     // fog on the lens (dew)
-  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.056,48).rotateY(Math.PI),dewMat);dewDisc.position.z=-.0405;altG.add(dewDisc);
+  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.056,48).rotateY(Math.PI),dewMat);dewDisc.position.z=-.0475;altG.add(dewDisc);
   const solar=new THREE.Group();altG.add(solar);solar.visible=false;                                          // magnetic solar filter, stuck on the front of the head
   {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(-.006,.009,-.0445);solar.add(cap);
    const rimR=new THREE.Mesh(new THREE.TorusGeometry(.05,.002,8,40),legMetal);rimR.position.set(-.006,.009,-.0478);solar.add(rimR);}
+
+  function shadowify(root){root.traverse(m=>{if(m.isMesh&&!m.material.isMeshBasicMaterial&&!m.userData.noShadow){m.castShadow=true;m.receiveShadow=true;}});}
+  shadowify(tiltG);shadowify(tripod);top.castShadow=true;top.receiveShadow=true;col.castShadow=true;
 
   /* ---- aim line: shows where the telescope points ---- */
   const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-.045),new THREE.Vector3(0,0,-30)]),new THREE.LineBasicMaterial({color:0x4da3ff,transparent:true,opacity:.7}));
@@ -164,6 +213,7 @@ function initScene(canvas){
       const k=(a=>{switch(a){case'solid':return 1;case'breath':return .15+.85*(.5+.5*Math.sin(t*6.283/5));case'breathFast':return .15+.85*(.5+.5*Math.sin(t*6.283/1.6));
         case'blink':return Math.floor(t*1.2)%2;case'blinkFast':return Math.floor(t*5)%2;case'run':return (Math.floor(t*10)%3)===0?1:.25;default:return 0;}})(led.anim);
       ringMat.color.setRGB(led.col[0]*k,led.col[1]*k,led.col[2]*k);
+      ledGlow.material.color.setRGB(led.col[0],led.col[1],led.col[2]);ledGlow.material.opacity=.4*k;ledLight.color.setRGB(led.col[0],led.col[1],led.col[2]);ledLight.intensity=.05*k;
       led.batt.forEach((s,i)=>{const on=s==='on'||(s==='blink'&&Math.floor(t*1.2)%2)||(s==='blinkFast'&&Math.floor(t*5)%2);dots[i].color.setHex(on?0xff2a1a:0x300000);});
     }
     beam.visible=SC.showBeam;
