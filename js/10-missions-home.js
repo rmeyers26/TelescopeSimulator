@@ -81,17 +81,20 @@ cv.addEventListener('pointerdown',()=>document.body.classList.remove('topopen'))
 const SCOPES=[
  {id:'c11cpc',name:'Celestron C11',sub:'CPC Deluxe 1100 HD',kind:'Schmidt-Cassegrain on a computerized GoTo fork mount',
   facts:['280 mm (11-inch) mirror – about 1,600× more light than your eye','2800 mm focal length · f/10','NexStar+ hand controller with 40,000-object database','Optional StarSense camera, Telrad and eyepiece kit'],
-  load:()=>{}}];                                   // the C11 scene is built at start-up, so loading it needs no extra work
-const COMING=[{e:'🤖',t:'Smart telescope',s:'An all-in-one scope that takes pictures for you'},{e:'🔭',t:'Refractor',s:'A lens telescope, like Galileo’s'},{e:'🪣',t:'Dobsonian',s:'A big mirror on a simple push-around base'}];
+  load:()=>{}},                                    // the C11 scene is built at start-up, so loading it needs no extra work
+ {id:'s50',name:'Seestar S50',sub:'Smart telescope by ZWO / Celestron',kind:'All-in-one smart telescope: it levels, finds north and stacks photos by itself',emoji:'🌟',url:'seestar.html',
+  facts:['50 mm refractor, f/5 – wide field of view (1.3° × 0.7°)','Plate-solving: no manual alignment','Live stacking: watch the noise melt away','Light-pollution filter, dew heater, battery']}];   // entries with a `url` open their own simulator page
+const COMING=[{e:'🔭',t:'Refractor',s:'A lens telescope, like Galileo’s'},{e:'🪣',t:'Dobsonian',s:'A big mirror on a simple push-around base'}];
 const homeState={scope:null,thumb:null};
 function showHome(){const el=$('#home');let red=document.body.classList.contains('red');
   el.innerHTML=`<div class="hw"><div style="font-size:40px">🔭</div><h1>Telescope Simulator</h1><div class="tag">Learn how a real telescope works – pick one to explore, drive and use under tonight’s sky.</div>
-   <div class="scopes">${SCOPES.map(sc=>`<button class="scard main" data-scope="${sc.id}"><div class="im" style="${homeState.thumb?`background-image:url(${homeState.thumb})`:''}">${homeState.thumb?'':'🔭'}</div>
+   <div class="scopes">${SCOPES.map(sc=>`<button class="scard main" data-scope="${sc.id}"><div class="im" style="${!sc.url&&homeState.thumb?`background-image:url(${homeState.thumb})`:''}">${!sc.url&&homeState.thumb?'':(sc.emoji||'🔭')}</div>
      <div class="bd"><span class="pill">${sc.kind}</span><h3>${sc.name}</h3><div class="sub">${sc.sub}</div><ul>${sc.facts.map(f=>`<li>${f}</li>`).join('')}</ul><span class="go">Explore this telescope ▸</span></div></button>`).join('')}
     </div><h3 style="margin:26px 0 10px;color:#aab4cf">More telescopes on the way</h3><div class="scopes">${COMING.map(c=>`<div class="scard soon"><div class="im">${c.e}</div><div class="bd"><span class="pill">Coming soon</span><h3>${c.t}</h3><div class="sub">${c.s}</div></div></div>`).join('')}</div>
    <div class="hopts"><label><input type="checkbox" id="hRed" ${red?'checked':''}> 🔴 Night mode</label><label><input type="checkbox" id="hEdu" ${edu.on?'checked':''}> 🎓 Education mode (simpler, kid-friendly)</label></div></div>`;
   el.style.display='block';}
-function chooseScope(id){const sc=SCOPES.find(x=>x.id===id);if(!sc)return;homeState.scope=sc;sc.load();$('#home').style.display='none';
+function chooseScope(id){const sc=SCOPES.find(x=>x.id===id);if(!sc)return;if(sc.url){location.href=sc.url;return;}   // a separate simulator page (e.g. the Seestar)
+  homeState.scope=sc;sc.load();$('#home').style.display='none';
   document.title=sc.name+' – Telescope Simulator';if(typeof tourFirstRun==='function'&&tourFirstRun())return;   // first visit: quick tour instead of the welcome screen
   let show=true;try{show=localStorage.getItem('c11welcome')!=='0';}catch(_){}if(show)showWelcome();}
 $('#home').addEventListener('click',e=>{const c=e.target.closest('[data-scope]');if(c)chooseScope(c.dataset.scope);});
