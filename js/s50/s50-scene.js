@@ -103,7 +103,7 @@ function initScene(canvas){
     sh.moveTo(x+rb,y);ln(x+w-rb,y);sh.absarc(x+w-rb,y+rb,rb,-Math.PI/2,0);ln(x+w,y+h-r);sh.absarc(x+w-r,y+h-r,r,0,Math.PI/2);
     ln(x+r,y+h);sh.absarc(x+r,y+h-r,r,Math.PI/2,Math.PI);ln(x,y+rb);sh.absarc(x+rb,y+rb,rb,Math.PI,1.5*Math.PI);return sh;}
   function rrBox(w,h,d,r,bev,mat,rb=r){                              // w × h × d box with rounded edges, centred on its own origin
-    const depth=Math.max(.0005,d-2*bev),g=new THREE.ExtrudeGeometry(rrShape(w-2*bev,h-2*bev,Math.max(.001,r-bev),Math.max(.001,rb-bev)),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
+    const depth=Math.max(.0005,d-2*bev),g=new THREE.ExtrudeGeometry(rrShape(w-2*bev,h-2*bev,Math.max(.001,r-bev),Math.max(.001,rb-bev)),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:4,curveSegments:18});
     g.translate(0,0,-depth/2);return new THREE.Mesh(g,mat);}
 
   /* ---- little table + short carbon-fibre tripod (manual: 227 mm tall, 737 mm across at the widest leg angle) ---- */
@@ -182,7 +182,7 @@ function initScene(canvas){
     const r=T/2,rf=.012,rr=r,yt=r;sh.moveTo(r,yb+rb);ln(r,yt-rf);sh.absarc(r-rf,yt-rf,rf,0,Math.PI/2,false);ln(-r+rr,yt);sh.absarc(-r+rr,yt-rr,rr,Math.PI/2,Math.PI,false);   // front-top corner tight, rear-top rounder
     ln(-r,yb+rb);sh.absarc(-r+rb,yb+rb,rb,Math.PI,1.5*Math.PI,false);ln(r-rb,yb);sh.absarc(r-rb,yb+rb,rb,1.5*Math.PI,2*Math.PI,false);return sh;}
   const HT=.072,HW=.12,HB=-.128;                                     // thickness, width, y of the bottom (relative to the pivot)
-  {const bev=.006,depth=HW-2*bev,g=new THREE.ExtrudeGeometry(headShape(HT-2*bev,HB+bev,.024-bev),{depth,steps:16,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:6,curveSegments:24});
+  {const bev=.006,depth=HW-2*bev,g=new THREE.ExtrudeGeometry(headShape(HT-2*bev,HB+bev,.024-bev),{depth,steps:10,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:4,curveSegments:14});
    g.translate(0,0,-depth/2);
    {const p=g.attributes.position,R=HW/2-.004,y0=HB+R,R2=.034,y1=HT/2-R2;                                     // seen from the front the head is a tall PILL: its bottom is half-round
     for(let i=0;i<p.count;i++){const y=p.getY(i);if(y<y0){const k=Math.sqrt(Math.max(0,1-Math.pow((y0-y)/R,2)));p.setZ(i,p.getZ(i)*Math.max(k,.08));}
@@ -278,6 +278,7 @@ function initScene(canvas){
   SC.resize=function(){const w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}};
   SC.setView=v=>{if(v==='eye'){viewMode='eye';SC.eye.yaw=SC.eye.pitch=0;}else setView(v);};
   SC._sig=0;
+  SC.vertexCount=()=>{let n=0;scene.traverse(o=>{if(o.geometry&&o.geometry.attributes.position)n+=o.geometry.attributes.position.count;});return n;};   // how heavy is the scene? (for tuning)
   /* Graphics quality: 'high' = shadows + sharp pixels, 'fast' = no shadows, normal pixels (for slower phones and laptops) */
   SC.setQuality=function(q){
     SC.quality=q;renderer.setPixelRatio(q==='fast'?1:Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=q!=='fast';
