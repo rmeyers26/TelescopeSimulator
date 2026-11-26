@@ -150,14 +150,14 @@ function initScene(canvas){
    const post=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.12,12),legMetal);post.position.set(0,-.06,.08);wedge.add(post);}
   const joint=new THREE.Mesh(new THREE.CylinderGeometry(.031,.031,.008,36),dark);joint.position.y=.001;eqG.add(joint);       // the turning joint at the tripod thread (Ø49 mm)
   const azG=new THREE.Group();eqG.add(azG);                                                 // azG: everything that turns left/right
-  const foot=rrBox(.13,.068,.1425,.024,.007,white);foot.position.y=.034;azG.add(foot);       // the flat foot (its front step is ~68 mm tall)       // the flat foot
+  const foot=rrBox(.13,.068,.1425,.026,.012,white);foot.position.y=.034;azG.add(foot);       // the flat foot (its front step is ~68 mm tall)       // the flat foot
   // logos in soft grey: "☆ Seestar" on the RIGHT side of the foot (it reads correctly from the right, as in the product photos), "S50 Pro" (red S) on the FRONT of the foot's step (as on the real unit)
   function logo(draw,w,x,z,rotY){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.textBaseline='middle';draw(g);
     const lg=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:tex(c),transparent:true,depthWrite:false,opacity:.9}));lg.rotation.y=rotY;lg.position.set(x,.035,z);lg.userData.noShadow=true;azG.add(lg);}
   logo(g=>{g.fillStyle='#7d838c';g.font='300 70px system-ui,sans-serif';g.fillText('☆',92,64);g.fillText('Seestar',150,66);},.075,.0656,-.005,Math.PI/2);
-  logo(g=>{g.font='300 66px system-ui,sans-serif';g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);},.056,.022,-.0717,Math.PI);
+  logo(g=>{g.font='300 66px system-ui,sans-serif';g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);},.07,0,-.0717,Math.PI);
   // the battery column at the rear, 68 mm deep, with a big rounded top
-  const column=rrBox(.1304,.253,.0692,.05,.008,white,.004);column.position.set(0,.1305,.03725);azG.add(column);      // runs from the base to the top, so column and foot form one smooth L
+  const column=rrBox(.1304,.253,.0692,.05,.011,white,.004);column.position.set(0,.1305,.03725);azG.add(column);      // runs from the base to the top, so column and foot form one smooth L
   const panel=rrBox(.108,.205,.004,.052,.001,blackGlass);panel.position.set(0,.1225,.0700);azG.add(panel);   // black glass face, set slightly into the white frame (looks backwards, +Z)
   for(const sx of[-1,1]){const seam=new THREE.Mesh(new THREE.BoxGeometry(.0009,.185,.0009),new THREE.MeshStandardMaterial({color:sRGB(0x6b7078),roughness:.8}));seam.position.set(sx*.0652,.1125,.04);azG.add(seam);}   // the thin vertical gap between the rear shell and the body
   const bezel=new THREE.Mesh(new THREE.TorusGeometry(.0138,.0022,10,40),new THREE.MeshStandardMaterial({color:0x4a4d55,roughness:.3,metalness:.8}));bezel.position.set(0,.061,.0745);azG.add(bezel);
