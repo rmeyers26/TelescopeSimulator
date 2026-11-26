@@ -80,48 +80,55 @@ function initScene(canvas){
   }
   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,.035,28),legMetal);hub.position.y=SCOPE_H-.0175;tripod.add(hub);
 
-  /* ---- the telescope (overall 260 × 140 × 145 mm per the manual) ---- */
+  /* ---- the telescope: 130 wide × 257 tall × 142.5 deep (mm), from the manufacturer's drawing ----
+     Side view = an "L": a wide flat foot, a thin tall BATTERY COLUMN at the REAR (its black glass face and power button face the
+     person standing behind it), and the big round optical head in front of the column. The lens looks forward (-Z). */
   const tiltG=new THREE.Group();tiltG.position.y=SCOPE_H;scene.add(tiltG);                  // tiltG: whole unit, wobbles until it has levelled itself
   const eqG=new THREE.Group();tiltG.add(eqG);                                               // eqG: tips the whole unit onto the EQ wedge's angle
   const wedge=new THREE.Group();eqG.add(wedge);wedge.visible=false;                         // the EQ wedge: a plate under the telescope on an adjustable strut
   {const plate=new THREE.Mesh(new THREE.BoxGeometry(.16,.012,.19),legMetal);plate.position.y=-.006;wedge.add(plate);
    const post=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.12,12),legMetal);post.position.set(0,-.06,.08);wedge.add(post);}
-  const base=rrBox(.14,.07,.145,.025,.008,white);base.position.y=.035;eqG.add(base);
-  // "S50 Pro" logo on the front of the base (a red S, like the real one)
+  const foot=rrBox(.13,.05,.1425,.02,.007,white);foot.position.y=.025;eqG.add(foot);       // the flat foot (tripod thread Ø49 mm underneath)
+  // "S50 Pro" logo on the left side of the foot (a red S, like the real one)
   {const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');g.font='300 62px system-ui,sans-serif';g.textBaseline='middle';
     g.fillStyle='#d23a3a';g.fillText('S',150,66);g.fillStyle='#7d838c';g.fillText('50 Pro',184,66);
-    const lg=new THREE.Mesh(new THREE.PlaneGeometry(.075,.019),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));lg.rotation.y=Math.PI;lg.position.set(.03,.034,-.0735);eqG.add(lg);}
-  // the battery column: tall white shell with a black glass front, the round power button + indicator ring, and 4 battery lights
-  const column=rrBox(.088,.19,.12,.03,.007,white);column.position.set(-.028,.165,-.0125);eqG.add(column);
-  const panel=rrBox(.06,.15,.006,.027,.002,blackGlass);panel.position.set(-.028,.165,-.0735);eqG.add(panel);
-  const btnMat=new THREE.MeshBasicMaterial({color:0xe8e8e8});
-  const btn=new THREE.Mesh(new THREE.CylinderGeometry(.0085,.0085,.004,24).rotateX(Math.PI/2),btnMat);btn.position.set(-.028,.115,-.0765);eqG.add(btn);
-  const ringMat=new THREE.MeshBasicMaterial({color:0x000000});
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.0125,.0016,8,36),ringMat);ring.position.set(-.028,.115,-.0765);eqG.add(ring);
-  const dots=[0,1,2,3].map(i=>{const m=new THREE.MeshBasicMaterial({color:0x300000}),d=new THREE.Mesh(new THREE.SphereGeometry(.0017,8,8),m);d.position.set(-.028,.17+i*.0125,-.0765);eqG.add(d);return m;});
-  // azG = the turret that turns left/right (azimuth). It sits on the base, beside the column.
-  const azG=new THREE.Group();azG.position.set(.034,.07,.012);eqG.add(azG);
-  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.034,.038,.07,28),white);neck.position.y=.035;azG.add(neck);
-  // altG = the optical head, which tips up and down (altitude). It folds down to the "zero position" when parked.
-  const altG=new THREE.Group();altG.position.y=.135;azG.add(altG);
-  const headBody=new THREE.Mesh(new THREE.CylinderGeometry(.049,.049,.1,40).rotateX(Math.PI/2),white);headBody.position.z=-.01;altG.add(headBody);
-  const headRear=new THREE.Mesh(new THREE.SphereGeometry(.049,32,20),white);headRear.position.z=.04;altG.add(headRear);
-  const win=new THREE.Mesh(new THREE.CircleGeometry(.0435,40).rotateY(Math.PI),blackGlass);win.position.z=-.0605;altG.add(win);                 // dark front window
-  const lens=new THREE.Mesh(new THREE.CircleGeometry(.03,40).rotateY(Math.PI),lensGlass);lens.position.set(-.004,.007,-.0612);altG.add(lens);       // telephoto lens (green coating)
-  const cam2=new THREE.Mesh(new THREE.CircleGeometry(.0095,24).rotateY(Math.PI),new THREE.MeshStandardMaterial({color:0x10131a,roughness:.1,metalness:.9}));cam2.position.set(.021,-.025,-.0614);altG.add(cam2);   // wide-angle lens
+    const lg=new THREE.Mesh(new THREE.PlaneGeometry(.07,.0175),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));lg.rotation.y=-Math.PI/2;lg.position.set(-.0657,.025,-.01);eqG.add(lg);}
+  // the battery column at the rear, 68 mm deep, with a big rounded top
+  const column=rrBox(.13,.207,.068,.05,.008,white);column.position.set(0,.1535,.0372);eqG.add(column);
+  const panel=rrBox(.098,.17,.004,.045,.001,blackGlass);panel.position.set(0,.152,.0725);eqG.add(panel);   // black glass face (looks backwards, +Z)
+  const bezel=new THREE.Mesh(new THREE.TorusGeometry(.0138,.0022,10,40),new THREE.MeshStandardMaterial({color:0x4a4d55,roughness:.3,metalness:.8}));bezel.position.set(0,.092,.0745);eqG.add(bezel);
+  const btnMat=new THREE.MeshBasicMaterial({color:0xf2f2f2});                                               // the power button: a white disc…
+  const btn=new THREE.Mesh(new THREE.CylinderGeometry(.0098,.0098,.004,28).rotateX(Math.PI/2),btnMat);btn.position.set(0,.092,.0745);eqG.add(btn);
+  const ringMat=new THREE.MeshBasicMaterial({color:0x000000});                                              // …inside a ring of light (the power indicator)
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.0122,.0017,8,40),ringMat);ring.position.set(0,.092,.0752);eqG.add(ring);
+  const dots=[0,1,2,3].map(i=>{const m=new THREE.MeshBasicMaterial({color:0x300000}),d=new THREE.Mesh(new THREE.SphereGeometry(.0018,8,8),m);d.position.set(0,.121+i*.0125,.0745);eqG.add(d);return m;});   // 4 battery lights, in a column above the button
+  const port=new THREE.Mesh(new THREE.BoxGeometry(.002,.0075,.0165),new THREE.MeshStandardMaterial({color:0x08090b,roughness:.4}));port.position.set(-.0655,.085,.04);eqG.add(port);   // USB-C port on the left side
+  // USB-C charging cable (visible while a charger is plugged in)
+  const cable=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-.066,.085,.04),new THREE.Vector3(-.1,.07,.06),new THREE.Vector3(-.15,-.05,.1),new THREE.Vector3(-.2,-.2,.16),new THREE.Vector3(-.3,-.226,.2)]),24,.0032,8),new THREE.MeshStandardMaterial({color:0xf2f2f2,roughness:.6}));
+  eqG.add(cable);cable.visible=false;
+  // azG = the turret that turns left/right (azimuth); a short neck on the foot, in front of the column
+  const azG=new THREE.Group();azG.position.set(0,.05,-.0335);eqG.add(azG);
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.03,.034,.052,28),white);neck.position.y=.026;azG.add(neck);
+  // altG = the big round optical head, which tips up and down (altitude). Folded flat on the neck = the "zero position".
+  const altG=new THREE.Group();altG.position.y=.123;azG.add(altG);
+  const headBody=new THREE.Mesh(new THREE.CylinderGeometry(.072,.072,.069,48).rotateX(Math.PI/2),white);altG.add(headBody);       // a puck ≈ 150 mm across, 75 mm thick
+  for(const zz of[-.0345,.0345]){const rim=new THREE.Mesh(new THREE.TorusGeometry(.072,.0045,12,48),white);rim.position.z=zz;altG.add(rim);}
+  const win=new THREE.Mesh(new THREE.CircleGeometry(.056,48).rotateY(Math.PI),blackGlass);win.position.z=-.0391;altG.add(win);                  // dark front window
+  const lens=new THREE.Mesh(new THREE.CircleGeometry(.034,40).rotateY(Math.PI),lensGlass);lens.position.set(-.006,.009,-.0397);altG.add(lens);    // telephoto lens (green coating)
+  const cam2=new THREE.Mesh(new THREE.CircleGeometry(.0105,24).rotateY(Math.PI),new THREE.MeshStandardMaterial({color:0x10131a,roughness:.1,metalness:.9}));cam2.position.set(.03,-.028,-.0399);altG.add(cam2);   // wide-angle lens
   const dewMat=new THREE.MeshBasicMaterial({color:0xdde8f0,transparent:true,opacity:0,depthWrite:false});     // fog on the lens (dew)
-  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.0435,40).rotateY(Math.PI),dewMat);dewDisc.position.z=-.0622;altG.add(dewDisc);
+  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.056,48).rotateY(Math.PI),dewMat);dewDisc.position.z=-.0405;altG.add(dewDisc);
   const solar=new THREE.Group();altG.add(solar);solar.visible=false;                                          // magnetic solar filter, stuck on the front of the head
-  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.0455,.0455,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.z=-.066;solar.add(cap);
-   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.0455,.002,8,40),legMetal);rimR.position.z=-.069;solar.add(rimR);}
+  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(-.006,.009,-.0445);solar.add(cap);
+   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.05,.002,8,40),legMetal);rimR.position.set(-.006,.009,-.0478);solar.add(rimR);}
 
   /* ---- aim line: shows where the telescope points ---- */
-  const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-.07),new THREE.Vector3(0,0,-30)]),new THREE.LineBasicMaterial({color:0x4da3ff,transparent:true,opacity:.7}));
+  const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-.045),new THREE.Vector3(0,0,-30)]),new THREE.LineBasicMaterial({color:0x4da3ff,transparent:true,opacity:.7}));
   beam.visible=false;altG.add(beam);
 
   /* ---- orbit camera (drag to rotate, wheel / pinch to zoom) ---- */
-  const orbit={yaw:2.7,pitch:.2,dist:1.25,ty:SCOPE_H+.12};
-  const views={orbit:null,front:{yaw:Math.PI,pitch:.1,dist:1.1},side:{yaw:Math.PI/2,pitch:.08,dist:1.1},top:{yaw:Math.PI,pitch:1.45,dist:1.2}};
+  const orbit={yaw:-0.75,pitch:.2,dist:1.25,ty:SCOPE_H+.12};
+  const views={orbit:null,back:{yaw:0,pitch:.1,dist:1.1},front:{yaw:Math.PI,pitch:.1,dist:1.1},side:{yaw:Math.PI/2,pitch:.08,dist:1.1},top:{yaw:Math.PI,pitch:1.45,dist:1.2}};
   let viewMode='orbit';
   function setView(v){viewMode=v;if(views[v]&&v!=='orbit')Object.assign(orbit,views[v]);}
   const ptrs=new Map();let pinch=0;
@@ -151,13 +158,12 @@ function initScene(canvas){
       azG.rotation.y=-m.az*D2R;altG.rotation.x=m.alt*D2R;
     }
     tiltG.rotation.x=m.tilt.x*D2R*(1+.03*Math.sin(t*5));tiltG.rotation.z=m.tilt.z*D2R;
-    dewMat.opacity=m.dew*.85;solar.visible=m.solarFilter;
+    dewMat.opacity=m.dew*.85;solar.visible=m.solarFilter;cable.visible=m.charger!=='none';
     // indicator ring + button + battery lights, following the pattern table in the manual
     if(led){
       const k=(a=>{switch(a){case'solid':return 1;case'breath':return .15+.85*(.5+.5*Math.sin(t*6.283/5));case'breathFast':return .15+.85*(.5+.5*Math.sin(t*6.283/1.6));
         case'blink':return Math.floor(t*1.2)%2;case'blinkFast':return Math.floor(t*5)%2;case'run':return (Math.floor(t*10)%3)===0?1:.25;default:return 0;}})(led.anim);
       ringMat.color.setRGB(led.col[0]*k,led.col[1]*k,led.col[2]*k);
-      btnMat.color.setRGB(.6+.35*(led.anim==='off'?1:0)+led.col[0]*k*.25,.6+.35*(led.anim==='off'?1:0)+led.col[1]*k*.25,.6+.35*(led.anim==='off'?1:0)+led.col[2]*k*.25);
       led.batt.forEach((s,i)=>{const on=s==='on'||(s==='blink'&&Math.floor(t*1.2)%2)||(s==='blinkFast'&&Math.floor(t*5)%2);dots[i].color.setHex(on?0xff2a1a:0x300000);});
     }
     beam.visible=SC.showBeam;
@@ -167,7 +173,7 @@ function initScene(canvas){
   function updateEye(){
     if(viewMode==='eye'){
       altG.updateWorldMatrix(true,false);                                                   // camera sits at the lens, looking where the lens looks
-      altG.getWorldQuaternion(q);tmp.set(0,0,-.075).applyMatrix4(altG.matrixWorld);
+      altG.getWorldQuaternion(q);tmp.set(0,0,-.05).applyMatrix4(altG.matrixWorld);
       camera.position.copy(tmp);camera.quaternion.copy(q);
       camera.rotateY(SC.eye.yaw);camera.rotateX(SC.eye.pitch);
       camera.fov=34;
