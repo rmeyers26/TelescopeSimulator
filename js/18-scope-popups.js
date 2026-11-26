@@ -52,6 +52,7 @@ $('#hcEl').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-k]
 
 /* ---------- what a tap on the 3D telescope does ---------- */
 function scopeTap(part,sub){
+  if(part==='focuser'){sel.part=part;sel.sub=null;showInfo();renderParts();epPopOpen('ep');toast('Turn the focus knob with ⟲ / ⟳ (or drag sideways on the view) until the stars are sharp dots.',4000);return true;}
   if(part==='eyepiece'||part==='finder'){sel.part=part;sel.sub=null;showInfo();renderParts();epPopOpen(part==='finder'?'finder':'ep');return true;}
   if(part==='handset'){sel.part=part;sel.sub=null;showInfo();renderParts();hcPopOpen();return true;}
   return false;}
