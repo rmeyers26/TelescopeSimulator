@@ -209,6 +209,7 @@ function drawEyepiece(c,epo,bare){                 // bare = small thumbnail: sk
     seeTmp.width=W;seeTmp.height=H;seeTmp.getContext('2d').drawImage(c,0,0);x.setTransform(1,0,0,1,0,0);x.fillStyle=day>0?'#000':bgN;x.fillRect(0,0,W,H);
     const offs=[[0,0],[b,0],[-b,0],[0,b],[0,-b],[b*.7,b*.7],[-b*.7,b*.7],[b*.7,-b*.7],[-b*.7,-b*.7]];
     offs.forEach(([ox,oy],i)=>{x.globalAlpha=1/(i+1);x.drawImage(seeTmp,ox+jx,oy+jy);});x.globalAlpha=1;}
+  if(typeof applyDefocus==='function')applyDefocus(x,c,defocusPx(ep,ppd));   // out of focus? stars become doughnuts (19-focus.js)
   x.restore();
   // the 9×50 finder has a crosshair: put the object where the lines cross and the main telescope is aimed at it
   if(ep.finder){const g=R*.06;x.strokeStyle=document.body.classList.contains('red')?'rgba(255,110,90,.75)':'rgba(230,230,230,.6)';x.lineWidth=Math.max(1,W/320);x.beginPath();

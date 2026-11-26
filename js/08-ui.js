@@ -28,7 +28,7 @@ const KID={
  primary:'The big curved mirror at the back. It collects lots of light – about 1,600 times more than your eye – and bounces it forward.',
  baffle:'A black tube in the middle that stops stray light from sneaking into your eyepiece, so the sky looks dark and stars look sharp.',
  rearcell:'The black back end of the tube. It holds the big mirror, the focus knob and the vents that let warm air out.',
- focuser:'The focus knob. Turn it slowly until stars become tiny sharp dots – just like focusing binoculars.',
+ focuser:'The focus knob. Turning it slides the big mirror inside the tube. Turn slowly until stars become tiny sharp dots – out of focus they look like little doughnuts! Tap the knob on the telescope to try it.',
  cap:'The black lid on the front of the telescope. It keeps dust off the glass. Take it off before you look – with the cap on, the eyepiece is totally dark!',
  dew:'A tube on the front that stops dew (water drops) from forming on the glass on cold nights.',
  visualback:'The ring on the back that eyepieces and cameras attach to.',

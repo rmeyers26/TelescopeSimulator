@@ -20,6 +20,8 @@ const camera=new THREE.PerspectiveCamera(45,1,0.05,600);
     if(y>0)c.setRGB(.06+.1*(1-y),.09+.12*(1-y),.18+.2*(1-y));else c.setRGB(.05,.045,.04);col.push(c.r,c.g,c.b);}
   g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(col),3));
   es.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide})));
+  [[0,14,0,1.6,26,3],[-14,4,8,1.1,3,14],[14,3,10,.8,2.5,12]].forEach(([x,y,z,k,w,h])=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(k,k,k*1.04),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);es.add(m);});   // strip lights give long clean highlights on the tube
+  {const f=new THREE.Mesh(new THREE.CircleGeometry(6,32),new THREE.MeshBasicMaterial({color:new THREE.Color(.16,.12,.08)}));f.rotation.x=-Math.PI/2;f.position.y=-6;es.add(f);}   // warm bounce from the ground
   [[8,10,6,5],[-9,6,-4,2.5],[0,12,-9,3]].forEach(([x,y,z,k])=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(7,4),new THREE.MeshBasicMaterial({color:new THREE.Color(k,k,k*1.05),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);es.add(m);});
   const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(es,0.04).texture;pm.dispose();
 })();
@@ -76,20 +78,36 @@ const hcTex=canvasTex(256,780,(x,w,h)=>{          // front face of the NexStar+ 
   x.fillStyle='#d9dadd';x.font='bold 22px system-ui';x.textAlign='center';x.fillText('CELESTRON',128,756);
 },true);
 
+// --- surface detail for realism: small bumps baked into "normal maps" (they fake fine relief without extra geometry)
+// heightFn(x,y) returns 0..1 for each texel; normals come from the height slope (a Sobel-style difference)
+const MAXANISO=renderer.capabilities.getMaxAnisotropy();
+function normalTex(w,h,heightFn,rep){const H=new Float32Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++)H[y*w+x]=heightFn(x,y);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x2=c.getContext('2d'),img=x2.createImageData(w,h),at=(x,y)=>H[((y+h)%h)*w+((x+w)%w)];
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const dx=at(x+1,y)-at(x-1,y),dy=at(x,y+1)-at(x,y-1),l=Math.hypot(dx,dy,1),k=(y*w+x)*4;
+    img.data[k]=(-dx/l*.5+.5)*255;img.data[k+1]=(dy/l*.5+.5)*255;img.data[k+2]=(1/l*.5+.5)*255;img.data[k+3]=255;}
+  x2.putImageData(img,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep||1,rep||1);t.anisotropy=MAXANISO;return t;}
+// crinkle (wrinkle) powder-coat like the CPC fork and base: smoothed random noise
+const crinkleN=(()=>{const n=128,r=new Float32Array(n*n).map(()=>Math.random()),s=(x,y)=>r[((y+n)%n)*n+((x+n)%n)];
+  return normalTex(n,n,(x,y)=>(s(x,y)*.4+(s(x+1,y)+s(x-1,y)+s(x,y+1)+s(x,y-1))*.15)*1.6,6);})();
+// knurled rubber grip: two crossing sets of fine ridges
+const knurlN=normalTex(128,128,(x,y)=>.5+.25*Math.sin((x+y)*Math.PI/4)+.25*Math.sin((x-y)*Math.PI/4),3);
+// very faint orange-peel on the gloss white tube paint
+const peelN=(()=>{const n=128,r=new Float32Array(n*n).map(()=>Math.random());return normalTex(n,n,(x,y)=>{let v=0;for(let j=-2;j<=2;j++)for(let i=-2;i<=2;i++)v+=r[((y+j+n)%n)*n+((x+i+n)%n)];return v/25;},8);})();
 // --- materials (each mesh gets its own clone so it can be highlighted independently)
 const BASE={
   orange:new THREE.MeshStandardMaterial({color:0xe2631b,metalness:.4,roughness:.38,roughnessMap:brushTex,side:THREE.DoubleSide}),
   black:new THREE.MeshStandardMaterial({color:0x14161b,metalness:.6,roughness:.42,side:THREE.DoubleSide}),
-  blackg:new THREE.MeshStandardMaterial({color:0x17181c,metalness:.1,roughness:.5,envMapIntensity:.6,side:THREE.DoubleSide}),
-  white:new THREE.MeshStandardMaterial({color:0xe8eadf,metalness:.08,roughness:.3,side:THREE.DoubleSide}),
+  blackg:new THREE.MeshStandardMaterial({color:0x17181c,metalness:.1,roughness:.62,normalMap:crinkleN,normalScale:new THREE.Vector2(.22,.22),envMapIntensity:.6,side:THREE.DoubleSide}),   // textured powder coat
+  white:new THREE.MeshPhysicalMaterial({color:0xe8eadf,metalness:.05,roughness:.32,clearcoat:.75,clearcoatRoughness:.12,normalMap:peelN,normalScale:new THREE.Vector2(.04,.04),side:THREE.DoubleSide}),   // gloss paint with a clear coat
   rubber:new THREE.MeshStandardMaterial({color:0x0b0b0d,metalness:0,roughness:.85,side:THREE.DoubleSide}),
   silver:new THREE.MeshStandardMaterial({color:0xc4c8d0,metalness:1,roughness:.28,side:THREE.DoubleSide}),
   steel:new THREE.MeshStandardMaterial({color:0x6b7078,metalness:.9,roughness:.4}),
+  coated:new THREE.MeshPhysicalMaterial({color:0x9fe3c4,metalness:0,roughness:.03,transparent:true,opacity:.3,clearcoat:1,envMapIntensity:2.2,side:THREE.DoubleSide,depthWrite:false}),   // StarBright XLT multi-coating: the faint green-purple sheen of a real corrector
   glass:new THREE.MeshPhysicalMaterial({color:0xbfd8ff,metalness:0,roughness:.04,transparent:true,opacity:.22,clearcoat:1,side:THREE.DoubleSide,depthWrite:false}),
   mirror:new THREE.MeshStandardMaterial({color:0xe8eeff,metalness:1,roughness:.04,side:THREE.DoubleSide}),
   label:new THREE.MeshStandardMaterial({map:labelTex,transparent:true,roughness:.6,metalness:0,side:THREE.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}),
   hcb:new THREE.MeshStandardMaterial({map:hcTex,roughness:.6,metalness:.1}),
-  grip:new THREE.MeshStandardMaterial({color:0x060607,roughness:.6,metalness:0,envMapIntensity:.2,side:THREE.DoubleSide}),
+  grip:new THREE.MeshStandardMaterial({color:0x08080a,roughness:.72,metalness:0,normalMap:knurlN,normalScale:new THREE.Vector2(.6,.6),envMapIntensity:.25,side:THREE.DoubleSide}),   // knurled rubber
   gloss:new THREE.MeshStandardMaterial({color:0x08090b,metalness:.35,roughness:.1,envMapIntensity:1.4,side:THREE.DoubleSide}),
   panel:new THREE.MeshStandardMaterial({map:panelTex,roughness:.35,metalness:.5,alphaTest:.5,side:THREE.DoubleSide}),
   badge:new THREE.MeshStandardMaterial({map:badgeTex,roughness:.45,metalness:.2}),
@@ -134,7 +152,7 @@ M('tube',gTube,cylZ(.15,.15,.415,72,true),'white',{p:[0,0,0.0075],sub:'shell',cl
     const m=M('tube',gTube,g,'label',{p:[0,0,-.125],sub:'decal',noShadow:true,clip:true});m.material.map=t;m.material.needsUpdate=true;});
 })();
 const gCor=G('corrector',altG,V3(0,0,-0.32));
-M('corrector',gCor,cylZ(.1397,.1397,.004,64),'glass',{p:[0,0,-.28],sub:'plate',clip:true,noShadow:true});
+M('corrector',gCor,cylZ(.1397,.1397,.004,64),'coated',{p:[0,0,-.28],sub:'plate',clip:true,noShadow:true});
 M('corrector',gCor,cylZ(.158,.158,.1,72,true),'blackg',{p:[0,0,-.25],sub:'cell',clip:true});
 M('corrector',gCor,new THREE.RingGeometry(.1397,.158,72),'blackg',{p:[0,0,-.3],sub:'cell',clip:true});
 
@@ -468,7 +486,7 @@ const TRI={t:.55,H:0,B:0};
 // CPC Deluxe 1100 HD drawing (OTA level): altitude axis is 530 mm above the tripod head, top of tube 689 mm above it.
 // The model's axis was 575 mm above the head, so the mount is scaled by MS to match the drawing.
 const MS=.93;      // CPC 11 mount + OTA drawing: axis is 532 mm above the base bottom (model was ~580 mm); a uniform scale keeps the tube round when it pitches, so widths come out ~6% narrow
-function setTripod(t){TRI.t=t;TRI.H=.784+(1.18-.784)*t;TRI.B=.45+(.64-.45)*t;buildTripod(TRI.H,TRI.B);mountG.scale.setScalar(MS);mountG.position.y=TRI.H+.53-MS*PIV_Y;}      // base bottom rests on the head; axis = head + 530 mm
+function setTripod(t){if(window.updAO)setTimeout(window.updAO,0);TRI.t=t;TRI.H=.784+(1.18-.784)*t;TRI.B=.45+(.64-.45)*t;buildTripod(TRI.H,TRI.B);mountG.scale.setScalar(MS);mountG.position.y=TRI.H+.53-MS*PIV_Y;}      // base bottom rests on the head; axis = head + 530 mm
 const mountPivY=()=>mountG.position.y+MS*PIV_Y;
 const triTxt=()=>`Head ${Math.round(TRI.H*1000)} mm · footprint Ø${Math.round(958+352*TRI.t)} mm · altitude axis ${Math.round((TRI.H+.53)*1000)} mm · top of tube ${Math.round((TRI.H+.689)*1000)} mm (tube level)`;
 setTripod(.55);
@@ -581,7 +599,17 @@ function buildHC(sx,zc){
 const gHCL=buildHC(-1,0),gHCR=buildHC(1,.02);gHCR.visible=false;
 // ground, pad, table, rocks
 const ground=new THREE.Mesh(new THREE.CircleGeometry(120,64),new THREE.MeshStandardMaterial({map:groundTex,roughness:1,metalness:0,envMapIntensity:.15}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-const pad=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.03,64),new THREE.MeshStandardMaterial({color:0x1c1e22,roughness:.95,envMapIntensity:.1}));pad.position.y=.015;pad.receiveShadow=true;scene.add(pad);
+const padTex=canvasTex(512,512,(x,w,h)=>{x.fillStyle='#2b2d31';x.fillRect(0,0,w,h);for(let i=0;i<9000;i++){const v=30+Math.random()*30|0;x.fillStyle=`rgba(${v},${v},${v+3},.35)`;x.fillRect(Math.random()*w,Math.random()*h,1.5,1.5);}
+  x.strokeStyle='rgba(0,0,0,.25)';x.lineWidth=2;for(let i=1;i<4;i++){x.beginPath();x.arc(w/2,h/2,i*w/8,0,7);x.stroke();}},true);   // brushed concrete with faint rings
+const pad=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.03,64),new THREE.MeshStandardMaterial({map:padTex,color:0xb0b0b0,roughness:.92,envMapIntensity:.1}));pad.position.y=.015;pad.receiveShadow=true;scene.add(pad);
+// contact shadows: soft dark patches where the tripod feet, the tripod and the power station touch the ground
+const aoTex=canvasTex(128,128,(x,w,h)=>{const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(0,0,0,.85)');g.addColorStop(.5,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,w,h);});
+const AO=[];function aoBlob(px,pz,r,o){const m=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),new THREE.MeshBasicMaterial({map:aoTex,transparent:true,opacity:o||.8,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(px,.0315,pz);m.renderOrder=1;scene.add(m);AO.push(m);return m;}
+// one big soft shadow under the whole telescope, one under each foot and one under the power station; follows tripod height and explode
+window.updAO=function(){if(!AO.length){aoBlob(0,0,.95,.55);for(let k=0;k<3;k++)aoBlob(0,0,.11,.9);aoBlob(0,0,.28,.75);}
+  const B=TRI.B;for(let k=0;k<3;k++){const a=k*Math.PI*2/3;AO[1+k].position.set(Math.sin(a)*B,.0315,Math.cos(a)*B);}
+  const p=new THREE.Vector3();gPS.getWorldPosition(p);AO[4].position.set(p.x,.0315,p.z);AO[4].visible=gPS.visible&&!hidden.has('power')&&p.y<.3;
+  const lift=Math.min(1,Math.abs(gTri.position.y)*2);AO.slice(0,4).forEach(m=>m.material.opacity=(m===AO[0]?.55:.9)*(1-lift));};
 (function(){const t=new THREE.Group();const top=new THREE.Mesh(new THREE.BoxGeometry(.9,.04,.5),new THREE.MeshStandardMaterial({color:0x4a3a2a,roughness:.8,envMapIntensity:.2}));top.position.y=.75;top.castShadow=top.receiveShadow=true;t.add(top);
   [[-.4,-.22],[.4,-.22],[-.4,.22],[.4,.22]].forEach(([x,z])=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.04,.75,.04),new THREE.MeshStandardMaterial({color:0x888d96,metalness:.8,roughness:.4}));l.position.set(x,.375,z);l.castShadow=true;t.add(l);});
   t.position.set(1.7,0,.6);t.rotation.y=-.5;scene.add(t);})();

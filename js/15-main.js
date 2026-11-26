@@ -43,7 +43,8 @@ function loop(now){
   if(frame%12===0){hc3Lcd();$('#bStar').classList.toggle('on',!hidden.has('starsense'));}
   if(!dewS.e)dewS.e=EXPL.find(e=>e.part==='dew');dewS.t+=(dewS.to-dewS.t)*Math.min(1,dt*3.2);if(Math.abs(dewS.to-dewS.t)<.0005)dewS.t=dewS.to;dewS.e.base.z=-.9*dewS.t;
   {if(!CAP.e)CAP.e=EXPL.find(e=>e.part==='cap');CAP.e.base.z=dewS.t<.05?-.337:0;}   // with the dew shield fitted, the cap sits on the shield's front instead of the corrector cell
-  stepPhoton(dt);if(frame%3===0)updPowerCable();{const st=driver.state();updPowerStation(dt,st.slewing||st.moving,st.tracking!=='off');if(loop.sl&&!st.slewing)haptic('arrive');loop.sl=st.slewing;}   // buzz when a GoTo arrivesgrainShift(t);
+  stepPhoton(dt);if(frame%3===0)updPowerCable();{const st=driver.state();updPowerStation(dt,st.slewing||st.moving,st.tracking!=='off');if(loop.sl&&!st.slewing)haptic('arrive');loop.sl=st.slewing;}   // buzz when a GoTo arrives
+  grainShift(t);if(frame%10===0&&window.updAO)updAO();   // film grain; contact shadows follow the tripod
   applyCamera();if(labState.on||frame%30===0)updLabels();
   renderer.render(scene,camera);
   if(frame===12&&!homeState.thumb){try{homeState.thumb=renderer.domElement.toDataURL('image/jpeg',.82);const im=document.querySelector('#home .scard .im');if(im){im.style.backgroundImage=`url(${homeState.thumb})`;im.textContent='';}}catch(_){}}
