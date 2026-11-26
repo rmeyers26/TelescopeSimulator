@@ -7,7 +7,9 @@
    The UI only talks to `driver`. SimDriver is the simulator. A real driver
    (NexStar serial / CPWI / ASCOM / INDI bridge) would implement the same API.
    ===================================================================== */
-const SLEW_RATES=[0,0.0021,0.0084,0.03,0.08,0.17,0.3,0.5,1.5,3.5];   // deg/s for keys 1..9 (simulated)
+// Slew rates for keys 1–9, from the CPC 1100 manual: 1 = 0.5×, 2 = 1× (sidereal), 3 = 4×, 4 = 8×, 5 = 16×, 6 = 64× sidereal,
+// 7 = 0.5°/s, 8 = 2°/s, 9 = 3°/s.  Sidereal rate = 360° per sidereal day ≈ 0.004178°/s.
+const SIDEREAL=0.004178,SLEW_RATES=[0,.5,1,4,8,16,64].map(x=>x*SIDEREAL).concat([.5,2,3]);
 const TRK_RATE={off:0,sidereal:0,lunar:0.549,solar:0.0411};           // eastward drift vs stars, deg/hour
 class TelescopeDriver{                       // ---- interface ----
   get kind(){return 'abstract';}
@@ -24,7 +26,7 @@ class SimDriver extends TelescopeDriver{
     super();
     // `err` is the (hidden) real-world orientation error of a freshly set-up mount: not levelled, north not exact.
     this.s={enc:{az:0,alt:0},err:{az:(Math.random()<.5?-1:1)*(1.5+Math.random()*2.5),alt:(Math.random()-.5)*2},corr:{az:0,alt:0,a:0,b:0},tilt:{a:0,b:0},
-            man:{az:0,alt:0},manRate:0.1,goto:null,moving:false,tracking:'off',lock:null,parked:false,align:[],slewMax:5,onArrive:null};
+            man:{az:0,alt:0},manRate:0.1,goto:null,moving:false,tracking:'off',lock:null,parked:false,align:[],slewMax:4,onArrive:null};
   }
   get kind(){return 'simulated';}
   // A tilted tripod adds an altitude error that changes as the fork turns: tilt.a*cos(az) + tilt.b*sin(az).

@@ -21,7 +21,7 @@ const SETUP=[
  {t:'Take off the lens cap',b:'Make sure the telescope is NOT pointed anywhere near the Sun, then pull the black lens cap straight off the front of the tube and put it somewhere safe, like the table. With the cap on, the eyepiece shows nothing at all. Put it back on at the end of the night once the glass is dry.',part:'cap',view:'front',uncap:true},
  {t:'Align from the hand control',b:'With the scope powered and level, use ALIGN on the controller (or StarSense AutoAlign if fitted) and follow the prompts. Tracking starts after alignment. Never slew while someone is looking through the eyepiece.',part:'handset',tab:'ctrl'}
 ];
-const SU={on:false,i:0,mine:new Set()};
+const SU={on:false,i:0,mine:new Set(),guideHid:new Set(),capPrev:null};   // guideHid / capPrev: what the guide changed, so it can be put back
 const MOUNT_STEP=()=>SETUP.findIndex(x=>x.t.startsWith('Mount the telescope'));
 // levelling game: leg lengths tilt the tripod head; the bubble moves toward the high side
 function levelUpdate(){const L=LEVEL.legs,dx=(L[1]-L[2])*.87,dz=L[0]-(L[1]+L[2])/2;LEVEL.dx=clamp(dx,-1,1);LEVEL.dz=clamp(-dz,-1,1);LEVEL.ok=Math.hypot(dx,dz)<.18;
@@ -38,12 +38,19 @@ const SU_PARTS=['diagonal','eyepiece','finder','handset','power'];
 function setupGo(i){
   SU.on=true;SU.i=Math.max(0,Math.min(SETUP.length-1,i));const st=SETUP[SU.i];
   setupMountVisible(SU.i===0||SU.i>=MOUNT_STEP());
-  {const ui=SETUP.findIndex(x=>x.uncap);setCap(SU.i<=ui);}            // the cap stays on until the 'Take off the lens cap' step
-  SU_PARTS.forEach(id=>hidden.add(id));                                // parts for later steps are not fitted yet
+  {const ui=SETUP.findIndex(x=>x.uncap),want=SU.i<=ui;if(CAP.on!==want){if(SU.capPrev===null)SU.capPrev=CAP.on;setCap(want);}}   // the cap stays on until the 'Take off the lens cap' step
+  SU_PARTS.forEach(id=>{if(!hidden.has(id)){hidden.add(id);SU.guideHid.add(id);}});   // parts for later steps are not fitted yet
   SETUP.slice(0,SU.i+1).forEach(x=>(x.reveal||[]).forEach(id=>hidden.delete(id)));
   renderSetup();renderParts();if(st.level)levelUpdate();
 }
-function setupShow(){const st=SETUP[SU.i];if(st.uncap)setCap(false);selectPart(st.part,st.sub||null,false);if(st.cam){setMode('orbit');tweenTo(st.cam());}else if(st.view)viewFrom(st.view);else focusPart(st.part);if(st.tab)tab(st.tab);}
+// Leaving the Setup tab part-way through used to leave the telescope half-built (no diagonal, eyepiece or finder)
+// with the lens cap on, so every eyepiece view looked broken. Now the guide puts back whatever it changed.
+function setupLeave(){let ch=false;
+  if(SU.mine.size){setupMountVisible(true);ch=true;}
+  SU.guideHid.forEach(id=>{if(hidden.has(id)){hidden.delete(id);ch=true;}});SU.guideHid.clear();
+  if(SU.capPrev!==null){if(CAP.on!==SU.capPrev)ch=true;setCap(SU.capPrev);SU.capPrev=null;}
+  if(ch){renderParts();toast('🔧 Setup guide paused – the telescope is put back together. Open Setup to carry on.',3500);}}
+function setupShow(){const st=SETUP[SU.i];if(st.uncap){setCap(false);SU.capPrev=null;}selectPart(st.part,st.sub||null,false);if(st.cam){setMode('orbit');tweenTo(st.cam());}else if(st.view)viewFrom(st.view);else focusPart(st.part);if(st.tab)tab(st.tab);}
 function renderSetup(){
   const st=SETUP[SU.i];
   $('#p-setup').innerHTML=`<h2>Setup guide</h2><p class="mu sm">Follows the Celestron CPC Deluxe HD and EdgeHD manuals. Parts appear as you reach the step that installs them.</p>
@@ -60,6 +67,6 @@ $('#p-setup').addEventListener('input',e=>{if(e.target.id==='triS'){setTripod(e.
 $('#p-setup').addEventListener('click',e=>{const lg=e.target.closest('[data-lg]');if(lg){LEVEL.legs[+lg.dataset.lg]+=+lg.dataset.d*.2;levelUpdate();return;}
   const b=e.target.closest('[data-su]');if(!b)return;const k=b.dataset.su;
   if(k==='prev')setupGo(SU.i-1);else if(k==='next'){setupGo(SU.i+1);setupShow();}else if(k==='show')setupShow();
-  else if(k==='all'){setupMountVisible(true);SU_PARTS.forEach(id=>hidden.delete(id));renderParts();viewFrom('iso');}
+  else if(k==='all'){setupMountVisible(true);SU_PARTS.forEach(id=>hidden.delete(id));SU.guideHid.clear();renderParts();viewFrom('iso');}
   else if(k==='lab')$('#bLab').click();else if(k.startsWith('go')){setupGo(+k.slice(2));setupShow();}});
 

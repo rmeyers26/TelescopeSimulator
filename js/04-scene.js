@@ -71,7 +71,7 @@ const hcTex=canvasTex(256,780,(x,w,h)=>{          // front face of the NexStar+ 
   x.fillStyle='#d9dadd';x.beginPath();x.ellipse(128,305,66,44,0,0,7);x.fill();x.fillStyle='#8a8d95';
   [[128,278,0],[128,332,Math.PI],[93,305,-Math.PI/2],[163,305,Math.PI/2]].forEach(([px,py,a])=>{x.save();x.translate(px,py);x.rotate(a);x.beginPath();x.moveTo(0,-11);x.lineTo(10,7);x.lineTo(-10,7);x.fill();x.restore();});
   const keys=[['SOLAR\nSYSTEM',1],['STARS',2],['DEEP\nSKY',3],['IDENTIFY',4],['SKY\nTOUR',5],['SCROLL ▲',6],['MENU',7],['HELP',8],['SCROLL ▼',9],['',0],['OBJECT\nINFO',0],['MOTOR\nSPEED',0]];
-  keys.forEach((k,i)=>{const c=i%3,r=(i/3)|0;btn(62+c*68,408+r*78-(c===1?-18:c===2?-4:0)*0,26,k[0],9);});
+  keys.forEach((k,i)=>{const c=i%3,r=(i/3)|0,cx=62+c*68,cy=408+r*78;btn(cx,cy-3,26,k[0],9);if(i<10){x.fillStyle='#22252b';x.font='bold 11px system-ui';x.textAlign='center';x.fillText(String(k[1]===undefined?'':i===9?0:k[1]),cx,cy+20);}});   // the digit each key types
   x.strokeStyle='#e2631b';x.lineWidth=3;x.beginPath();x.arc(62,642,13,.5,6.0);x.stroke();x.fillStyle='#4a5780';x.font='8px system-ui';x.textAlign='center';x.fillText('OPTION',62,670);
   x.fillStyle='#d9dadd';x.font='bold 22px system-ui';x.textAlign='center';x.fillText('CELESTRON',128,756);
 },true);
@@ -711,4 +711,4 @@ function updateDome(){
 }
 
 
-document.addEventListener('click',e=>{if(e.target.closest('[data-cap]'))setCap(!CAP.on);});
+document.addEventListener('click',e=>{if(e.target.closest('[data-cap]')){setCap(!CAP.on);if(typeof SU!=='undefined')SU.capPrev=null;}});
