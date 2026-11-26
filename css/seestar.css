@@ -1,0 +1,94 @@
+/* Seestar S50 simulator – styles.
+   Same colour palette as the C11 simulator (css/style.css) so the two feel like one product. */
+:root{--bg:#070a12;--pn:#0d1220;--ln:#1e2740;--tx:#e4e9f5;--mu:#8f9bb8;--ac:#4da3ff;--or:#ff8a3d;--ok:#46d28a;--bad:#ff6b5b;--appw:440px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button,select,input{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+.mu{color:var(--mu)}.sm{font-size:12px}.grow{flex:1}
+
+/* ---- top bar ---- */
+#bar{position:fixed;left:0;right:0;top:0;height:46px;display:flex;align-items:center;gap:10px;padding:0 10px;background:#0a0f1c;border-bottom:1px solid var(--ln);z-index:6;overflow-x:auto;scrollbar-width:none;white-space:nowrap}
+#bar h1{font-size:15px;margin:0}
+#bar label{display:flex;gap:6px;align-items:center}
+
+/* ---- main layout: 3D on the left, app on the right (stacked on phones) ---- */
+#main{position:fixed;left:0;right:0;top:46px;bottom:0;display:grid;grid-template-columns:1fr var(--appw)}
+#stage{position:relative;min-height:0;overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#app{display:flex;flex-direction:column;min-height:0;background:rgba(10,14,26,.97);border-left:1px solid var(--ln)}
+@media (max-width:860px){
+  #main{grid-template-columns:1fr;grid-template-rows:34vh 1fr}
+  #app{border-left:0;border-top:1px solid var(--ln)}
+  #bar h1 .mu{display:none}
+  #hud{font-size:10px;padding:3px 6px}#hud .hx{display:none}
+}
+
+/* ---- buttons & form bits ---- */
+.b{background:#141b2e;border:1px solid var(--ln);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap;touch-action:manipulation;user-select:none}
+.b:hover{border-color:#34406a}.b.on{background:#1b3a66;border-color:var(--ac)}.b.sm{padding:3px 8px;font-size:12px}.b.big{padding:9px 16px;font-size:15px}
+.b:disabled{opacity:.4;cursor:not-allowed}
+.wide{width:100%}
+input[type=range]{width:100%;accent-color:var(--ac)}
+label{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.grid2 label{color:var(--mu);font-size:12px}.grid2 select,.grid2 input[type=date]{width:100%;margin-top:3px;color:var(--tx)}
+.grid2 b{color:var(--tx);float:right}
+.sw{display:flex;gap:6px;align-items:center;cursor:pointer}
+
+/* ---- 3D overlays ---- */
+#views{position:absolute;left:8px;bottom:8px;display:flex;gap:5px;flex-wrap:wrap;z-index:2}
+#hud{position:absolute;left:8px;top:8px;background:rgba(8,12,22,.8);border:1px solid var(--ln);border-radius:8px;padding:6px 9px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;pointer-events:none}
+#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);max-width:90%;background:#101a30;border:1px solid var(--ac);padding:6px 12px;border-radius:8px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:3;text-align:center}
+#toast.on{opacity:1}
+
+/* ---- live view ---- */
+#live{position:relative;background:#000;border-bottom:1px solid var(--ln)}
+#lv{display:block;width:100%;aspect-ratio:16/9}
+#liveMsg{position:absolute;left:0;right:0;bottom:0;padding:6px 10px;font-size:12px;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#cfe2ff;min-height:28px}
+#chips{display:flex;gap:6px;flex-wrap:wrap;padding:7px 10px;border-bottom:1px solid var(--ln)}
+.chip{padding:1px 9px;border-radius:99px;background:#141b2e;border:1px solid var(--ln);font-size:12px;color:var(--mu)}
+.chip.ok{color:var(--ok);border-color:#1f5a40}.chip.warn{color:#ffc46b;border-color:#6b4a14}.chip.bad{color:var(--bad);border-color:#6b2a24}
+
+/* ---- tabs & panes ---- */
+#tabs{display:flex;gap:2px;padding:4px 6px 0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--ln)}
+#tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:8px 11px;cursor:pointer;color:var(--mu);white-space:nowrap}
+#tabs button.on{color:var(--tx);border-color:var(--or)}
+.pane{display:none;overflow:auto;padding:12px;flex:1;min-height:0;-webkit-overflow-scrolling:touch}.pane.on{display:block}
+h3{margin:16px 0 6px;font-size:12px;color:var(--or);text-transform:uppercase;letter-spacing:.06em}h3:first-child{margin-top:0}
+p{margin:4px 0 8px}ul{margin:4px 0 8px;padding-left:18px}li{margin:2px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.card{border:1px solid var(--ln);border-radius:10px;padding:10px;margin:8px 0;background:#0f1628}
+.cv{width:100%;background:#0a0f1c;border:1px solid var(--ln);border-radius:8px;display:block}
+table{border-collapse:collapse;width:100%}td{padding:4px 6px;border-bottom:1px solid var(--ln);vertical-align:top}td:first-child{color:var(--mu);width:42%}
+details{border:1px solid var(--ln);border-radius:8px;margin:6px 0;background:#0f1628}summary{cursor:pointer;padding:8px 10px;font-weight:600}details>div{padding:0 10px 8px}
+
+/* ---- start-up checklist ---- */
+.steps{list-style:none;margin:8px 0;padding:0}
+.steps li{padding:4px 0 4px 26px;position:relative;color:var(--mu)}
+.steps li::before{content:"○";position:absolute;left:4px}
+.steps li.now{color:var(--tx)}.steps li.now::before{content:"◔";color:var(--or)}
+.steps li.done{color:var(--ok)}.steps li.done::before{content:"✓";color:var(--ok)}
+
+/* ---- battery ---- */
+#batt{width:90px;height:16px;border:1px solid var(--mu);border-radius:4px;padding:2px}
+#battFill{display:block;height:100%;width:100%;background:var(--ok);border-radius:2px}
+
+/* ---- jog pad ---- */
+.pad{display:grid;grid-template-columns:repeat(3,54px);gap:5px;justify-content:center}
+.pad button{height:46px;border-radius:10px;border:1px solid var(--ln);background:#141b2e;cursor:pointer;font-size:18px;touch-action:none}
+.pad button:active{background:#1b3a66}.pad .stopb{font-size:11px;color:#ff9b8f;border-color:#6b2a24}
+
+/* ---- object list ---- */
+#olist{max-height:34vh;overflow:auto;margin:6px 0}
+.ob{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--ln);border-radius:8px;margin:3px 0;cursor:pointer;background:#0f1628}
+.ob.on{border-color:var(--ac);background:#14264a}.ob.dn{opacity:.4}
+.ob .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ob .al{font:12px ui-monospace,Menlo,monospace;color:var(--mu)}.ob .al.up{color:var(--ok)}
+
+/* ---- stack tab bits ---- */
+#frot{width:64px;height:64px;display:grid;place-items:center;background:#0a0f1c;border:1px solid var(--ln);border-radius:8px}
+#frot i{display:block;width:44px;height:25px;border:2px solid var(--or);border-radius:3px;transition:transform .2s}
+
+/* ---- night mode: a red filter over everything, like a red torch (keeps your eyes dark-adapted) ---- */
+#redov{position:fixed;inset:0;background:#f00;mix-blend-mode:multiply;pointer-events:none;display:none;z-index:50}
+body.red #redov{display:block}
