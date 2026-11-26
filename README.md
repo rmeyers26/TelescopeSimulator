@@ -3,7 +3,7 @@
 Interactive 3D telescope simulators that help a beginner (or a middle-school student) learn how telescopes work. They run in any modern browser on desktop or phone.
 
 - **Celestron C11** on a CPC Deluxe HD fork mount – `index.html` (a classic computerized GoTo telescope you align and drive yourself).
-- **Seestar S50** smart telescope – `seestar.html` (an all-in-one scope that levels itself, finds north by plate-solving and live-stacks photos). Choose it from the home screen, or open `seestar.html` directly.
+- **Seestar S50 Pro** smart telescope – `seestar.html` (an all-in-one scope with a telephoto and a wide-angle camera that finds north by plate-solving and live-stacks photos). Choose it from the home screen, or open `seestar.html` directly.
 
 ## Run it
 
@@ -39,12 +39,13 @@ js/17-ux.js            Quick tour, My First Night story, sky compass, swipe tabs
 js/18-scope-popups.js  Tap the eyepiece/finder to look through it and swap eyepieces; tap the hand controller to pop it out
 js/19-focus.js        Focus knob: slides the primary mirror; out-of-focus stars become doughnuts; per-eyepiece focus
 
-seestar.html          the Seestar S50 simulator page (uses js/01 and js/02 from above, plus its own files below)
+seestar.html          the Seestar S50 Pro simulator page (uses js/01 and js/02 from above, plus its own files below)
 css/seestar.css       styling for the Seestar page
-js/s50/s50-model.js   specs, sky conditions (light pollution, Moon glare, clouds, dew) and the mount state machine (start-up, GoTo, tracking)
-js/s50/s50-imaging.js paints the sky patch in view and stacks simulated photos with realistic noise; field rotation; Moon
-js/s50/s50-scene.js   Three.js 3D model of the S50 on a tripod, sky dome with real stars, orbit camera
-js/s50/s50-app.js     user interface (tabs, object list, charts, scenarios) and the main loop
+js/s50/s50-model.js   specs (from the S50 Pro manual), sky/weather, power button + indicator-light language, mount state machine (boot, connection, initialization, GoTo, tracking, zero position, EQ mode, solar safety)
+js/s50/s50-imaging.js telephoto + wide-angle imaging: star fields, galaxies, nebulae, Milky Way, stacking with realistic noise, star trails, Sun / Moon / scenery renderers
+js/s50/s50-scene.js   Three.js 3D model of the S50 Pro on its carbon tripod: the whole L-shaped body turns, the slab-shaped head tilts (EQ wedge, solar filter, indicator lights), photo-realistic rendering, sky dome, orbit camera
+js/s50/s50-app.js     the phone app and device controls: tabs, connection wizard, modes, targets, EQ set-up, album (JPEG / FITS / video)
+js/s50/s50-live.js    live view and overlays, photo / video capture, scenarios, learn text, main loop and start-up
 ```
 
 ### Why plain scripts instead of ES modules?
@@ -66,13 +67,18 @@ The files are ordinary `<script>` tags, not `import`/`export` modules. Browsers 
 
 Simulation only: the RS-232/Link features are not connected to real hardware yet.
 
-## Seestar S50 simulator (short)
+## Seestar S50 Pro simulator (short)
 
-- Realistic start-up: power on → arm opens → self-levels → gets time/place → plate-solves to find north. No manual alignment.
-- Plan tab: pick from Messier/NGC objects, planets and the Moon, see what is up now, how it fits the 1.27° × 0.72° frame, and GoTo.
-- Live stack: every simulated 10 s / 20 s photo adds random noise that shrinks as 1/√N. Switch between the live stack and a single photo; adjust gain; save a PNG.
-- Dual-band light-pollution filter vs IR-cut filter: nebulae pop, galaxies and stars fade. Light pollution (Bortle 1–9), twilight, Moon glare, clouds and dew all change the picture.
-- Alt-az behaviour: field rotation (dark corners grow on long stacks) and the zenith blind spot (the mount loses a target that passes almost overhead).
-- Learn tab: specifications, short explanations, and one-click scenarios.
+Built from the S50 Pro user manual (V1) and quick guide. It does what the manual describes:
 
-The numbers (sensitivity, noise, rates) are a teaching model tuned to look and behave plausibly; they are not measurements of a real unit. The Sun is deliberately not offered as a target, and the simulator warns if you steer near it.
+- **The physical device:** press-and-hold power button with the manual's timings (short press shows the battery, 2 s on/off, 6 s forced off, special first-use press), indicator-light patterns (red running / breathing, yellow steady or breathing, green in EQ mode, four battery lights), USB-C charging while running, auto-shutdown below 5 %, and a "zero position" where the head stands upright with the lens up.
+- **Phone connection:** scan, first-time reset-button pairing, online activation (internet, ZWO account, region), Wi-Fi hotspot (iOS automatic / Android manual with password), firmware update and reboot, NFC quick connect, and an imaging session that keeps going if the phone disconnects.
+- **Four modes:** Stargazing (Tonight's Best, GOTO, automatic initialization on the first GoTo, auto-stacking at 10 s, Stop saves to the album), Milky Way (63° wide camera, SkyAtlas framing, photo / wide-angle stacking / star trails, constellation lines), Solar System (the Sun with the full solar-filter procedure and safety stop, Moon, planets, 1×/2×/4× magnification) and Scenery (birds and landscapes, 15 m focus limit of the telephoto lens).
+- **EQ mode:** set-up checklist, wedge angle and north alignment, "calculate polar alignment error" (within 1°), green light, almost no field rotation, no zenith blind spot.
+- **Cameras and filters:** telephoto (2160 × 3840 portrait, 2.8°) and wide-angle (63°); UV/IR-cut, Duo-Band and Dark filters; joystick speeds from 8× to 1440× sidereal; tap-twice "GO" in the wide view.
+- **Conditions from the manual:** light pollution, twilight, Moon glare, clouds, dew heater, temperature range and cold-battery loss, wind above Force 3, vibration from bumping the tripod, trees/buildings hiding the sky.
+- **Album:** device and phone ("Saved") tabs, storage use, JPEG and FITS download, video clips (WebM in the browser).
+- **Learn tab:** specifications, the manual's safety reminders and observing tips, and one-click scenarios.
+- **Phones and tablets:** works in portrait and landscape. On a phone the 3D model and the camera's live view share one slot with a switch button (the Device tab shows the 3D unit so you can watch the lights; other tabs show the live view). Touch: press-and-hold the on-screen power button, hold the joystick arrows, tap twice to GO in the wide view, one finger to orbit the 3D model and two fingers to zoom. Buttons are enlarged for fingers, form text is 16 px so iPhones do not zoom the page, and the layout respects notches. Graphics **Auto / High / Fast** (top bar) switches shadows off on slower phones.
+
+The numbers (sensitivity, noise, rates) are a teaching model tuned to look and behave plausibly; they are not measurements of a real unit. Pointing the telephoto lens at the Sun without the solar filter permanently damages the simulated sensor, as the manual warns.

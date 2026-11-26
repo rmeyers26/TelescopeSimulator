@@ -3,22 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#070a12">
-<title>Seestar S50 – Smart Telescope Simulator</title>
+<meta name="theme-color" content="#070a12"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<title>Seestar S50 Pro – Smart Telescope Simulator</title>
 <link rel="stylesheet" href="css/seestar.css">
 </head>
 <body>
 <!-- Top bar: back to the telescope chooser, clock, time speed, night mode -->
 <header id="bar">
-  <a class="b" href="index.html" title="Back to the telescope chooser">← Telescopes</a>
-  <h1>Seestar S50 <span class="mu">smart telescope simulator</span></h1>
+  <a class="b" href="index.html" title="Back to the telescope chooser">←<span class="lt"> Telescopes</span></a>
+  <h1><span class="lt">Seestar </span>S50 Pro <span class="mu">smart telescope simulator</span></h1>
   <span class="grow"></span>
   <span id="clock" class="mu"></span>
-  <label class="mu" title="How fast simulated time runs. Faster = stacking finishes sooner.">Time
+  <label class="mu" title="How fast simulated time runs. Faster = stacking finishes sooner."><span class="lt keep">Time</span>
     <select id="speed" class="b sm">
       <option value="1">×1 (real time)</option><option value="10" selected>×10</option><option value="60">×60</option><option value="300">×300</option>
     </select></label>
-  <label class="mu"><input type="checkbox" id="red"> 🔴 Night mode</label>
+  <label class="mu" title="Fast turns off shadows for slower devices. Auto picks for you."><span class="lt">Graphics</span> <select id="gfx" class="b sm"><option value="auto">Auto</option><option value="high">High</option><option value="fast">Fast</option></select></label>
+  <label class="mu"><input type="checkbox" id="red"> 🔴<span class="lt"> Night mode</span></label>
 </header>
 
 <main id="main">
@@ -27,6 +28,7 @@
     <canvas id="gl"></canvas>
     <div id="views">
       <button class="b sm on" data-view="orbit">Orbit</button>
+      <button class="b sm" data-view="back" title="Behind the telescope: the power button and lights">Back</button>
       <button class="b sm" data-view="front">Front</button>
       <button class="b sm" data-view="side">Side</button>
       <button class="b sm" data-view="top">Top</button>
@@ -35,90 +37,29 @@
     </div>
     <div id="hud"></div>
     <div id="toast"></div>
+    <button class="b sm vsw" id="vsw3d" title="Switch to the camera's live view">📷 Live view</button>
   </section>
 
   <!-- RIGHT: the "phone app": live view on top, tabs underneath -->
   <aside id="app">
     <div id="live">
-      <canvas id="lv" width="768" height="432"></canvas>
+      <div id="lvwrap"><canvas id="lv" width="540" height="960"></canvas></div>
+      <div id="lvbar">
+        <span class="seg" id="camSeg"><button data-cam="tele" class="on">Tele</button><button data-cam="wide">Wide</button></span>
+        <span class="seg" id="zoomSeg"><button data-zoom="1" class="on">1×</button><button data-zoom="2">2×</button><button data-zoom="4">4×</button></span>
+      </div>
+      <div id="lvact">
+        <button id="shutter" title="Take a photo">●</button>
+        <button id="recbtn" title="Record video">⏺</button>
+      </div>
       <div id="liveMsg"></div>
+      <button class="b sm vsw" id="vswLive" title="Switch to the 3D model">🔭 3D view</button>
     </div>
-    <div id="chips"></div>
-    <nav id="tabs">
-      <button data-t="scope" class="on">Telescope</button><button data-t="plan">Plan</button><button data-t="stack">Stack</button><button data-t="sky">Sky</button><button data-t="learn">Learn</button>
-    </nav>
-
-    <!-- ===== TELESCOPE tab ===== -->
-    <div class="pane on" id="p-scope">
-      <div class="card">
-        <div class="row"><button class="b big" id="pwr">⏻ Power on</button><span id="pstate" class="mu"></span></div>
-        <ol id="boot" class="steps"></ol>
-        <div class="row"><button class="b sm" id="skip" title="Skip the start-up wait (for impatient moments)">⏩ Skip start-up</button></div>
-      </div>
-      <h3>Power</h3>
-      <div class="row"><div id="batt"><i id="battFill"></i></div><span id="battTxt" class="mu sm"></span></div>
-      <div class="row">
-        <label class="sw"><input type="checkbox" id="ext"> USB-C power bank plugged in</label>
-        <label class="sw"><input type="checkbox" id="dew"> Dew heater on</label>
-      </div>
-      <h3>Arm cover</h3>
-      <div class="row"><button class="b" id="armO">Open arm</button><button class="b" id="armC">Close arm</button><button class="b" id="park">Park &amp; close</button></div>
-      <h3>Move by hand</h3>
-      <div class="pad">
-        <span></span><button data-jog="0,1">▲</button><span></span>
-        <button data-jog="-1,0">◀</button><button id="stop" class="stopb">STOP</button><button data-jog="1,0">▶</button>
-        <span></span><button data-jog="0,-1">▼</button><span></span>
-      </div>
-      <p class="mu sm">Hold an arrow to turn the telescope. This stops tracking – the Seestar re-finds its target with the camera when you use GoTo again.</p>
+    <div id="ui">
+      <div id="chips"></div>
+      <nav id="tabs"></nav>
+      <div id="panes"></div>
     </div>
-
-    <!-- ===== PLAN tab ===== -->
-    <div class="pane" id="p-plan">
-      <input id="q" type="search" placeholder="Search: M42, Orion, Saturn, galaxy…" class="b wide">
-      <div class="row" id="chipsF"></div>
-      <div id="olist"></div>
-      <div id="odet" class="card"></div>
-    </div>
-
-    <!-- ===== STACK tab ===== -->
-    <div class="pane" id="p-stack">
-      <div class="row"><button class="b big on" id="stk">▶ Start stacking</button><button class="b" id="rst">Reset stack</button><button class="b" id="sav">💾 Save image</button></div>
-      <div class="grid2">
-        <label>Exposure per photo<select id="exp" class="b"><option value="10" selected>10 s</option><option value="20">20 s</option></select></label>
-        <label>Filter<select id="flt" class="b"><option value="ircut" selected>IR-cut (broadband)</option><option value="lp">Dual-band light-pollution</option></select></label>
-        <label>Gain <b id="gainV">80</b><input type="range" id="gain" min="0" max="150" value="80"></label>
-        <label>Show<select id="showMode" class="b"><option value="stack" selected>Live stack</option><option value="single">Single photo</option></select></label>
-        <label>Brightness <b id="brV">1.0×</b><input type="range" id="br" min="30" max="300" value="100"></label>
-      </div>
-      <div id="sstats" class="card"></div>
-      <h3>Why stacking works</h3>
-      <canvas id="nplot" width="360" height="130" class="cv"></canvas>
-      <p class="mu sm">Every photo has random noise. Averaging N photos shrinks the noise by √N, so faint things slowly rise out of the grain. 4× more photos = 2× cleaner.</p>
-      <h3>Field rotation</h3>
-      <div class="row"><div id="frot"><i></i></div><div id="frTxt" class="sm"></div></div>
-    </div>
-
-    <!-- ===== SKY tab ===== -->
-    <div class="pane" id="p-sky">
-      <canvas id="polar" width="360" height="360" class="cv"></canvas>
-      <p class="mu sm">All-sky chart: zenith (straight up) is the centre, the horizon is the outer ring. Tap an object to select it.</p>
-      <h3>Where &amp; when</h3>
-      <div class="grid2">
-        <label>Location<select id="loc" class="b"></select></label>
-        <label>Date<input type="date" id="date" class="b"></label>
-        <label>Local time <b id="hourV"></b><input type="range" id="hour" min="0" max="24" step="0.25"></label>
-      </div>
-      <h3>Sky conditions</h3>
-      <div class="grid2">
-        <label>Light pollution <b id="bortleV"></b><input type="range" id="bortle" min="1" max="9" value="6"></label>
-        <label>Clouds <b id="cloudV"></b><input type="range" id="cloud" min="0" max="100" value="0"></label>
-        <label>Humidity (dew) <b id="humV"></b><input type="range" id="hum" min="0" max="100" value="15"></label>
-      </div>
-      <div id="skyInfo" class="card"></div>
-    </div>
-
-    <!-- ===== LEARN tab ===== -->
-    <div class="pane" id="p-learn"></div>
   </aside>
 </main>
 <div id="redov"></div>
@@ -132,5 +73,6 @@
 <script src="js/s50/s50-imaging.js"></script>
 <script src="js/s50/s50-scene.js"></script>
 <script src="js/s50/s50-app.js"></script>
+<script src="js/s50/s50-live.js"></script>
 </body>
 </html>

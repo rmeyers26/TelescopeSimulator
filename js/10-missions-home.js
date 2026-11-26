@@ -82,8 +82,8 @@ const SCOPES=[
  {id:'c11cpc',name:'Celestron C11',sub:'CPC Deluxe 1100 HD',kind:'Schmidt-Cassegrain on a computerized GoTo fork mount',
   facts:['280 mm (11-inch) mirror – about 1,600× more light than your eye','2800 mm focal length · f/10','NexStar+ hand controller with 40,000-object database','Optional StarSense camera, Telrad and eyepiece kit'],
   load:()=>{}},                                    // the C11 scene is built at start-up, so loading it needs no extra work
- {id:'s50',name:'Seestar S50',sub:'Smart telescope by ZWO / Celestron',kind:'All-in-one smart telescope: it levels, finds north and stacks photos by itself',emoji:'🌟',url:'seestar.html',
-  facts:['50 mm refractor, f/5 – wide field of view (1.3° × 0.7°)','Plate-solving: no manual alignment','Live stacking: watch the noise melt away','Light-pollution filter, dew heater, battery']}];   // entries with a `url` open their own simulator page
+ {id:'s50',name:'Seestar S50 Pro',sub:'Smart telescope by ZWO / Celestron',kind:'All-in-one smart telescope: it finds north, tracks and stacks photos by itself',emoji:'🌟',url:'seestar.html',
+  facts:['50 mm apochromatic telephoto (f/5.2, 2.8° field) plus a 63° wide-angle camera','Four modes: Stargazing, Milky Way, Solar System, Scenery','Plate-solving: no manual alignment · optional EQ mode with a wedge','Duo-Band filter, magnetic solar filter, dew heater, 9-hour battery']}];   // entries with a `url` open their own simulator page
 const COMING=[{e:'🔭',t:'Refractor',s:'A lens telescope, like Galileo’s'},{e:'🪣',t:'Dobsonian',s:'A big mirror on a simple push-around base'}];
 const homeState={scope:null,thumb:null};
 function showHome(){const el=$('#home');let red=document.body.classList.contains('red');
