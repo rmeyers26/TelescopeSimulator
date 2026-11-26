@@ -177,18 +177,20 @@ function initScene(canvas){
   // (an open pocket you can see through). alt 0° = hanging straight down, lens facing forward (the "zero position"); raising alt swings the bottom
   // end forward, so the window faces higher and higher; at 90° the slab points forward and the lens looks straight up. It never touches the column.
   const altG=new THREE.Group();altG.position.set(0,.218,-.0353);azG.add(altG);
-  function headShape(T,yb,rb){                                       // side profile in (x = −z, y): rounded top corners (the pivot is at the origin) and a rounded bottom
-    const sh=new THREE.Shape(),ln=(x2,y2)=>{const c=sh.currentPoint,n=Math.max(2,Math.ceil(Math.hypot(x2-c.x,y2-c.y)/.006));for(let i=1;i<=n;i++)sh.lineTo(c.x+(x2-c.x)*i/n,c.y+(y2-c.y)*i/n);};
-    const r=T/2,rf=.012,rr=r,yt=r;sh.moveTo(r,yb+rb);ln(r,yt-rf);sh.absarc(r-rf,yt-rf,rf,0,Math.PI/2,false);ln(-r+rr,yt);sh.absarc(-r+rr,yt-rr,rr,Math.PI/2,Math.PI,false);   // front-top corner tight, rear-top rounder
-    ln(-r,yb+rb);sh.absarc(-r+rb,yb+rb,rb,Math.PI,1.5*Math.PI,false);ln(r-rb,yb);sh.absarc(r-rb,yb+rb,rb,1.5*Math.PI,2*Math.PI,false);return sh;}
   const HT=.072,HW=.12,HB=-.128;                                     // thickness, width, y of the bottom (relative to the pivot)
-  {const bev=.006,depth=HW-2*bev,g=new THREE.ExtrudeGeometry(headShape(HT-2*bev,HB+bev,.024-bev),{depth,steps:10,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:4,curveSegments:14});
-   g.translate(0,0,-depth/2);
-   {const p=g.attributes.position,R=HW/2-.004,y0=HB+R,R2=.034,y1=HT/2-R2;                                     // seen from the front the head is a tall PILL: its bottom is half-round
-    for(let i=0;i<p.count;i++){const y=p.getY(i);if(y<y0){const k=Math.sqrt(Math.max(0,1-Math.pow((y0-y)/R,2)));p.setZ(i,p.getZ(i)*Math.max(k,.08));}
-      else if(y>y1){const k=Math.sqrt(Math.max(0,1-Math.pow((y-y1)/R2,2)));p.setZ(i,p.getZ(i)*Math.max(k,.3));}}      // …and its top corners are rounded too
-    g.computeVertexNormals();creaseNormals(g,50);}
-   g.rotateY(Math.PI/2);altG.add(new THREE.Mesh(g,white));}                                    // shape x → −z, extrusion → x (the width)
+  {/* The head is a densely subdivided ROUNDED BOX, then shaped with a little maths: (1) its rear-top is an arc about the pivot (so it never
+       touches the column when it tilts), (2) its bottom is half-round when seen from the front – a tall pill. Dense = smooth shading. */
+    const rad=.022,top=HT/2,H=top-HB,g=new THREE.BoxGeometry(HW,H,HT,30,60,24),p=g.attributes.position,v=new THREE.Vector3(),c=new THREE.Vector3(),d=new THREE.Vector3();
+    const inner=new THREE.Vector3(HW/2-rad,H/2-rad,HT/2-rad),ninner=inner.clone().negate(),R=HW/2-.004,y0=HB+R;
+    for(let i=0;i<p.count;i++){
+      v.fromBufferAttribute(p,i);c.copy(v).clamp(ninner,inner);d.copy(v).sub(c);if(d.lengthSq()>1e-12){d.normalize().multiplyScalar(rad);v.copy(c).add(d);}   // round every edge
+      v.y+=(top+HB)/2;                                                                      // put the pivot at the origin (the top is at +HT/2)
+      if(v.y>0&&v.z>0){const l=Math.hypot(v.z,v.y);if(l>top){v.z*=top/l;v.y*=top/l;}}      // rear-top: a circular arc about the pivot
+      if(v.y<y0){const k=Math.sqrt(Math.max(0,1-Math.pow((y0-v.y)/R,2)));v.x*=Math.max(k,.1);}   // bottom: half-round seen from the front
+      p.setXYZ(i,v.x,v.y,v.z);}
+    g.computeVertexNormals();creaseNormals(g,60);altG.add(new THREE.Mesh(g,white));}
+  // a hair-line groove round the head near its bottom, like the rim of a separate base ring (seen in the side-view video)
+  {const ring=rrBox(.099,HT+.0008,.0012,.032,.0004,new THREE.MeshStandardMaterial({color:sRGB(0x6a6e76),roughness:.7}));ring.rotation.x=Math.PI/2;ring.position.y=HB+.026;altG.add(ring);}
   const nose=rrBox(.09,.112,.006,.045,.0025,white);nose.position.set(0,-.027,-HT/2-.0015);altG.add(nose);          // a raised boss round the window
   const zF=-HT/2-.0045;                                              // z of the boss's front face
   const frame=rrBox(.072,.1,.002,.036,.0008,silver);frame.position.set(0,-.027,zF-.0028);altG.add(frame);         // silver ring
