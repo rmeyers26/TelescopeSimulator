@@ -128,7 +128,25 @@ function syncSkyUi(){
 
 /* ---- TABS ---- */
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)openTab(b.dataset.t);});
-function openTab(k){A.tab=k;$$('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===k));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));if(k==='target')renderTarget();if(k==='album')renderAlbum();}
+function openTab(k){A.tab=k;A.vpref=null;applyViewer();$$('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===k));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));if(k==='target')renderTarget();if(k==='album')renderAlbum();}
+/* ---- phone layout: the 3D model and the live view share one slot (see css/seestar.css) ---- */
+const mq=matchMedia('(max-width:860px), (max-height:500px) and (orientation:landscape)');
+function applyViewer(){                                       // which viewer is showing on a phone? Device tab → 3D (watch the lights); other tabs → live view; the buttons override
+  const v=A.vpref||(A.tab==='device'?'3d':'live');document.body.classList.toggle('v3d',v==='3d');
+  setTimeout(()=>{if(SC.resize)SC.resize();},30);
+}
+function layoutMode(){
+  const m=mq.matches,app=$('#app'),stage=$('#stage'),main=$('#main');
+  document.body.classList.toggle('mobile',m);
+  if(m&&stage.parentElement!==app)app.prepend(stage);
+  if(!m&&stage.parentElement!==main)main.prepend(stage);
+  applyViewer();
+}
+if(mq.addEventListener)mq.addEventListener('change',layoutMode);else mq.addListener(layoutMode);
+$('#vsw3d').onclick=()=>{A.vpref='live';applyViewer();};
+$('#vswLive').onclick=()=>{A.vpref='3d';applyViewer();};
+document.addEventListener('contextmenu',e=>{if(e.target.closest('#pbtn,.pad,#lvact,#lv,.vsw'))e.preventDefault();});   // a long press must not open the phone's context menu
+
 /* ---- 3D view buttons, top bar ---- */
 $('#views').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(!b)return;SC.setView(b.dataset.view);setViewBtn(b.dataset.view);});
 function setViewBtn(v){$$('#views [data-view]').forEach(x=>x.classList.toggle('on',x.dataset.view===v));}

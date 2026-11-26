@@ -17,11 +17,49 @@ a{color:inherit;text-decoration:none}
 #stage{position:relative;min-height:0;overflow:hidden}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 #app{display:flex;flex-direction:column;min-height:0;background:rgba(10,14,26,.97);border-left:1px solid var(--ln)}
-@media (max-width:860px){
-  #main{grid-template-columns:1fr;grid-template-rows:24vh 1fr}
-  #app{border-left:0;border-top:1px solid var(--ln)}
-  #bar h1 .mu{display:none}
-  #hud{font-size:10px;padding:3px 6px}#hud .hx{display:none}
+#ui{display:flex;flex-direction:column;flex:1;min-height:0}
+.vsw{display:none;position:absolute;right:8px;top:8px;z-index:3}
+html{touch-action:manipulation}                                /* no double-tap zoom delay */
+#pbtn,.pad button,#lvact button,.vsw,#lv{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* ---- PHONES (portrait, or landscape with little height): ONE viewer at a time – the 3D model OR the camera's live view –
+   above the controls. JS adds body.mobile and moves #stage into #app so both viewers share the same slot. ---- */
+body.mobile #main{display:block}
+body.mobile #app{position:absolute;inset:0;display:flex;flex-direction:column;border:0}
+body.mobile #stage,body.mobile #live{flex:none;width:100%;height:40vh;height:40dvh;max-height:380px;position:relative}
+body.mobile.v3d #live{display:none}
+body.mobile:not(.v3d) #stage{display:none}
+body.mobile .vsw{display:block}
+body.mobile #views{right:8px;left:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;bottom:6px}
+body.mobile #views .b{flex:none}
+body.mobile #hud{font-size:10px;padding:3px 6px;top:6px;left:6px}body.mobile #hud .hx{display:none}
+body.mobile #chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:5px 8px}body.mobile .chip{flex:none}
+body.mobile #lvbar{top:6px;left:6px}
+@media (max-height:500px) and (orientation:landscape){
+  body.mobile #app{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+  body.mobile #stage,body.mobile #live{grid-column:1;grid-row:1;height:100%;max-height:none}
+  body.mobile #ui{grid-column:2;grid-row:1}
+  #bar{height:40px}#main{top:40px}
+}
+body.mobile #bar h1 .mu,body.mobile #clock,body.mobile #bar .lt:not(.keep){display:none}   /* a compact top bar on phones: only the essentials */
+body.mobile #bar{gap:8px}body.mobile #bar select{max-width:84px}
+@media (max-width:560px){#bar .lt:not(.keep){display:none}}
+@supports (padding:max(0px)){
+  #bar{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+  .pane{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+}
+/* fingers are bigger than mouse pointers: larger targets, and 16 px form text (iPhones zoom the page on smaller text) */
+@media (pointer:coarse){
+  .b{min-height:40px;padding:8px 12px}.b.sm{min-height:36px;padding:6px 10px;font-size:13px}
+  select,input,textarea{font-size:16px}
+  .seg button{min-height:36px;padding:6px 12px}
+  #tabs button{padding:12px 12px}
+  input[type=range]{height:34px}
+  .ob{padding:10px 8px}.ob .go{padding:6px 12px}
+  .sw{min-height:38px}.sw input{width:20px;height:20px}
+  .pad{grid-template-columns:repeat(3,64px)}.pad button{height:54px}
+  #lvact button{width:52px;height:52px}
+  summary{padding:12px 10px}
 }
 
 /* ---- buttons & form bits ---- */

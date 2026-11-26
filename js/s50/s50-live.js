@@ -391,7 +391,7 @@ function frame(now){
 }
 
 initScene($('#gl'));
-new ResizeObserver(()=>SC.resize()).observe($('#stage'));
+new ResizeObserver(()=>SC.resize()).observe($('#stage'));layoutMode();
 SC.setView('orbit');SC.setQuality(gfxPref==='fast'?'fast':'high');
 setLocation(0);SKY.bortle=6;syncSkyUi();                                 // default: Phoenix, but a "bright suburban" sky so the first night looks decent
 $('#date').value=tonightDateStr();setClockRaw(tonightDateStr(),21);$('#hour').value=21;$('#hourV').textContent='21:00';

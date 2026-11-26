@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#070a12">
+<meta name="theme-color" content="#070a12"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <title>Seestar S50 Pro – Smart Telescope Simulator</title>
 <link rel="stylesheet" href="css/seestar.css">
 </head>
 <body>
 <!-- Top bar: back to the telescope chooser, clock, time speed, night mode -->
 <header id="bar">
-  <a class="b" href="index.html" title="Back to the telescope chooser">← Telescopes</a>
-  <h1>Seestar S50 Pro <span class="mu">smart telescope simulator</span></h1>
+  <a class="b" href="index.html" title="Back to the telescope chooser">←<span class="lt"> Telescopes</span></a>
+  <h1><span class="lt">Seestar </span>S50 Pro <span class="mu">smart telescope simulator</span></h1>
   <span class="grow"></span>
   <span id="clock" class="mu"></span>
-  <label class="mu" title="How fast simulated time runs. Faster = stacking finishes sooner.">Time
+  <label class="mu" title="How fast simulated time runs. Faster = stacking finishes sooner."><span class="lt keep">Time</span>
     <select id="speed" class="b sm">
       <option value="1">×1 (real time)</option><option value="10" selected>×10</option><option value="60">×60</option><option value="300">×300</option>
     </select></label>
-  <label class="mu" title="Fast turns off shadows for slower devices. Auto picks for you.">Graphics <select id="gfx" class="b sm"><option value="auto">Auto</option><option value="high">High</option><option value="fast">Fast</option></select></label>
-  <label class="mu"><input type="checkbox" id="red"> 🔴 Night mode</label>
+  <label class="mu" title="Fast turns off shadows for slower devices. Auto picks for you."><span class="lt">Graphics</span> <select id="gfx" class="b sm"><option value="auto">Auto</option><option value="high">High</option><option value="fast">Fast</option></select></label>
+  <label class="mu"><input type="checkbox" id="red"> 🔴<span class="lt"> Night mode</span></label>
 </header>
 
 <main id="main">
@@ -37,6 +37,7 @@
     </div>
     <div id="hud"></div>
     <div id="toast"></div>
+    <button class="b sm vsw" id="vsw3d" title="Switch to the camera's live view">📷 Live view</button>
   </section>
 
   <!-- RIGHT: the "phone app": live view on top, tabs underneath -->
@@ -52,10 +53,13 @@
         <button id="recbtn" title="Record video">⏺</button>
       </div>
       <div id="liveMsg"></div>
+      <button class="b sm vsw" id="vswLive" title="Switch to the 3D model">🔭 3D view</button>
     </div>
-    <div id="chips"></div>
-    <nav id="tabs"></nav>
-    <div id="panes"></div>
+    <div id="ui">
+      <div id="chips"></div>
+      <nav id="tabs"></nav>
+      <div id="panes"></div>
+    </div>
   </aside>
 </main>
 <div id="redov"></div>
