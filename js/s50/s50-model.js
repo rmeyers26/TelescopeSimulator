@@ -79,7 +79,7 @@ const INIT_STEPS=[
 ];
 const BOOT_SEC=4;                                       // power-on light sequence
 const TRACK_AZ_LIMIT=0.12;                              // fastest the azimuth motor can follow the sky (degrees per simulated second)
-const ZERO_ALT=-85;                                     // "zero position": the lens is folded down out of the way
+const ZERO_ALT=90;                                      // "zero position": the head stands upright, lens up (as in the manufacturer's drawing). Whether we are parked is tracked by the `parked` flag.
 const JOG_SPEEDS={slow:8,medium:64,fast:360,max:1440};  // joystick speeds as multiples of the sidereal rate (manual: 1X – 1440X)
 
 class SeestarMount{
@@ -139,7 +139,7 @@ class SeestarMount{
   forgetActivation(){this.activated=this.paired=this.fwOk=false;this.firstUse=true;try{localStorage.removeItem('s50act');}catch(_){}}
 
   /* ---------- pointing commands ---------- */
-  _wake(){this.parking=false;this.shutdownAfterPark=false;this.jog={az:0,alt:0,rate:0};}
+  _wake(){this.parked=false;this.parking=false;this.shutdownAfterPark=false;this.jog={az:0,alt:0,rate:0};}   // leaving the zero position
   gotoObj(o){
     if(!this.ready)return {ok:false,reason:this.power!=='on'?'The telescope is off – hold the power button for 2 s.':'Connect the phone app first (Device tab).'};
     if(this.damaged)return {ok:false,reason:'The sensor is damaged.'};
@@ -164,7 +164,6 @@ class SeestarMount{
   setJog(a,b,speedKey){
     if(!this.usable)return;
     if(a||b){
-      if(this.parked){this.parked=false;this.alt=0;}
       this._wake();this.jog={az:a,alt:b,rate:JOG_SPEEDS[speedKey||'medium']*0.004178};this.mode='manual';
       if(!(this.target&&this.target.type==='sun')){this.target=null;this.sunStage=null;}
     }else{
@@ -249,7 +248,6 @@ class SeestarMount{
     if(this.mode==='slew'){
       const rate=clamp(dist*2.2,0.5,S50.slewMaxDegPerSec);
       this._step(dAz,dAlt,rate*slewDt);
-      if(this.alt>ZERO_ALT+1)this.parked=false;
       const sunNear='GoTo stops near the Sun for safety. Now fine-tune by hand: tap GO in the wide view or use the joystick on SLOW.';
       if(this.sunStage==='approach'&&this.target&&angDistHor(this.alt,this.az,this.target.alt,this.target.az)<4){this.mode='idle';this.sunStage=null;this.note=sunNear;return;}
       if(dist<0.03){
@@ -284,6 +282,6 @@ class SeestarMount{
   }
   _step(dAz,dAlt,maxMove){
     const m=Math.max(Math.abs(dAz),Math.abs(dAlt),1e-9),f=Math.min(1,maxMove/m);
-    this.az=norm360(this.az+dAz*f);this.alt=clamp(this.alt+dAlt*f,ZERO_ALT,90);
+    this.az=norm360(this.az+dAz*f);this.alt=clamp(this.alt+dAlt*f,0,90);
   }
 }
