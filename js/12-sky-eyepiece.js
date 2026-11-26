@@ -11,7 +11,7 @@ let epI=2;
 // Eyepiece picker: every eyepiece is a little window that previews what you would see with it right now,
 // so you can compare before switching. Thumbnails are redrawn about once a second (see epThumbs).
 function buildEpRows(){const h='<div class="eptiles">'+EPS.map((e,i)=>`<button class="ept${i===epI?' on':''}" data-ep="${i}" title="${e.n}"><canvas width="96" height="96"></canvas><b>${e.finder?'Finder':e.fl===1?'Cam':e.n}</b><span>${Math.round(e.mag)}×</span></button>`).join('')+'</div>'+`<span class="sm mu" id="epinfo"></span>`;
-  $('#epRow').innerHTML=h;$('#epRowMini').innerHTML=h;setTimeout(()=>epThumbs(true),0);}
+  ['#epRow','#epRowMini','#epRowPop'].forEach(s=>{const e=document.querySelector(s);if(e)e.innerHTML=h;});setTimeout(()=>epThumbs(true),0);}
 function epThumbs(all){$$('.eptiles').forEach(t=>{if(!all&&!t.offsetParent)return;t.querySelectorAll('canvas').forEach((c,i)=>drawEyepiece(c,EPS[i],true));});}
 setInterval(()=>epThumbs(false),1000);
 function setEp(i){epI=i;buildEpRows();epInfo();}
@@ -210,6 +210,9 @@ function drawEyepiece(c,epo,bare){                 // bare = small thumbnail: sk
     const offs=[[0,0],[b,0],[-b,0],[0,b],[0,-b],[b*.7,b*.7],[-b*.7,b*.7],[b*.7,-b*.7],[-b*.7,-b*.7]];
     offs.forEach(([ox,oy],i)=>{x.globalAlpha=1/(i+1);x.drawImage(seeTmp,ox+jx,oy+jy);});x.globalAlpha=1;}
   x.restore();
+  // the 9×50 finder has a crosshair: put the object where the lines cross and the main telescope is aimed at it
+  if(ep.finder){const g=R*.06;x.strokeStyle=document.body.classList.contains('red')?'rgba(255,110,90,.75)':'rgba(230,230,230,.6)';x.lineWidth=Math.max(1,W/320);x.beginPath();
+    x.moveTo(cx-R,cy);x.lineTo(cx-g,cy);x.moveTo(cx+g,cy);x.lineTo(cx+R,cy);x.moveTo(cx,cy-R);x.lineTo(cx,cy-g);x.moveTo(cx,cy+g);x.lineTo(cx,cy+R);x.stroke();}
   x.strokeStyle='#222';x.lineWidth=4;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke();
   if(!bare){
   x.fillStyle='rgba(255,255,255,.6)';x.font=`${Math.max(11,W/28)}px system-ui`;x.textAlign='left';x.fillText(`${ep.n} · ${Math.round(ep.mag)}× · ${ep.fov.toFixed(2)}°`,10,H-10);

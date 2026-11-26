@@ -40,23 +40,26 @@
       <div class="row"><button class="b sm" id="bFullHC">Show the real hand controller</button></div>
     </div>
     <div class="row hcpwr" style="justify-content:center"><button class="b on pwrb" data-pwr>⏻ Power: ON</button><span class="mu sm">or tap the red switch on the base</span></div>
-    <div class="hc">
+    <div class="hcwrap" id="hcHome"><div class="hc" id="hcEl">
+      <div class="hctop"><span>NexStar<i>+</i></span><button class="b sm hcpopb" id="bHcPop" title="Pop the hand controller out next to the telescope">⤢ Pop out</button></div>
       <div class="lcd"><span id="scr" title="more items – use SCROLL">⇕</span><div id="l1"></div><div id="l2"></div><div id="l3" class="dim"></div></div>
-      <div class="krow"><button data-k="align">Align</button><button data-k="menu">Menu</button><button data-k="undo">Back</button><button data-k="enter">Enter</button></div>
-      <div class="krow"><button data-k="stars">Stars</button><button data-k="solar">Solar Sys</button><button data-k="dso">Deep Sky</button><button data-k="tour">Sky Tour</button></div>
-      <div class="krow"><button data-k="ident">Identify</button><button data-k="info">Obj Info</button><button data-k="help">Help</button><button data-k="option">Option</button></div>
-      <div class="mid">
-        <div class="dpad">
-          <span></span><button data-d="alt+">▲</button><span></span>
-          <button data-d="az-">◀</button><span></span><button data-d="az+">▶</button>
-          <span></span><button data-d="alt-">▼</button><span></span>
-        </div>
-        <div class="nums" id="nums"></div>
-        <div class="scroll"><button data-k="sup">⌃</button><button data-k="sdn">⌄</button></div>
+      <!-- Layout copied from the real NexStar+ hand control: 3 keys, the arrow pad, then a 4×3 keypad whose keys double as the digits 0–9 -->
+      <div class="hk3"><button data-k="align">ALIGN</button><button data-k="enter" class="ent">ENTER</button><button data-k="undo">BACK</button></div>
+      <div class="dpad">
+        <span></span><button data-d="alt+" aria-label="Up">▲</button><span></span>
+        <button data-d="az-" aria-label="Left">◀</button><span class="dc"></span><button data-d="az+" aria-label="Right">▶</button>
+        <span></span><button data-d="alt-" aria-label="Down">▼</button><span></span>
       </div>
-      <div class="krow"><button data-k="track">Track</button><button data-k="home">Home</button><button data-k="park">Park</button><button data-k="stop">Stop</button></div>
-      <div class="krow k2"><button data-k="mspeed">Motor Speed</button><span class="rs">RS-232 port (not simulated)</span></div>
-    </div>
+      <div class="hkp">
+        <button data-k="solar" data-n="1"><b>SOLAR<br>SYSTEM</b><i>1</i></button><button data-k="stars" data-n="2"><b>STARS</b><i>2</i></button><button data-k="dso" data-n="3"><b>DEEP<br>SKY</b><i>3</i></button>
+        <button data-k="ident" data-n="4"><b>IDENTIFY</b><i>4</i></button><button data-k="tour" data-n="5"><b>SKY<br>TOUR</b><i>5</i></button><button data-k="sup" data-n="6"><b>SCROLL ▲</b><i>6</i></button>
+        <button data-k="menu" data-n="7"><b>MENU</b><i>7</i></button><button data-k="help" data-n="8"><b>HELP</b><i>8</i></button><button data-k="sdn" data-n="9"><b>SCROLL ▼</b><i>9</i></button>
+        <button data-k="option" data-n="0" class="opt"><b>OPTION</b><i>0</i></button><button data-k="info"><b>OBJECT<br>INFO</b></button><button data-k="mspeed"><b>MOTOR<br>SPEED</b></button>
+      </div>
+      <div class="hchint" id="hcHint">Tap a key to see what it does.</div>
+      <div class="hcx"><span class="mu sm">Shortcuts (not on the real controller):</span><button data-k="track">Track</button><button data-k="home">Home</button><button data-k="park">Park</button><button data-k="stop">Stop</button></div>
+      <div id="nums" hidden></div>
+    </div></div>
     <div class="cau">⚠ Never slew the telescope while anyone is looking through the eyepiece. Use a certified solar filter for the Sun.</div>
     <p class="mu sm" style="text-align:center">Keyboard: arrow keys slew (hold one, tap the opposite = max speed) · 1–9 rate · Enter · Esc = Back · M menu · A align · T track · I identify · O option · H help · N object info · PgUp/PgDn scroll. Gamepad: left stick slews, LB/RB change rate, A/B = Enter/Undo, Y = tracking. <span id="padst"></span></p>
     <h3>Eyepiece view</h3>
@@ -109,5 +112,6 @@
 <script src="js/15-main.js"></script>
 <script src="js/16-align-wizard.js"></script>
 <script src="js/17-ux.js"></script>
+<script src="js/18-scope-popups.js"></script>
 </body>
 </html>

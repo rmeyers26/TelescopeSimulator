@@ -8,7 +8,7 @@
 let rate=7;const HC={mode:'idle',stack:[],pick:null,confirm:null,msg:null,msgT:0,al:{n:0,first:null,cur:null},opt:false,num:null,info:null};
 const HCS={allowSun:false,revUD:true};                    // Database Setup / Scope Setup switches (NexStar+ "Allow Sun", Up/Down reversal)
 const hcMsg=(a,b,s)=>{HC.msg=[a,b||''];HC.msgT=performance.now()+(s||2.2)*1000;};
-const rateTxt=k=>{const r=SLEW_RATES[k];return `${r>=1?r.toFixed(1):r}°/s (${(r/.004178).toFixed(1)}× sidereal)`;};
+const rateTxt=k=>{const r=SLEW_RATES[k];return k>=7?`${r}°/s`:`${+(r/SIDEREAL).toFixed(1)}× sidereal`;};   // same wording as the manual
 const trkTxt=t=>({off:'Off',sidereal:'Sidereal',lunar:'Lunar',solar:'Solar'}[t]);
 const fmtRA=d=>{const h=d/15,hh=Math.floor(h),mm=Math.floor((h-hh)*60);return `${String(hh).padStart(2,'0')}h${String(mm).padStart(2,'0')}m`;};
 const fmtDec=d=>{const s=d<0?'-':'+',a=Math.abs(d),dd=Math.floor(a),mm=Math.floor((a-dd)*60);return `${s}${String(dd).padStart(2,'0')}°${String(mm).padStart(2,'0')}′`;};
@@ -188,13 +188,16 @@ function key(k){
     case 'stop':driver.stop();hcMsg('Stopped','');break;
   }
 }
-function flash(k){const b=$(`.hc [data-k="${k}"]`);if(b){b.classList.add('fl');setTimeout(()=>b.classList.remove('fl'),3500);}}
+function flash(k){const b=$(`.hc [data-k="${k}"]`)||$(`.hc [data-n="${k}"]`);if(b){b.classList.add('fl');setTimeout(()=>b.classList.remove('fl'),3500);}}
 let repT=null,repI=null,repDone=false;                      // holding SCROLL repeats quickly
 const stopRepeat=()=>{clearTimeout(repT);clearInterval(repI);repT=repI=null;};
 const startRepeat=f=>{stopRepeat();repT=setTimeout(()=>{repDone=true;repI=setInterval(f,70);},420);};
 $('#nums').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join('');
-$('.hc').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;if(repDone){repDone=false;return;}key(b.dataset.k);});
-$$('.hc [data-k="sup"],.hc [data-k="sdn"]').forEach(b=>{b.addEventListener('pointerdown',()=>{repDone=false;startRepeat(()=>key(b.dataset.k));});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,stopRepeat));});
+// Like the real NexStar+, the keypad keys double as digits: while you are typing a number (MOTOR SPEED, catalog #) they send 0–9.
+const wantsDigit=()=>HC.mode==='rate'||HC.mode==='num';
+function hcPress(fn,digit){key(digit!=null&&digit!==''&&wantsDigit()?String(digit):fn);}
+$('.hc').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;if(repDone){repDone=false;return;}hcPress(b.dataset.k,b.dataset.n);});
+$$('.hc [data-k="sup"],.hc [data-k="sdn"]').forEach(b=>{b.addEventListener('pointerdown',()=>{repDone=false;if(!wantsDigit())startRepeat(()=>key(b.dataset.k));});['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,stopRepeat));});
 // held direction buttons
 const inp={pad:{az:0,alt:0}};
 const HD={az:[],alt:[]};                                   // held arrow presses in the order they were made
@@ -252,8 +255,8 @@ function hc3Key(px,py){                            // px,py are pixel positions 
   if(near(60,215,26))return {f:()=>key('align')};if(near(128,205,26))return {f:()=>key('enter')};if(near(196,215,26))return {f:()=>key('undo')};
   const dx=(px-128)/66,dy=(py-305)/44;
   if(dx*dx+dy*dy<1.15){return Math.abs(dx)>Math.abs(dy)?{d:['az',dx<0?-1:1]}:{d:['alt',dy<0?1:-1]};}
-  const F=[()=>key('planets'),()=>key('stars'),()=>key('dso'),()=>key('ident'),()=>key('tour'),()=>key('sup'),()=>key('menu'),()=>key('help'),()=>key('sdn'),()=>key('option'),()=>key('info'),()=>key('mspeed')];
-  for(let i=0;i<12;i++)if(near(62+(i%3)*68,408+((i/3)|0)*78,30))return {f:F[i],rep:i===5||i===8};
+  const FK=['solar','stars','dso','ident','tour','sup','menu','help','sdn','option','info','mspeed'],DG=[1,2,3,4,5,6,7,8,9,0,null,null];   // keys double as digits, as on the real handset
+  for(let i=0;i<12;i++)if(near(62+(i%3)*68,408+((i/3)|0)*78,30)){const f=()=>hcPress(FK[i],DG[i]);return {f,rep:(i===5||i===8)&&!wantsDigit(),k:FK[i]};}
   return null;
 }
 cv.addEventListener('pointerdown',e=>{
@@ -263,7 +266,7 @@ cv.addEventListener('pointerdown',e=>{
   const pad=ray.intersectObjects(ALLM.filter(m=>m.userData.keypad&&isShown(m)),false)[0];if(!pad||!pad.uv)return;
   const front=ray.intersectObjects(ALLM.filter(m=>isShown(m)&&m.userData.part&&!hidden.has(m.userData.part)),false)[0];if(front&&front.object!==pad.object&&front.distance<pad.distance-.003)return;
   const k=hc3Key(pad.uv.x*256,(1-pad.uv.y)*780);if(!k)return;
-  e.stopImmediatePropagation();e.preventDefault();if(curTab!=='ctrl')tab('ctrl');
+  e.stopImmediatePropagation();e.preventDefault();if(typeof hcPopOpen==='function')hcPopOpen();else if(curTab!=='ctrl')tab('ctrl');
   if(k.d){dirDown(k.d[0],k.d[1],'h');HC3.held=k.d;cancelHcMsg();}else{k.f();if(k.rep)startRepeat(k.f);}
 },true);
 const hc3Up=()=>{stopRepeat();if(HC3.held){dirUp(HC3.held[0],HC3.held[1],'h');HC3.held=null;}};addEventListener('pointerup',hc3Up);addEventListener('pointercancel',hc3Up);

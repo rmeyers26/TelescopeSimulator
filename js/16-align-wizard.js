@@ -96,7 +96,7 @@ $('#wiz').addEventListener('click',e=>{
 // big arrows inside the wizard: fast when far away, slow and gentle when close
 $('#wiz').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-wd]');if(!b)return;e.preventDefault();
   if(b.dataset.wd==='stop'){driver.stop();return;}const ax=b.dataset.wd.slice(0,-1),sg=b.dataset.wd.slice(-1)==='+'?1:-1;
-  const d=WZ.cur?wzSep(WZ.cur):5;rate=d>1.5?8:d>.3?6:4;b.setPointerCapture(e.pointerId);dirDown(ax,sg,'kid');b.classList.add('act');
+  const d=WZ.cur?wzSep(WZ.cur):5;rate=d>1.5?8:d>.3?6:5;b.setPointerCapture(e.pointerId);dirDown(ax,sg,'kid');b.classList.add('act');
   const up=()=>{dirUp(ax,sg,'kid');b.classList.remove('act');b.removeEventListener('pointerup',up);b.removeEventListener('pointercancel',up);};
   b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);});
 setInterval(()=>{if(WZ.on)wzTick();},120);

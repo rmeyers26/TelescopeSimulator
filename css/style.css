@@ -183,3 +183,36 @@ body.night #wiz{border-color:#a00}
   #top .b{min-height:40px}}
 body.red #tourHole{border-color:#ff4a3a}body.red #tourTip,body.red #fn{border-color:#a02a20}
 #compass{display:flex;flex-direction:column;align-items:flex-end}#compass canvas{align-self:center}#compass .cpt{white-space:nowrap}
+
+/* ===== Real-layout NexStar+ hand controller (Control tab and pop-out) ===== */
+.hc{background:linear-gradient(#34373d,#222429);border:1px solid #474b55;border-radius:26px 26px 34px 34px;padding:12px 14px 14px;max-width:300px}
+.hctop{display:flex;align-items:center;justify-content:space-between;margin:-2px 2px 6px}.hctop span{font:italic 600 15px system-ui;color:#c9ccd2}.hctop i{color:#ff8a3d}
+.hc .hcpopb{background:#1b2338;border-color:#3a4a72;color:#cfe3ff;font-size:12px;padding:3px 8px}
+.hc .hk3,.hc .hkp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;margin:8px 0}
+.hc .hk3 button,.hc .hkp button{background:#d9dadd;color:#2a2d33;border:1px solid #9a9da5;border-radius:999px;font-weight:700;font-size:11px;min-height:40px;box-shadow:0 2px 0 #7d8088}
+.hc .hk3 .ent{transform:translateY(-6px)}
+.hc .hkp button{border-radius:16px;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.05;padding:4px 2px}
+.hc .hkp b{font-size:10px;letter-spacing:.2px}.hc .hkp i{font-style:normal;font-size:13px;font-weight:800;color:#111}
+.hc .hkp .opt{background:radial-gradient(circle at 50% 45%,#d9dadd 40%,#c8cad0);color:#e2631b}
+.hc .hk3 button:active,.hc .hkp button:active,.hc .hk3 button.act,.hc .hkp button.act{background:#b9bcc3;box-shadow:none;transform:translateY(1px)}
+.hc .dpad{width:190px;margin:4px auto;grid-template-rows:repeat(3,44px);gap:3px;background:#d9dadd;border-radius:50%/50%;padding:6px 12px}
+.hc .dpad button{background:transparent;border:0;color:#5a5e68;font-size:22px;border-radius:12px}.hc .dpad button.act,.hc .dpad button:active{background:#b9bcc3;color:#111}
+.hc .hchint{font-size:12px;color:#cfe3ff;background:#141b2e;border:1px solid #2b3a60;border-radius:8px;padding:5px 8px;min-height:2.6em;margin-top:4px}
+.hc .hcx{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:8px}.hc .hcx button{padding:4px 8px;font-size:11px}
+body.edu .hc .hk3 button,body.edu .hc .hkp button{font-size:11px;padding:4px 2px}
+/* pop-out panels next to the telescope */
+#hcPop,#epPop{position:fixed;right:calc(var(--dockw) + 10px);bottom:10px;display:none;z-index:8;background:rgba(12,18,34,.97);border:1px solid var(--ac);border-radius:14px;padding:8px 10px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-height:calc(100vh - 70px);overflow:auto}
+#hcPop{width:320px}#hcPop .hc{max-width:none}
+#epPop{width:min(400px,calc(100vw - var(--dockw) - 20px))}#eppC{width:100%;aspect-ratio:1;border-radius:50%;display:block;margin:4px auto;background:#000;max-width:340px}
+#epPop .eptiles{margin-top:4px}#epPop .b.sm.on{background:#1b3a66;border-color:var(--ac)}
+@media(max-width:780px){
+  #hcPop,#epPop{left:6px;right:6px;width:auto;bottom:calc(var(--sheet,64px) + 6px);max-height:calc(100dvh - var(--sheet,64px) - 60px)}
+  #hcPop .hc{max-width:330px}#eppC{max-width:min(300px,42dvh)}}
+body.red #hcPop,body.red #epPop{border-color:#a02a20}
+/* phones: keep the pop-outs short so the telescope stays visible above them */
+@media(max-width:780px){
+  #hcPop,#epPop{max-height:min(60dvh,calc(100dvh - var(--sheet,64px) - 60px));padding:6px 8px}
+  #hcPop .hc{padding:8px 10px 10px;border-radius:20px}#hcPop .hctop{margin:0 2px 4px}#hcPop .lcd{min-height:0;font-size:12px;padding:4px 6px;margin-bottom:6px}
+  #hcPop .hk3,#hcPop .hkp{gap:5px 8px;margin:5px 0}#hcPop .hk3 button{min-height:32px}#hcPop .hkp button{min-height:38px}
+  #hcPop .dpad{width:150px;grid-template-rows:repeat(3,34px)}
+  #eppC{max-width:min(230px,28dvh)}#epPop .ept{width:62px}#epPop .ept canvas{width:48px;height:48px}}

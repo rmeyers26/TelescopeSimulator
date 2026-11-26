@@ -8,7 +8,9 @@
 const TABS=[['parts','Parts'],['miss','Missions'],['setup','Setup'],['info','Info'],['ctrl','Control'],['sky','Sky'],['learn','Learn'],['link','Link']];
 let curTab='parts';
 $('#tabs').innerHTML=TABS.map(([k,n])=>`<button data-t="${k}" class="${k==='parts'?'on':''}">${n}</button>`).join('')+'<button class="min" id="bMin">▾</button>';
-function tab(k){if(k==='setup'&&!SU.on)setupGo(0);curTab=k;$$('#tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));$('#dock').classList.remove('min');$('#bMin').textContent='▾';}
+function tab(k){if(curTab==='setup'&&k!=='setup'&&typeof setupLeave==='function')setupLeave();   // put the telescope back together
+  if(k==='setup'&&curTab!=='setup')setupGo(SU.on?SU.i:0);                                                  // resume the guide where you left it
+ curTab=k;$$('#tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+k));$('#dock').classList.remove('min');$('#bMin').textContent='▾';}
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id==='bMin'){const m=$('#dock').classList.toggle('min');b.textContent=m?'▴':'▾';return;}if(b.dataset.t)tab(b.dataset.t);});
 function toast(t,ms){const e=$('#toast');e.textContent=t;e.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.opacity=0,ms||2400);}
 

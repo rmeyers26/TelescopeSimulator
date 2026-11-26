@@ -8,7 +8,8 @@
 const cam={mode:'orbit',tx:0,ty:1.45,tz:0,yaw:2.4,pitch:.22,dist:3.5,px:0,py:1.7,pz:4.5,wyaw:0,wpitch:0,tw:null};
 const keys={},joy={x:0,y:0},ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
 function applyCamera(){
-  if(cam.mode==='orbit'){const cp=Math.cos(cam.pitch);
+  // never let the camera dip below the round platform the telescope stands on (its top is at y = 0.03)
+  if(cam.mode==='orbit'){const minY=.12,lo=Math.asin(clamp((minY-cam.ty)/cam.dist,-1,1));if(cam.pitch<lo)cam.pitch=lo;const cp=Math.cos(cam.pitch);
     camera.position.set(cam.tx+cam.dist*Math.sin(cam.yaw)*cp,cam.ty+cam.dist*Math.sin(cam.pitch),cam.tz+cam.dist*Math.cos(cam.yaw)*cp);camera.lookAt(cam.tx,cam.ty,cam.tz);}
   else{camera.position.set(cam.px,cam.py,cam.pz);camera.rotation.order='YXZ';camera.rotation.set(cam.wpitch,cam.wyaw,0);}
 }
@@ -67,7 +68,8 @@ function pick(e){
   const hits=ray.intersectObjects(ALLM.filter(m=>shown(m)&&m.userData.part&&!hidden.has(m.userData.part)),false);
   for(const h of hits){
     if(cut.on&&h.object.userData.clip){const lp=altG.worldToLocal(h.point.clone());if(inCutWedge(lp))continue;}
-    selectPart(h.object.userData.part,h.object.userData.sub,true);return;}
+    const pid=h.object.userData.part;if(typeof scopeTap==='function'&&scopeTap(pid,h.object.userData.sub))return;   // eyepiece, finder and hand controller open their own pop-ups
+    selectPart(pid,h.object.userData.sub,true);return;}
   selectPart(null);
 }
 function selectPart(id,sub,openTab){

@@ -50,7 +50,7 @@ function initCompass(){
 const TOUR={on:false,i:0,timer:null};
 const TOUR_STEPS=[
  {title:'👋 Quick tour',text:'This 1-minute tour shows where everything is. Tap <b>Next</b>, or <b>Skip</b> any time. You can bring it back with ❓ Help.'},
- {sel:'view',title:'The 3D telescope',text:'<b>Drag</b> to spin around it and <b>pinch</b> (or scroll) to zoom. <b>Tap</b> any part to learn what it does, or <b>press and hold</b> a part for a quick label.'},
+ {sel:'view',title:'The 3D telescope',text:'<b>Drag</b> to spin around it and <b>pinch</b> (or scroll) to zoom. <b>Tap</b> any part to learn what it does, or <b>press and hold</b> for a quick label. Tap the <b>eyepiece</b> to look through it, and the <b>hand controller</b> to use it.'},
  {sel:'#compass',title:'Sky compass',text:'The <b style="color:#ff8a3d">orange arrow</b> shows which way the telescope points – North, East, South or West – and how high it is. One fist at arm’s length is about 10°.'},
  {sel:'#tabs',title:'Menus',text:'These tabs open the menus.'+(isPhone()?' <b>Swipe left or right</b> on the menu to change tabs, and drag the little bar to make it bigger or smaller.':'')},
  {sel:()=>edu.on?'#kidpad .kgrid':'.hc .dpad',tab:'ctrl',title:'Drive the telescope',text:'Hold an arrow to move the telescope. Let go to stop.'},
@@ -106,7 +106,7 @@ const FN_STEPS=[
  {t:'Take off the lens cap',k:()=>'With the cap on, the eyepiece is completely dark!',act:[['Remove the cap',()=>setCap(false)]],check:()=>!CAP.on},
  {t:'Line up with the sky',k:()=>'The telescope has to learn where the sky is. The quick way: centre one bright planet and press Align.',act:[['🎯 1-planet align',()=>{fnHide();wzStart('planet');}],['⭐ 3 stars',()=>{fnHide();wzStart('stars');}]],check:()=>ALIGN_DONE_AT>FN.t0},
  {t:()=>'Go to '+fnTarget().name,k:()=>`Now the fun part. Tap the button and watch the telescope drive itself to ${fnTarget().name}.`,act:[[()=>'🪐 Go to '+fnTarget().name,()=>{if(WZ.on)wzStop();doGoto(fnTarget());}]],check:fnInView,view:true},
- {t:'Zoom in',k:()=>'Tap a smaller eyepiece number to zoom in. The 13 mm makes it about 215× bigger – look for details!',act:[['13 mm',()=>setEp(3)],['9 mm',()=>setEp(4)]],check:()=>EPS[epI].mag>=200&&EPS[epI].fl>1&&fnInView(),view:true},
+ {t:'Zoom in',k:()=>'Tap a smaller eyepiece number to zoom in (or tap the eyepiece on the telescope to swap it). The 13 mm makes it about 215× bigger – look for details!',act:[['13 mm',()=>setEp(3)],['9 mm',()=>setEp(4)]],check:()=>EPS[epI].mag>=200&&EPS[epI].fl>1&&fnInView(),view:true},
  {t:'Watch it track',k:()=>'The Earth spins, so the sky slowly moves. With <b>tracking</b> on, the motors follow the planet. Fast-forward one hour and see if it stays in view.',act:[['⏩ Fast-forward 1 hour',fnFF]],check:()=>FN.ff&&fnInView(),view:true},
  {t:'🏅 First night complete!',k:()=>'You set up a real computerised telescope and found a planet. That is exactly what astronomers do outside.',final:true}];
 function fnStart(resume){
@@ -141,7 +141,7 @@ function fnTick(){                                               // live check e
   if(st.intro||st.final||st.optional)return;
   const ok=st.check();                                           // FN.okStep remembers which step we already celebrated
   if(ok&&FN.okStep!==FN.i){FN.okStep=FN.i;haptic('success');toast('✅ '+fnv(st.t)+' – done!');clearTimeout(FN.adv);
-    FN.adv=setTimeout(()=>{if(FN.on&&FN_STEPS[FN.i]===st&&st.check()){FN.i++;fnRender();}},1600);fnRender();}
+    FN.adv=setTimeout(()=>{if(FN.on&&FN_STEPS[FN.i]===st&&st.check()){FN.i++;if(curTab==='setup')tab('ctrl');fnRender();}},1600);fnRender();}   // leaving Setup puts the telescope back together
   else if(!ok&&FN.okStep===FN.i){FN.okStep=-1;fnRender();}}
 setInterval(fnTick,500);
 
