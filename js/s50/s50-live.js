@@ -354,7 +354,14 @@ $('#p-learn').innerHTML=`
 /* =====================================================================
    5. MAIN LOOP AND START-UP
    ===================================================================== */
-let lastT=performance.now(),frameN=0,uiT=0,prevT=0,wideT=0;
+let lastT=performance.now(),frameN=0,uiT=0,prevT=0,wideT=0,fpsT=performance.now(),fpsN=0,gfxPref='auto';
+try{gfxPref=localStorage.getItem('s50gfx')||'auto';}catch(_){}
+$('#gfx').value=gfxPref;
+$('#gfx').onchange=e=>{gfxPref=e.target.value;try{localStorage.setItem('s50gfx',gfxPref);}catch(_){}fpsT=performance.now();fpsN=0;SC.setQuality(gfxPref==='fast'?'fast':'high');if(gfxPref==='fast')toast('Fast graphics: shadows are off.');};
+function autoQuality(now){                               // in Auto mode, drop to Fast graphics if the first few seconds run slowly
+  if(gfxPref!=='auto'||SC.quality==='fast')return;fpsN++;
+  if(now-fpsT>4000){const fps=fpsN/((now-fpsT)/1000);if(fps<20){SC.setQuality('fast');toast(`The picture was running at ${fps.toFixed(0)} frames per second, so Fast graphics (no shadows) were switched on. Change this in the top bar.`,7000);}fpsT=Infinity;}
+}
 function frame(now){
   requestAnimationFrame(frame);
   const dt=clamp((now-lastT)/1000,0,.05);lastT=now;frameN++;
@@ -379,13 +386,13 @@ function frame(now){
   SC.update(mount,now/1000,mount.ledPattern(anyOn()));
   if(frameN%30===0)SC.updateSky();
   tickPowerButton();
-  drawLive(now);
+  drawLive(now);autoQuality(now);
   if(now-uiT>100){uiT=now;updAll();if(A.tab==='target'&&frameN%60===0&&!['q'].includes((document.activeElement||{}).id)&&A.mode!=='mw')renderTarget();}
 }
 
 initScene($('#gl'));
 new ResizeObserver(()=>SC.resize()).observe($('#stage'));
-SC.setView('orbit');
+SC.setView('orbit');SC.setQuality(gfxPref==='fast'?'fast':'high');
 setLocation(0);SKY.bortle=6;syncSkyUi();                                 // default: Phoenix, but a "bright suburban" sky so the first night looks decent
 $('#date').value=tonightDateStr();setClockRaw(tonightDateStr(),21);$('#hour').value=21;$('#hourV').textContent='21:00';
 renderTarget();renderImaging();renderAlbum();renderMM();renderWiz(true);

@@ -16,7 +16,7 @@ function initScene(canvas){
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
   renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;   // photographic colour handling
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;                                                  // soft shadows
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;   // shadows are recomputed only when something moves                                                  // soft shadows
   const scene=new THREE.Scene();scene.background=new THREE.Color(0x04060c).convertSRGBToLinear();
   const camera=new THREE.PerspectiveCamera(40,1,0.02,200);
   const sRGB=h=>new THREE.Color(h).convertSRGBToLinear();                                    // hex colours are written in sRGB; the renderer wants linear
@@ -32,13 +32,13 @@ function initScene(canvas){
     box(1,4,-5,1.5,2,1.6,2,3.2);   // cool tall fill strip on the left
     box(5,1,0,5,-4,3,3,3.6);       // rim strip behind and above
     box(3,1.2,-3,0.5,-5,1,1,1.2);
-    const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(es,0.03).texture;pm.dispose();
+    const pm=new THREE.PMREMGenerator(renderer);SC.envTex=pm.fromScene(es,0.03).texture;scene.environment=SC.envTex;pm.dispose();
   }catch(e){console.warn('Environment map unavailable',e);}
 
   /* ---- lights (a "night helper" studio light so the telescope stays visible; real nights are darker!) ---- */
   scene.add(new THREE.HemisphereLight(0xdde3ff,0x1a1d26,0.25));
   const key=new THREE.DirectionalLight(0xfff9f2,2.0);key.position.set(1.6,SCOPE_H+1.6,1.9);key.target.position.set(0,SCOPE_H+.1,0);scene.add(key,key.target);
-  key.castShadow=true;key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-.9,right:.9,top:.9,bottom:-.9,near:.3,far:6});key.shadow.camera.updateProjectionMatrix();key.shadow.bias=-0.0003;key.shadow.normalBias=.006;
+  key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-.9,right:.9,top:.9,bottom:-.9,near:.3,far:6});key.shadow.camera.updateProjectionMatrix();key.shadow.bias=-0.0003;key.shadow.normalBias=.006;
   const rim=new THREE.DirectionalLight(0x7a96ff,0.9);rim.position.set(-3,SCOPE_H+1,-2.5);scene.add(rim);
 
   /* ---- ground + compass letters ---- */
@@ -216,6 +216,8 @@ function initScene(canvas){
       ledGlow.material.color.setRGB(led.col[0],led.col[1],led.col[2]);ledGlow.material.opacity=.4*k;ledLight.color.setRGB(led.col[0],led.col[1],led.col[2]);ledLight.intensity=.05*k;
       led.batt.forEach((s,i)=>{const on=s==='on'||(s==='blink'&&Math.floor(t*1.2)%2)||(s==='blinkFast'&&Math.floor(t*5)%2);dots[i].color.setHex(on?0xff2a1a:0x300000);});
     }
+    const sig=m.az*1.3+m.alt*2.1+m.tilt.x*3+m.tilt.z*5+(m.mountMode==='eq'?7:0)+(m.solarFilter?11:0)+m.eq.wedgeAlt*.1+(m.charger!=='none'?13:0);   // did the telescope move? then the shadows need redrawing
+    if(Math.abs(sig-SC._sig)>1e-4){SC._sig=sig;renderer.shadowMap.needsUpdate=true;}
     beam.visible=SC.showBeam;
     updateEye();
     renderer.render(scene,camera);
@@ -237,6 +239,16 @@ function initScene(canvas){
   }
   SC.resize=function(){const w=canvas.clientWidth,h=canvas.clientHeight;if(w&&h){renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}};
   SC.setView=v=>{if(v==='eye'){viewMode='eye';SC.eye.yaw=SC.eye.pitch=0;}else setView(v);};
+  SC._sig=0;
+  /* Graphics quality: 'high' = shadows + sharp pixels, 'fast' = no shadows, normal pixels (for slower phones and laptops) */
+  SC.setQuality=function(q){
+    SC.quality=q;renderer.setPixelRatio(q==='fast'?1:Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=q!=='fast';
+    scene.environment=q==='fast'?null:(SC.envTex||null);                                           // no mirror-reflections in Fast mode
+    scene.traverse(o=>{if(o.material)[].concat(o.material).forEach(m=>{
+      if(m.isMeshPhysicalMaterial){if(m.userData.cc===undefined)m.userData.cc=m.clearcoat;m.clearcoat=q==='fast'?0:m.userData.cc;}   // and no clear-coat layer
+      m.needsUpdate=true;});});
+    renderer.shadowMap.needsUpdate=true;SC.resize();
+  };
   SC.updateSky=updateSky;SC.showBeam=false;
   addEventListener('resize',SC.resize);SC.resize();updateSky();
 }
