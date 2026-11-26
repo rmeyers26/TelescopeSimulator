@@ -85,6 +85,17 @@ function initScene(canvas){
   const legMetal=new THREE.MeshStandardMaterial({color:sRGB(0x2c2f35),roughness:.32,metalness:.85,envMapIntensity:1.1});
   const silver=new THREE.MeshStandardMaterial({color:sRGB(0xb9bdc5),roughness:.22,metalness:.95,envMapIntensity:1.4});          // the bright aluminium ring round the lens window
 
+  /* Smooth the shading of a (non-indexed) geometry: vertices at the same spot share an averaged normal, but only with faces that
+     bend away by less than `deg` degrees, so real creases stay sharp while curved surfaces look round. */
+  function creaseNormals(g,deg){
+    const p=g.attributes.position,n=g.attributes.normal,N=p.count,key=i=>Math.round(p.getX(i)*5e4)+','+Math.round(p.getY(i)*5e4)+','+Math.round(p.getZ(i)*5e4);
+    const groups=new Map();for(let i=0;i<N;i++){const k=key(i);let a=groups.get(k);if(!a){a=[];groups.set(k,a);}a.push(i);}
+    const out=new Float32Array(N*3),cs=Math.cos(deg*Math.PI/180);
+    for(const idx of groups.values())for(const i of idx){let x=0,y=0,z=0;const nx=n.getX(i),ny=n.getY(i),nz=n.getZ(i);
+      for(const j of idx){const mx=n.getX(j),my=n.getY(j),mz=n.getZ(j);if(nx*mx+ny*my+nz*mz>cs){x+=mx;y+=my;z+=mz;}}
+      const l=Math.hypot(x,y,z)||1;out[i*3]=x/l;out[i*3+1]=y/l;out[i*3+2]=z/l;}
+    n.array.set(out);n.needsUpdate=true;}
+
   /* ---- helpers: rounded boxes (the real body has no sharp corners) ---- */
   function rrShape(w,h,r,rb=r){                                      // a rounded rectangle (rb = the bottom corners' radius, if different); long straight edges are cut into short pieces,
     const x=-w/2,y=-h/2,sh=new THREE.Shape();                          // because three.js' bevel pinches the middle of one long straight edge
@@ -171,23 +182,28 @@ function initScene(canvas){
     const r=T/2,rf=.012,rr=r,yt=r;sh.moveTo(r,yb+rb);ln(r,yt-rf);sh.absarc(r-rf,yt-rf,rf,0,Math.PI/2,false);ln(-r+rr,yt);sh.absarc(-r+rr,yt-rr,rr,Math.PI/2,Math.PI,false);   // front-top corner tight, rear-top rounder
     ln(-r,yb+rb);sh.absarc(-r+rb,yb+rb,rb,Math.PI,1.5*Math.PI,false);ln(r-rb,yb);sh.absarc(r-rb,yb+rb,rb,1.5*Math.PI,2*Math.PI,false);return sh;}
   const HT=.072,HW=.12,HB=-.128;                                     // thickness, width, y of the bottom (relative to the pivot)
-  {const bev=.006,depth=HW-2*bev,g=new THREE.ExtrudeGeometry(headShape(HT-2*bev,HB+bev,.024-bev),{depth,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:7,curveSegments:28});
-   g.translate(0,0,-depth/2);g.rotateY(Math.PI/2);altG.add(new THREE.Mesh(g,white));}                                    // shape x → −z, extrusion → x (the width)
-  const zF=-HT/2;                                                    // z of the head's big front face
-  const nose=rrBox(.1,.098,.003,.042,.0015,white);nose.position.set(0,-.026,zF-.0012);altG.add(nose);               // a barely raised boss round the window
-  const frame=rrBox(.094,.092,.002,.04,.0008,silver);frame.position.set(0,-.026,zF-.0028);altG.add(frame);         // silver ring
-  const win=rrBox(.088,.086,.002,.038,.0008,blackGlass);win.position.set(0,-.026,zF-.0036);altG.add(win);          // dark window (almost flush, as on the real unit)
-  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.033,.035,.004,48).rotateX(Math.PI/2),dark);collar.position.set(0,.003,zF-.004);altG.add(collar);
-  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.032,.0022,14,56),silver);bezelL.position.set(0,.003,zF-.0046);altG.add(bezelL);
-  const lens=new THREE.Mesh(new THREE.SphereGeometry(.031,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.13),lensGlass);lens.position.set(0,.003,zF-.0042);altG.add(lens);        // a gently domed coated glass (green…)
-  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.019,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.1),lensGlass2);lens2.position.set(0,.003,zF-.0049);altG.add(lens2);        // …and purple
-  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0112,.0016,10,32),silver);bezel2.position.set(.004,-.048,zF-.0042);altG.add(bezel2);                                                    // the small wide-angle camera, below the big lens
-  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0102,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass);cam2.position.set(.004,-.048,zF-.004);altG.add(cam2);
+  {const bev=.006,depth=HW-2*bev,g=new THREE.ExtrudeGeometry(headShape(HT-2*bev,HB+bev,.024-bev),{depth,steps:16,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:6,curveSegments:24});
+   g.translate(0,0,-depth/2);
+   {const p=g.attributes.position,R=HW/2-.004,y0=HB+R,R2=.034,y1=HT/2-R2;                                     // seen from the front the head is a tall PILL: its bottom is half-round
+    for(let i=0;i<p.count;i++){const y=p.getY(i);if(y<y0){const k=Math.sqrt(Math.max(0,1-Math.pow((y0-y)/R,2)));p.setZ(i,p.getZ(i)*Math.max(k,.08));}
+      else if(y>y1){const k=Math.sqrt(Math.max(0,1-Math.pow((y-y1)/R2,2)));p.setZ(i,p.getZ(i)*Math.max(k,.3));}}      // …and its top corners are rounded too
+    g.computeVertexNormals();creaseNormals(g,50);}
+   g.rotateY(Math.PI/2);altG.add(new THREE.Mesh(g,white));}                                    // shape x → −z, extrusion → x (the width)
+  const nose=rrBox(.09,.112,.006,.045,.0025,white);nose.position.set(0,-.027,-HT/2-.0015);altG.add(nose);          // a raised boss round the window
+  const zF=-HT/2-.0045;                                              // z of the boss's front face
+  const frame=rrBox(.072,.1,.002,.036,.0008,silver);frame.position.set(0,-.027,zF-.0028);altG.add(frame);         // silver ring
+  const win=rrBox(.066,.094,.002,.033,.0008,blackGlass);win.position.set(0,-.027,zF-.0036);altG.add(win);          // dark window (almost flush, as on the real unit)
+  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.0245,.0265,.004,48).rotateX(Math.PI/2),dark);collar.position.set(0,-.003,zF-.004);altG.add(collar);
+  const bezelL=new THREE.Mesh(new THREE.TorusGeometry(.0245,.0018,14,56),silver);bezelL.position.set(0,-.003,zF-.0046);altG.add(bezelL);
+  const lens=new THREE.Mesh(new THREE.SphereGeometry(.0235,48,20,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.13),lensGlass);lens.position.set(0,-.003,zF-.0042);altG.add(lens);        // a gently domed coated glass (green…)
+  const lens2=new THREE.Mesh(new THREE.SphereGeometry(.0145,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.1),lensGlass2);lens2.position.set(0,-.003,zF-.0049);altG.add(lens2);        // …and purple
+  const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0105,.0015,10,32),silver);bezel2.position.set(0,-.056,zF-.0042);altG.add(bezel2);                                                    // the small wide-angle camera, below the big lens
+  const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0095,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass);cam2.position.set(0,-.056,zF-.004);altG.add(cam2);
   const dewMat=new THREE.MeshBasicMaterial({color:0xdde8f0,transparent:true,opacity:0,depthWrite:false});     // fog on the lens (dew)
-  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.046,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,-.026,zF-.0085);altG.add(dewDisc);
+  const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.04,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,-.027,zF-.0085);altG.add(dewDisc);
   const solar=new THREE.Group();altG.add(solar);solar.visible=false;                                          // magnetic solar filter, stuck on the front of the head
-  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(0,-.026,zF-.0085);solar.add(cap);
-   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.052,.002,8,40),legMetal);rimR.position.set(0,-.026,zF-.0115);solar.add(rimR);}
+  {const cap=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.006,40).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({color:0x2a2218,roughness:.3,metalness:.6}));cap.position.set(0,-.027,zF-.0085);solar.add(cap);
+   const rimR=new THREE.Mesh(new THREE.TorusGeometry(.052,.002,8,40),legMetal);rimR.position.set(0,-.027,zF-.0115);solar.add(rimR);}
 
   function shadowify(root){root.traverse(m=>{if(m.isMesh&&!m.material.isMeshBasicMaterial&&!m.userData.noShadow){m.castShadow=true;m.receiveShadow=true;}});}
   shadowify(tiltG);shadowify(tripod);top.castShadow=true;top.receiveShadow=true;col.castShadow=true;
