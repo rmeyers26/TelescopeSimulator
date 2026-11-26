@@ -192,7 +192,7 @@ function initScene(canvas){
     g.computeVertexNormals();creaseNormals(g,60);altG.add(new THREE.Mesh(g,white));}
   // a hair-line groove round the head near its bottom, like the rim of a separate base ring (seen in the side-view video)
   {const ring=rrBox(.099,HT+.0008,.0012,.032,.0004,new THREE.MeshStandardMaterial({color:sRGB(0xaab0b8),roughness:.6}));ring.rotation.x=Math.PI/2;ring.position.y=HB+.026;altG.add(ring);}
-  const nose=rrBox(.09,.112,.006,.045,.0025,white);nose.position.set(0,-.027,-HT/2-.0015);altG.add(nose);          // a raised boss round the window
+  const nose=rrBox(.094,.114,.006,.045,.0025,white);nose.position.set(0,-.027,-HT/2-.0015);altG.add(nose);          // a raised boss round the window
   const zF=-HT/2-.0045;                                              // z of the boss's front face
   const rimMat=new THREE.MeshPhysicalMaterial({color:sRGB(0xe4e8ee),roughness:.25,clearcoat:.8,clearcoatRoughness:.15});
   const frame=rrBox(.084,.108,.002,.040,.0008,rimMat);frame.position.set(0,-.03,zF-.0028);altG.add(frame);         // silver ring
@@ -203,6 +203,10 @@ function initScene(canvas){
   const lens2=new THREE.Mesh(new THREE.SphereGeometry(.0165,40,16,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.1),lensGlass2);lens2.position.set(0,-.009,zF-.0049);altG.add(lens2);        // …and purple
   const bezel2=new THREE.Mesh(new THREE.TorusGeometry(.0105,.0015,10,32),silver);bezel2.position.set(0,-.064,zF-.0042);altG.add(bezel2);                                                    // the small wide-angle camera, below the big lens
   const cam2=new THREE.Mesh(new THREE.SphereGeometry(.0095,28,12,0,Math.PI*2,0,Math.PI/2).rotateX(-Math.PI/2).scale(1,1,.2),lensGlass);cam2.position.set(0,-.064,zF-.004);altG.add(cam2);
+  // Spin the whole window (boss, rim, black glass, big lens, small camera) a quarter turn CLOCKWISE as seen from the front: the pill now lies on its side.
+  // Trick: put those parts in a group centred on the window, then rotate the group about the face's normal (z). Child positions become relative to the group.
+  const WIN_Y=-.03,lensG=new THREE.Group();lensG.position.set(0,WIN_Y,0);lensG.rotation.z=Math.PI/2;altG.add(lensG);
+  [nose,frame,win,collar,bezelL,lens,lens2,bezel2,cam2].forEach(m=>{m.position.y-=WIN_Y;lensG.add(m);});
   const dewMat=new THREE.MeshBasicMaterial({color:0xdde8f0,transparent:true,opacity:0,depthWrite:false});     // fog on the lens (dew)
   const dewDisc=new THREE.Mesh(new THREE.CircleGeometry(.04,48).rotateY(Math.PI),dewMat);dewDisc.position.set(0,-.027,zF-.0085);altG.add(dewDisc);
   const solar=new THREE.Group();altG.add(solar);solar.visible=false;                                          // magnetic solar filter, stuck on the front of the head
