@@ -79,7 +79,7 @@ const INIT_STEPS=[
 ];
 const BOOT_SEC=4;                                       // power-on light sequence
 const TRACK_AZ_LIMIT=0.12;                              // fastest the azimuth motor can follow the sky (degrees per simulated second)
-const ZERO_ALT=90;                                      // "zero position": the head stands upright, lens up (as in the manufacturer's drawing). Whether we are parked is tracked by the `parked` flag.
+const ZERO_ALT=0;                                       // "zero position": the head hangs straight down in front of the column, lens facing forward (the manufacturer's drawing pose). Whether we are parked is tracked by the `parked` flag.
 const JOG_SPEEDS={slow:8,medium:64,fast:360,max:1440};  // joystick speeds as multiples of the sidereal rate (manual: 1X – 1440X)
 
 class SeestarMount{
